@@ -9,7 +9,7 @@
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
 :root {
-  --bg: #fbfcef;
+  --bg: #0D0F12;
   --surface: #13161A;
   --surface2: #1A1E24;
   --border: rgba(255,255,255,0.06);
@@ -17,8 +17,6 @@
   --gold: #D4AF37;
   --gold-dim: rgba(212,175,55,0.15);
   --gold-glow: rgba(212,175,55,0.08);
-  --blue: #1A3A5C;
-  --blue-bright: #2A5A8C;
   --text: #F0F2F5;
   --text-muted: #6B7280;
   --text-dim: #9CA3AF;
@@ -26,11 +24,6 @@
   --yellow: #EAB308;
   --orange: #F97316;
   --red: #EF4444;
-  --grade-a: #22C55E;
-  --grade-b: #86EFAC;
-  --grade-c: #EAB308;
-  --grade-d: #F97316;
-  --grade-f: #EF4444;
 }
 
 body {
@@ -41,7 +34,6 @@ body {
   overflow-x: hidden;
 }
 
-/* Grid background */
 body::before {
   content: '';
   position: fixed;
@@ -54,7 +46,6 @@ body::before {
   z-index: 0;
 }
 
-/* Top glow */
 body::after {
   content: '';
   position: fixed;
@@ -76,7 +67,6 @@ body::after {
   padding: 0 24px 80px;
 }
 
-/* Header */
 header {
   padding: 48px 0 40px;
   display: flex;
@@ -86,34 +76,20 @@ header {
   margin-bottom: 48px;
 }
 
-.logo {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
 .logo-mark {
   font-family: 'Bebas Neue', sans-serif;
   font-size: 3rem;
   letter-spacing: 0.08em;
   line-height: 1;
-  color: var(--text);
 }
-
-.logo-mark span {
-  color: var(--gold);
-}
-
+.logo-mark span { color: var(--gold); }
 .logo-sub {
   font-size: 0.7rem;
   letter-spacing: 0.2em;
   color: var(--text-muted);
   font-weight: 500;
   text-transform: uppercase;
-}
-
-.header-right {
-  text-align: right;
+  margin-top: 4px;
 }
 
 .draft-year {
@@ -121,17 +97,17 @@ header {
   font-size: 1.1rem;
   letter-spacing: 0.15em;
   color: var(--gold);
+  text-align: right;
 }
-
 .draft-label {
   font-size: 0.68rem;
   color: var(--text-muted);
   letter-spacing: 0.15em;
   text-transform: uppercase;
   margin-top: 2px;
+  text-align: right;
 }
 
-/* Team selector */
 .section-label {
   font-size: 0.65rem;
   letter-spacing: 0.2em;
@@ -160,22 +136,10 @@ header {
   cursor: pointer;
   transition: all 0.2s ease;
   text-align: center;
-  letter-spacing: 0.02em;
 }
+.team-btn:hover { border-color: var(--border2); color: var(--text); background: var(--surface2); }
+.team-btn.active { border-color: var(--gold); color: var(--gold); background: var(--gold-glow); }
 
-.team-btn:hover {
-  border-color: var(--border2);
-  color: var(--text);
-  background: var(--surface2);
-}
-
-.team-btn.active {
-  border-color: var(--gold);
-  color: var(--gold);
-  background: var(--gold-glow);
-}
-
-/* Pick builder */
 .pick-builder {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -183,12 +147,10 @@ header {
   padding: 28px;
   margin-bottom: 32px;
 }
-
 .pick-builder h2 {
   font-family: 'Bebas Neue', sans-serif;
   font-size: 1.2rem;
   letter-spacing: 0.1em;
-  color: var(--text);
   margin-bottom: 20px;
 }
 
@@ -200,8 +162,7 @@ header {
   margin-bottom: 12px;
 }
 
-.pick-row select,
-.pick-row input {
+.pick-row select, .pick-row input {
   background: var(--bg);
   border: 1px solid var(--border2);
   color: var(--text);
@@ -215,19 +176,9 @@ header {
   appearance: none;
   -webkit-appearance: none;
 }
-
-.pick-row select:focus,
-.pick-row input:focus {
-  border-color: var(--gold);
-}
-
-.pick-row input::placeholder {
-  color: var(--text-muted);
-}
-
-.pick-row select option {
-  background: var(--bg);
-}
+.pick-row select:focus, .pick-row input:focus { border-color: var(--gold); }
+.pick-row input::placeholder { color: var(--text-muted); }
+.pick-row select option { background: var(--bg); }
 
 .remove-btn {
   background: none;
@@ -244,12 +195,7 @@ header {
   justify-content: center;
   flex-shrink: 0;
 }
-
-.remove-btn:hover {
-  border-color: var(--red);
-  color: var(--red);
-  background: rgba(239,68,68,0.08);
-}
+.remove-btn:hover { border-color: var(--red); color: var(--red); background: rgba(239,68,68,0.08); }
 
 .add-pick-btn {
   background: none;
@@ -264,11 +210,7 @@ header {
   margin-top: 4px;
   letter-spacing: 0.05em;
 }
-
-.add-pick-btn:hover {
-  border-color: var(--gold);
-  color: var(--gold);
-}
+.add-pick-btn:hover { border-color: var(--gold); color: var(--gold); }
 
 .grade-btn {
   display: block;
@@ -285,27 +227,11 @@ header {
   transition: all 0.2s ease;
   margin-top: 20px;
 }
+.grade-btn:hover { background: #E8C84A; transform: translateY(-1px); }
 
-.grade-btn:hover {
-  background: #E8C84A;
-  transform: translateY(-1px);
-}
+.results { display: none; }
+.results.visible { display: block; animation: fadeUp 0.5s ease both; }
 
-.grade-btn:active {
-  transform: translateY(0);
-}
-
-/* Results */
-.results {
-  display: none;
-}
-
-.results.visible {
-  display: block;
-  animation: fadeUp 0.5s ease both;
-}
-
-/* Overall grade card */
 .overall-card {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -329,69 +255,21 @@ header {
   font-size: 3rem;
   letter-spacing: 0.05em;
   border: 2px solid;
-  position: relative;
-}
-
-.grade-circle::after {
-  content: '';
-  position: absolute;
-  inset: -8px;
-  border-radius: 50%;
-  opacity: 0.15;
 }
 
 .grade-A { color: var(--green); border-color: var(--green); background: rgba(34,197,94,0.08); }
-.grade-A::after { background: var(--green); }
 .grade-B { color: #86EFAC; border-color: #86EFAC; background: rgba(134,239,172,0.08); }
-.grade-B::after { background: #86EFAC; }
 .grade-C { color: var(--yellow); border-color: var(--yellow); background: rgba(234,179,8,0.08); }
-.grade-C::after { background: var(--yellow); }
 .grade-D { color: var(--orange); border-color: var(--orange); background: rgba(249,115,22,0.08); }
-.grade-D::after { background: var(--orange); }
 .grade-F { color: var(--red); border-color: var(--red); background: rgba(239,68,68,0.08); }
-.grade-F::after { background: var(--red); }
 
-.overall-info {
-  flex: 1;
-}
+.overall-info { flex: 1; }
+.overall-team { font-family: 'Bebas Neue', sans-serif; font-size: 1.8rem; letter-spacing: 0.08em; margin-bottom: 6px; }
+.overall-summary { font-size: 0.9rem; color: var(--text-dim); line-height: 1.6; max-width: 500px; }
+.overall-score { text-align: right; flex-shrink: 0; }
+.score-num { font-family: 'DM Mono', monospace; font-size: 2rem; font-weight: 500; color: var(--gold); line-height: 1; }
+.score-label { font-size: 0.65rem; color: var(--text-muted); letter-spacing: 0.15em; text-transform: uppercase; margin-top: 4px; }
 
-.overall-team {
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: 1.8rem;
-  letter-spacing: 0.08em;
-  color: var(--text);
-  margin-bottom: 6px;
-}
-
-.overall-summary {
-  font-size: 0.9rem;
-  color: var(--text-dim);
-  line-height: 1.6;
-  max-width: 500px;
-}
-
-.overall-score {
-  text-align: right;
-  flex-shrink: 0;
-}
-
-.score-num {
-  font-family: 'DM Mono', monospace;
-  font-size: 2rem;
-  font-weight: 500;
-  color: var(--gold);
-  line-height: 1;
-}
-
-.score-label {
-  font-size: 0.65rem;
-  color: var(--text-muted);
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
-  margin-top: 4px;
-}
-
-/* Individual pick results */
 .pick-result {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -409,12 +287,7 @@ header {
   gap: 16px;
 }
 
-.pick-meta {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
-}
+.pick-meta { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 
 .round-badge {
   background: var(--gold-dim);
@@ -427,18 +300,8 @@ header {
   text-transform: uppercase;
 }
 
-.pick-name {
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: 1.4rem;
-  letter-spacing: 0.05em;
-  color: var(--text);
-}
-
-.pick-details {
-  font-size: 0.78rem;
-  color: var(--text-muted);
-  margin-top: 2px;
-}
+.pick-name { font-family: 'Bebas Neue', sans-serif; font-size: 1.4rem; letter-spacing: 0.05em; margin-top: 8px; }
+.pick-details { font-size: 0.78rem; color: var(--text-muted); margin-top: 2px; }
 
 .pick-grade-badge {
   font-family: 'Bebas Neue', sans-serif;
@@ -450,53 +313,13 @@ header {
   flex-shrink: 0;
 }
 
-/* Stat bars */
-.stat-bars {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px 24px;
-  margin-bottom: 16px;
-}
-
-.stat-bar-item {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.stat-bar-label {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.stat-bar-name {
-  font-size: 0.7rem;
-  color: var(--text-muted);
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  font-weight: 500;
-}
-
-.stat-bar-value {
-  font-family: 'DM Mono', monospace;
-  font-size: 0.75rem;
-  font-weight: 500;
-}
-
-.bar-track {
-  height: 4px;
-  background: var(--bg);
-  border-radius: 2px;
-  overflow: hidden;
-}
-
-.bar-fill {
-  height: 100%;
-  border-radius: 2px;
-  transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
-  width: 0%;
-}
+.stat-bars { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 24px; margin-bottom: 16px; }
+.stat-bar-item { display: flex; flex-direction: column; gap: 6px; }
+.stat-bar-label { display: flex; justify-content: space-between; align-items: center; }
+.stat-bar-name { font-size: 0.7rem; color: var(--text-muted); letter-spacing: 0.1em; text-transform: uppercase; font-weight: 500; }
+.stat-bar-value { font-family: 'DM Mono', monospace; font-size: 0.75rem; font-weight: 500; }
+.bar-track { height: 4px; background: var(--bg); border-radius: 2px; overflow: hidden; }
+.bar-fill { height: 100%; border-radius: 2px; transition: width 1s cubic-bezier(0.4,0,0.2,1); width: 0%; }
 
 .pick-verdict {
   font-size: 0.82rem;
@@ -506,7 +329,6 @@ header {
   border-top: 1px solid var(--border);
 }
 
-/* Comp tag */
 .comp-tag {
   display: inline-flex;
   align-items: center;
@@ -520,50 +342,21 @@ header {
   margin-top: 8px;
   margin-right: 6px;
 }
-
-.comp-tag span {
-  color: var(--gold);
-  font-weight: 600;
-}
-
-/* No team selected state */
-.no-team {
-  text-align: center;
-  padding: 60px 20px;
-  color: var(--text-muted);
-  font-size: 0.85rem;
-  letter-spacing: 0.05em;
-}
-
-/* Divider */
-.divider {
-  height: 1px;
-  background: var(--border);
-  margin: 40px 0;
-}
+.comp-tag span { color: var(--gold); font-weight: 600; }
 
 @keyframes fadeUp {
   from { opacity: 0; transform: translateY(16px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* Responsive */
 @media (max-width: 600px) {
-  .pick-row {
-    grid-template-columns: 80px 1fr;
-    grid-template-rows: auto auto;
-  }
-  .pick-row .round-select { grid-column: 1; }
-  .pick-row .player-input { grid-column: 2; }
-  .pick-row .position-select { grid-column: 1; }
-  .pick-row .remove-btn { grid-column: 2; justify-self: end; }
+  .pick-row { grid-template-columns: 1fr 1fr; grid-template-rows: auto auto; }
   .stat-bars { grid-template-columns: 1fr; }
   .overall-card { flex-direction: column; gap: 20px; }
   .overall-score { text-align: left; }
   header { flex-direction: column; align-items: flex-start; gap: 12px; }
 }
 
-/* Scrollbar */
 ::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-track { background: var(--bg); }
 ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
@@ -573,36 +366,31 @@ header {
 <div class="wrapper">
 
   <header>
-    <div class="logo">
+    <div>
       <div class="logo-mark">THE <span>BOARD</span></div>
       <div class="logo-sub">NHL Draft Grade Tool</div>
     </div>
-    <div class="header-right">
+    <div>
       <div class="draft-year">2026</div>
       <div class="draft-label">Draft Class</div>
     </div>
   </header>
 
-  <!-- Step 1: Pick your team -->
   <div class="section-label">Select Your Team</div>
   <div class="team-grid" id="teamGrid"></div>
 
-  <!-- Step 2: Build picks -->
-  <div class="pick-builder" id="pickBuilder">
+  <div class="pick-builder">
     <h2>YOUR PICKS</h2>
     <div id="pickRows"></div>
     <button class="add-pick-btn" onclick="addPickRow()">+ Add Pick</button>
     <button class="grade-btn" onclick="gradeDraft()">GRADE MY DRAFT</button>
   </div>
 
-  <!-- Results -->
   <div class="results" id="results"></div>
 
 </div>
 
 <script>
-// ── DATA ─────────────────────────────────────────────────────────────────────
-
 const NHL_TEAMS = [
   "Anaheim","Boston","Buffalo","Calgary","Carolina","Chicago","Colorado",
   "Columbus","Dallas","Detroit","Edmonton","Florida","Los Angeles","Minnesota",
@@ -611,175 +399,595 @@ const NHL_TEAMS = [
   "Toronto","Utah","Vancouver","Vegas","Washington","Winnipeg"
 ];
 
-// 2026 Draft Class — real prospects
+// Full 2026 Draft Class — Rounds 1-3 (96 prospects)
 const PROSPECTS = {
+  // ── ROUND 1 (1-32) ──────────────────────────────────────────────
   "Gavin McKenna": {
-    rank: 1, pos: "LW", league: "NCAA (Penn State)", nation: "CAN",
-    scores: { production: 97, skating: 94, hockey_iq: 96, compete: 88, ceiling: 98 },
-    age_score: 96, contract_score: 100,
-    grade: "A+", verdict: "Generational talent. Consensus #1 overall. Elite offensive instincts, elite skating, plays with pace and purpose. Comps to McDavid-lite ceiling.",
-    comps: ["Connor McDavid", "Nathan MacKinnon"],
-    reach_round: 99, // pick # where this becomes a reach
+    rank:1, pos:"LW", league:"NCAA (Penn State)", nation:"CAN",
+    scores:{production:97,skating:94,hockey_iq:96,compete:88,ceiling:98},
+    grade:"A+", verdict:"Generational talent. Consensus #1 overall. Elite offensive instincts and skating. Dominant at every level he's played.",
+    comps:["Connor McDavid","Nathan MacKinnon"]
   },
   "Ivar Stenberg": {
-    rank: 2, pos: "C/LW", league: "SHL (Frölunda)", nation: "SWE",
-    scores: { production: 95, skating: 92, hockey_iq: 97, compete: 90, ceiling: 95 },
-    age_score: 95, contract_score: 100,
-    grade: "A+", verdict: "Record-breaking SHL season at 18. Elite two-way game, leads by example in every situation. NHL-ready today. First overall in most European scouting departments.",
-    comps: ["Anze Kopitar", "Elias Lindholm"],
-    reach_round: 99,
+    rank:2, pos:"LW/C", league:"SHL (Frölunda)", nation:"SWE",
+    scores:{production:95,skating:92,hockey_iq:97,compete:90,ceiling:95},
+    grade:"A+", verdict:"Record-breaking SHL season at 18. Elite two-way game, led Frölunda to a CHL title. NHL-ready today.",
+    comps:["Anze Kopitar","Elias Lindholm"]
   },
   "Keaton Verhoeff": {
-    rank: 3, pos: "D", league: "NCAA (North Dakota)", nation: "CAN",
-    scores: { production: 88, skating: 90, hockey_iq: 89, compete: 92, ceiling: 93 },
-    age_score: 94, contract_score: 100,
-    grade: "A", verdict: "Best defenceman in the class. Two-way excellence, quarterback power play, massive NHL upside. Top-3 pick.",
-    comps: ["Cale Makar", "Quinn Hughes"],
-    reach_round: 95,
-  },
-  "Tynan Lawrence": {
-    rank: 4, pos: "C", league: "OHL", nation: "CAN",
-    scores: { production: 85, skating: 84, hockey_iq: 93, compete: 91, ceiling: 88 },
-    age_score: 93, contract_score: 100,
-    grade: "A", verdict: "The most mature two-way centre in the class. Projects as an NHL captain. Won't wow you statistically but wins every intangible metric.",
-    comps: ["Patrice Bergeron", "Ryan O'Reilly"],
-    reach_round: 90,
-  },
-  "Ethan Belchetz": {
-    rank: 5, pos: "C", league: "OHL", nation: "CAN",
-    scores: { production: 84, skating: 83, hockey_iq: 86, compete: 88, ceiling: 95 },
-    age_score: 93, contract_score: 100,
-    grade: "A", verdict: "Unicorn size-skill package. 6'4\" with elite hands — every team craves this profile. Upside is massive if it all comes together.",
-    comps: ["Eric Staal", "Logan Couture"],
-    reach_round: 88,
-  },
-  "Viggo Björck": {
-    rank: 6, pos: "LW", league: "SHL", nation: "SWE",
-    scores: { production: 82, skating: 88, hockey_iq: 84, compete: 83, ceiling: 88 },
-    age_score: 92, contract_score: 100,
-    grade: "A-", verdict: "Elite skater with top-six NHL upside. Swedish pedigree at 18 in SHL is a strong signal. Dangerous on the rush.",
-    comps: ["Filip Forsberg (comp)", "Rickard Rakell"],
-    reach_round: 82,
+    rank:3, pos:"D", league:"NCAA (North Dakota)", nation:"CAN",
+    scores:{production:88,skating:90,hockey_iq:89,compete:92,ceiling:93},
+    grade:"A", verdict:"Best defenceman in the class. Two-way excellence, quarterback PP. Top-3 pick certainty.",
+    comps:["Cale Makar","Quinn Hughes"]
   },
   "Chase Reid": {
-    rank: 7, pos: "D", league: "WHL", nation: "CAN",
-    scores: { production: 83, skating: 85, hockey_iq: 82, compete: 84, ceiling: 87 },
-    age_score: 92, contract_score: 100,
-    grade: "A-", verdict: "Dynamic offensive defenceman with elite passing. Consistency is the only question mark — when locked in, one of the best defenders in the class.",
-    comps: ["Jakob Chychrun", "Shea Theodore"],
-    reach_round: 80,
-  },
-  "Caleb Malhotra": {
-    rank: 8, pos: "C", league: "OHL (Brantford)", nation: "CAN",
-    scores: { production: 80, skating: 82, hockey_iq: 85, compete: 86, ceiling: 84 },
-    age_score: 91, contract_score: 100,
-    grade: "B+", verdict: "Outstanding OHL playoffs performer. Cerebral centre with strong two-way awareness. Late riser who keeps climbing boards.",
-    comps: ["Ryan Nugent-Hopkins", "Adam Lowry"],
-    reach_round: 75,
+    rank:4, pos:"D", league:"OHL", nation:"CAN",
+    scores:{production:83,skating:85,hockey_iq:82,compete:84,ceiling:87},
+    grade:"A", verdict:"Dynamic offensive defenceman with elite passing vision. Best asset is his creativity off the rush.",
+    comps:["Jakob Chychrun","Shea Theodore"]
   },
   "Alberts Smits": {
-    rank: 9, pos: "C", league: "QMJHL", nation: "LAT",
-    scores: { production: 79, skating: 80, hockey_iq: 83, compete: 82, ceiling: 85 },
-    age_score: 91, contract_score: 100,
-    grade: "B+", verdict: "Latvian centre with excellent two-way instincts. Underrated in most public rankings. Smart pickup in the top 10-15.",
-    comps: ["Zemgus Girgensons (ceiling)", "Frans Nielsen"],
-    reach_round: 72,
+    rank:5, pos:"D", league:"Liiga", nation:"LAT",
+    scores:{production:80,skating:83,hockey_iq:84,compete:82,ceiling:86},
+    grade:"A", verdict:"Latvian defender playing pro hockey in Finland at 18. Smooth, mobile, smart. Underrated by most public boards.",
+    comps:["Sandis Ozolinsh","Rasmus Sandin"]
   },
-  "Maddox Dagenais": {
-    rank: 10, pos: "LW", league: "QMJHL (Quebec)", nation: "CAN",
-    scores: { production: 78, skating: 82, hockey_iq: 80, compete: 80, ceiling: 84 },
-    age_score: 90, contract_score: 100,
-    grade: "B+", verdict: "Risen sharply in second half. Elite athleticism, heavy shot from the left side. One of the most exciting late-round climbers.",
-    comps: ["Nicolas Roy", "Kyle Connor (upside)"],
-    reach_round: 68,
-  },
-  "Mathis Preston": {
-    rank: 11, pos: "RW", league: "WHL", nation: "CAN",
-    scores: { production: 77, skating: 79, hockey_iq: 78, compete: 80, ceiling: 82 },
-    age_score: 90, contract_score: 100,
-    grade: "B", verdict: "Reliable top-6 winger profile. Doesn't have elite flashiness but brings consistency and compete every night.",
-    comps: ["Darnell Nurse (scoring comp)", "Brock Boeser"],
-    reach_round: 62,
-  },
-  "Oscar Hemming": {
-    rank: 12, pos: "C", league: "SHL", nation: "SWE",
-    scores: { production: 75, skating: 80, hockey_iq: 82, compete: 78, ceiling: 82 },
-    age_score: 89, contract_score: 100,
-    grade: "B", verdict: "SHL-seasoned Swedish centre. High-IQ play drives value here more than raw production numbers.",
-    comps: ["Carl Soderberg", "Marcus Kruger (upside)"],
-    reach_round: 55,
-  },
-  "Daxon Rudolph": {
-    rank: 13, pos: "C", league: "WHL", nation: "CAN",
-    scores: { production: 74, skating: 76, hockey_iq: 80, compete: 82, ceiling: 80 },
-    age_score: 89, contract_score: 100,
-    grade: "B", verdict: "Solid two-way centre with good instincts. NHL floor is quite safe, ceiling is top-9 or better.",
-    comps: ["Nic Dowd", "Michael Raffl"],
-    reach_round: 48,
-  },
-  "Tommy Bleyl": {
-    rank: 14, pos: "D", league: "QMJHL (Moncton)", nation: "CAN",
-    scores: { production: 76, skating: 78, hockey_iq: 77, compete: 76, ceiling: 81 },
-    age_score: 88, contract_score: 100,
-    grade: "B", verdict: "One of the most dynamic offensive defenders outside the top tier. Second half surge pushed him up boards.",
-    comps: ["Rasmus Sandin", "Mark Friedman"],
-    reach_round: 45,
-  },
-  "Ryan Lin": {
-    rank: 15, pos: "C", league: "BCHL", nation: "CAN",
-    scores: { production: 72, skating: 74, hockey_iq: 78, compete: 75, ceiling: 79 },
-    age_score: 87, contract_score: 100,
-    grade: "B-", verdict: "Smart, skilled centre from the BCHL. Needs more seasoning but the tools are there for a solid NHL career.",
-    comps: ["Jean-Gabriel Pageau", "Yanni Gourde"],
-    reach_round: 38,
-  },
-  "Elton Hermansson": {
-    rank: 16, pos: "D", league: "SHL", nation: "SWE",
-    scores: { production: 71, skating: 75, hockey_iq: 76, compete: 74, ceiling: 78 },
-    age_score: 87, contract_score: 100,
-    grade: "B-", verdict: "Steady Swedish defender with good fundamentals. Not a flashy pick but reliable long-term value.",
-    comps: ["Hampus Lindholm (floor)", "Dennis Cholowski"],
-    reach_round: 32,
-  },
-  "Adam Novotny": {
-    rank: 17, pos: "C", league: "Czech Extraliga", nation: "CZE",
-    scores: { production: 70, skating: 72, hockey_iq: 75, compete: 74, ceiling: 77 },
-    age_score: 86, contract_score: 100,
-    grade: "B-", verdict: "Czech centre with a polished all-around game. Good value in rounds 1-2.",
-    comps: ["David Krejci (hope)", "Jakub Voracek"],
-    reach_round: 28,
+  "Caleb Malhotra": {
+    rank:6, pos:"C", league:"OHL (Brantford)", nation:"CAN",
+    scores:{production:82,skating:82,hockey_iq:85,compete:88,ceiling:85},
+    grade:"A", verdict:"Outstanding OHL season, dominant playoffs. Cerebral two-way centre who competes on every shift. Late riser who kept climbing.",
+    comps:["Ryan Nugent-Hopkins","Adam Lowry"]
   },
   "Carson Carels": {
-    rank: 18, pos: "C", league: "WHL", nation: "CAN",
-    scores: { production: 69, skating: 73, hockey_iq: 74, compete: 76, ceiling: 76 },
-    age_score: 86, contract_score: 100,
-    grade: "C+", verdict: "Solid mid-round centre. Good character player with a compete level that teams love.",
-    comps: ["Luke Philp", "Lias Andersson"],
-    reach_round: 22,
+    rank:7, pos:"D", league:"WHL (Prince George)", nation:"CAN",
+    scores:{production:78,skating:80,hockey_iq:79,compete:84,ceiling:84},
+    grade:"A-", verdict:"Unique all-around defender. Physical, mobile, offensive upside. NHL comp to Charlie McAvoy according to Central Scouting.",
+    comps:["Charlie McAvoy","Noah Hanifin"]
+  },
+  "Tynan Lawrence": {
+    rank:8, pos:"C", league:"NCAA", nation:"CAN",
+    scores:{production:83,skating:82,hockey_iq:93,compete:90,ceiling:87},
+    grade:"A-", verdict:"Most mature two-way centre in the class. Projects as an NHL captain. Every intangible metric points to a long NHL career.",
+    comps:["Patrice Bergeron","Ryan O'Reilly"]
+  },
+  "Ethan Belchetz": {
+    rank:9, pos:"LW", league:"OHL (Windsor)", nation:"CAN",
+    scores:{production:82,skating:81,hockey_iq:85,compete:88,ceiling:94},
+    grade:"A-", verdict:"6'4\" power forward with elite hands. First overall pick in 2024 OHL Draft. Unicorn size-skill package every team craves.",
+    comps:["Eric Staal","Power forward ceiling"]
+  },
+  "Viggo Björck": {
+    rank:10, pos:"C/RW", league:"SHL", nation:"SWE",
+    scores:{production:82,skating:88,hockey_iq:84,compete:83,ceiling:88},
+    grade:"A-", verdict:"Elite skater with top-six NHL upside. Historic SHL playoff debut. One of the most exciting players in the class to watch.",
+    comps:["Filip Forsberg (comp)","Rickard Rakell"]
+  },
+  "Daxon Rudolph": {
+    rank:11, pos:"D", league:"WHL", nation:"CAN",
+    scores:{production:74,skating:78,hockey_iq:80,compete:82,ceiling:82},
+    grade:"B+", verdict:"Steady two-way defender. NHL floor is quite safe, ceiling is a top-4 defenceman.",
+    comps:["Luke Schenn","Brendan Dillon"]
+  },
+  "Ilya Morozov": {
+    rank:12, pos:"C", league:"NCAA", nation:"RUS",
+    scores:{production:78,skating:80,hockey_iq:82,compete:79,ceiling:84},
+    grade:"B+", verdict:"Russian centre playing NCAA hockey. Smart positional player with good hands. Late first-round value.",
+    comps:["Evgeni Malkin (hope)","Nicklas Backstrom floor"]
+  },
+  "Ryan Lin": {
+    rank:13, pos:"D", league:"WHL", nation:"CAN",
+    scores:{production:75,skating:77,hockey_iq:79,compete:76,ceiling:81},
+    grade:"B+", verdict:"Mobile defender with offensive upside. Recent commitment to a top NCAA program boosted his stock considerably.",
+    comps:["Darnell Nurse","Marc-Edouard Vlasic"]
   },
   "Oliver Suvanto": {
-    rank: 19, pos: "LW", league: "Liiga", nation: "FIN",
-    scores: { production: 68, skating: 70, hockey_iq: 73, compete: 72, ceiling: 75 },
-    age_score: 85, contract_score: 100,
-    grade: "C+", verdict: "Finnish winger with solid fundamentals. Steady mid-round value, more of a depth piece than a star.",
-    comps: ["Patrik Laine (floor)", "Teuvo Teravainen"],
-    reach_round: 18,
+    rank:14, pos:"C", league:"Liiga", nation:"FIN",
+    scores:{production:70,skating:73,hockey_iq:76,compete:74,ceiling:79},
+    grade:"B+", verdict:"Finnish centre with strong two-way fundamentals. Liiga experience at 18 is a real differentiator.",
+    comps:["Mikael Granlund","Valtteri Filppula"]
   },
+  "JP Hurlbert": {
+    rank:15, pos:"LW", league:"WHL", nation:"CAN",
+    scores:{production:76,skating:79,hockey_iq:77,compete:80,ceiling:82},
+    grade:"B+", verdict:"Some analysts have him in the top-10 conversation. Skilled winger with compete and offensive tools.",
+    comps:["Brock Boeser","Troy Terry"]
+  },
+  "Adam Novotný": {
+    rank:16, pos:"LW/RW", league:"OHL", nation:"CZE",
+    scores:{production:72,skating:74,hockey_iq:76,compete:75,ceiling:79},
+    grade:"B+", verdict:"Czech winger with polished all-around game. Good value in late first round.",
+    comps:["David Krejci floor","Jakub Voracek"]
+  },
+  "Xavier Villeneuve": {
+    rank:17, pos:"D", league:"QMJHL", nation:"CAN",
+    scores:{production:74,skating:76,hockey_iq:75,compete:77,ceiling:80},
+    grade:"B", verdict:"Steady QMJHL defenceman. Positional play and compete level earn him a late first-round grade.",
+    comps:["Alexander Romanov","Brogan Rafferty"]
+  },
+  "Oscar Hemming": {
+    rank:18, pos:"LW", league:"NCAA", nation:"SWE",
+    scores:{production:73,skating:79,hockey_iq:80,compete:76,ceiling:81},
+    grade:"B", verdict:"Swedish winger playing NCAA hockey. High-IQ game, strong skating. Good value in the 15-20 range.",
+    comps:["Carl Soderberg","Carl Hagelin"]
+  },
+  "Malte Gustafsson": {
+    rank:19, pos:"D", league:"SHL", nation:"SWE",
+    scores:{production:72,skating:77,hockey_iq:76,compete:75,ceiling:80},
+    grade:"B", verdict:"Late-season riser on most boards. Dynamic offensive defender who pushed up rankings with strong second half.",
+    comps:["Victor Hedman (floor)","Anton Stralman"]
+  },
+  "Elton Hermansson": {
+    rank:20, pos:"RW/LW", league:"Allsvenskan", nation:"SWE",
+    scores:{production:71,skating:75,hockey_iq:76,compete:74,ceiling:78},
+    grade:"B", verdict:"Swedish winger with solid fundamentals. Playing above his age group. Steady long-term value.",
+    comps:["Hampus Lindholm (floor)","Dennis Cholowski"]
+  },
+  "Juho Piiparinen": {
+    rank:21, pos:"D", league:"Liiga", nation:"FIN",
+    scores:{production:70,skating:74,hockey_iq:75,compete:74,ceiling:78},
+    grade:"B", verdict:"Finnish defender with pro experience at 18. Strong skating and positioning.",
+    comps:["Sami Vatanen","Olli Maatta"]
+  },
+  "Marcus Nordmark": {
+    rank:22, pos:"RW", league:"U20 Nationell (SWE)", nation:"SWE",
+    scores:{production:71,skating:76,hockey_iq:73,compete:75,ceiling:79},
+    grade:"B", verdict:"Swedish winger with good offensive instincts and skating. Projects as a top-9 NHL forward.",
+    comps:["William Nylander (floor)","Pontus Aberg"]
+  },
+  "Nikita Klepov": {
+    rank:23, pos:"LW", league:"OHL", nation:"RUS",
+    scores:{production:73,skating:75,hockey_iq:74,compete:76,ceiling:80},
+    grade:"B", verdict:"Multiple analysts have called him a first-round lock. Skilled Russian winger with OHL seasoning.",
+    comps:["Mikhail Grabovski","Evgeny Kuznetsov floor"]
+  },
+  "Yegor Shilov": {
+    rank:24, pos:"C", league:"QMJHL", nation:"RUS",
+    scores:{production:72,skating:73,hockey_iq:76,compete:74,ceiling:79},
+    grade:"B", verdict:"Cerebral Russian centre in the Q. Strong two-way game for his age.",
+    comps:["Aleksander Barkov floor","Pavel Datsyuk hope"]
+  },
+  "Brooks Rogowski": {
+    rank:25, pos:"C", league:"OHL", nation:"CAN",
+    scores:{production:70,skating:72,hockey_iq:74,compete:76,ceiling:77},
+    grade:"B-", verdict:"Reliable centre with strong compete. More of a sure thing than a high-upside play.",
+    comps:["Ryan O'Reilly floor","Derek Roy"]
+  },
+  "Mathis Preston": {
+    rank:26, pos:"C/LW", league:"WHL", nation:"CAN",
+    scores:{production:71,skating:73,hockey_iq:73,compete:76,ceiling:78},
+    grade:"B-", verdict:"Solid WHL forward with consistent compete level. Late first or early second round value.",
+    comps:["Darnell Nurse scoring","Brock Boeser"]
+  },
+  "Maddox Dagenais": {
+    rank:27, pos:"C/LW", league:"QMJHL (Quebec)", nation:"CAN",
+    scores:{production:74,skating:80,hockey_iq:75,compete:77,ceiling:82},
+    grade:"B-", verdict:"One of the biggest risers of the second half. Elite athleticism, heavy shot. Huge upside if it clicks.",
+    comps:["Nicolas Roy","Kyle Connor (upside)"]
+  },
+  "Ryan Roobroeck": {
+    rank:28, pos:"C", league:"OHL", nation:"CAN",
+    scores:{production:70,skating:72,hockey_iq:73,compete:74,ceiling:77},
+    grade:"B-", verdict:"Solid OHL centre with good two-way awareness. Safe late first-round pick.",
+    comps:["Adam Lowry","Derek Forbort"]
+  },
+  "Alexander Command": {
+    rank:29, pos:"C", league:"SHL", nation:"SWE",
+    scores:{production:69,skating:74,hockey_iq:75,compete:73,ceiling:78},
+    grade:"B-", verdict:"Swedish centre with strong hockey sense. SHL experience adds to the appeal.",
+    comps:["Marcus Kruger","Joel Armia"]
+  },
+  "William Håkansson": {
+    rank:30, pos:"D", league:"SHL", nation:"SWE",
+    scores:{production:68,skating:73,hockey_iq:74,compete:72,ceiling:77},
+    grade:"B-", verdict:"Swedish defender with good mobility and passing. Steady late first-round pick.",
+    comps:["Anton Stralman","Mattias Ekholm floor"]
+  },
+  "Ben Macbeath": {
+    rank:31, pos:"D", league:"WHL", nation:"CAN",
+    scores:{production:67,skating:72,hockey_iq:73,compete:73,ceiling:76},
+    grade:"B-", verdict:"WHL defender with good mobility and compete. Safe pick at the back end of round one.",
+    comps:["Josh Morrissey floor","Luke Schenn"]
+  },
+  "Jakub Vanecek": {
+    rank:32, pos:"D", league:"WHL", nation:"CZE",
+    scores:{production:66,skating:71,hockey_iq:72,compete:72,ceiling:75},
+    grade:"B-", verdict:"Czech defender in the WHL. International pedigree adds intrigue as a late first-round pick.",
+    comps:["Michael Spacek","David Krejci floor"]
+  },
+
+  // ── ROUND 2 (33-64) ─────────────────────────────────────────────
   "Ryder Cali": {
-    rank: 20, pos: "C", league: "OHL (North Bay)", nation: "CAN",
-    scores: { production: 67, skating: 71, hockey_iq: 72, compete: 74, ceiling: 78 },
-    age_score: 85, contract_score: 100,
-    grade: "C+", verdict: "One of the youngest players in the class. Shows real upside — one of the bigger wildcards in the draft.",
-    comps: ["Nico Hischier (hope)", "Troy Terry"],
-    reach_round: 15,
+    rank:33, pos:"C", league:"OHL (North Bay)", nation:"CAN",
+    scores:{production:67,skating:71,hockey_iq:72,compete:74,ceiling:78},
+    grade:"B-", verdict:"One of the youngest in the class. Shows real upside — a genuine wildcard who could climb boards significantly.",
+    comps:["Nico Hischier (hope)","Troy Terry"]
   },
+  "Wyatt Cullen": {
+    rank:34, pos:"C", league:"NTDP (USA)", nation:"USA",
+    scores:{production:68,skating:72,hockey_iq:71,compete:73,ceiling:76},
+    grade:"C+", verdict:"American centre from the NTDP. Good skating and compete, projects as a reliable middle-six forward.",
+    comps:["Jack Hughes floor","Nick Cousins"]
+  },
+  "Liam Ruck": {
+    rank:35, pos:"LW", league:"WHL", nation:"CAN",
+    scores:{production:67,skating:70,hockey_iq:70,compete:72,ceiling:75},
+    grade:"C+", verdict:"WHL winger with good north-south game. Solid second-round value.",
+    comps:["Brett Connolly","Josh Leivo"]
+  },
+  "Alessandro Di Iorio": {
+    rank:36, pos:"C", league:"QMJHL", nation:"CAN",
+    scores:{production:66,skating:69,hockey_iq:71,compete:72,ceiling:74},
+    grade:"C+", verdict:"QMJHL centre with good offensive awareness and playmaking ability.",
+    comps:["Cedric Paquette","David Desharnais"]
+  },
+  "Viktor Fyodorov": {
+    rank:37, pos:"C", league:"KHL/MHL", nation:"RUS",
+    scores:{production:65,skating:71,hockey_iq:72,compete:70,ceiling:76},
+    grade:"C+", verdict:"Russian centre with good hockey IQ. KHL/MHL exposure gives him a higher floor than most second-rounders.",
+    comps:["Evgeni Malkin floor","Artem Anisimov"]
+  },
+  "Tomas Chrenko": {
+    rank:38, pos:"G", league:"WHL", nation:"SVK",
+    scores:{production:66,skating:68,hockey_iq:74,compete:74,ceiling:77},
+    grade:"C+", verdict:"Slovak goalie with strong reflexes and compete. One of the top netminders in the class.",
+    comps:["Juraj Slavkovsky (skater parallel)","Jaroslav Halak (goalie)"]
+  },
+  "Jaxon Cover": {
+    rank:39, pos:"C", league:"WHL", nation:"CAN",
+    scores:{production:64,skating:68,hockey_iq:70,compete:72,ceiling:73},
+    grade:"C+", verdict:"WHL centre with good two-way awareness. Solid mid-second round pick.",
+    comps:["Adam Lowry floor","Colton Sceviour"]
+  },
+  "Lucian Bernat": {
+    rank:40, pos:"C/LW", league:"OHL", nation:"CAN",
+    scores:{production:65,skating:68,hockey_iq:69,compete:71,ceiling:73},
+    grade:"C+", verdict:"Versatile OHL forward. Can play centre or wing, which adds positional value.",
+    comps:["Zach Aston-Reese","Eric Staal floor"]
+  },
+  "Adam Goljer": {
+    rank:41, pos:"D", league:"Slovak Extraliga", nation:"SVK",
+    scores:{production:64,skating:70,hockey_iq:71,compete:70,ceiling:76},
+    grade:"C+", verdict:"Athletic two-way Slovak defender playing pro hockey. Strong upside that pushed him up boards late.",
+    comps:["Martin Marincin","Andrej Sekera"]
+  },
+  "Tommy Bleyl": {
+    rank:42, pos:"D", league:"QMJHL (Moncton)", nation:"CAN",
+    scores:{production:68,skating:72,hockey_iq:71,compete:70,ceiling:76},
+    grade:"C+", verdict:"One of the most dynamic offensive defenders in the Q. Second-half surge earned him a strong second-round grade.",
+    comps:["Rasmus Sandin","Mark Friedman"]
+  },
+  "Dmitri Borichev": {
+    rank:43, pos:"G", league:"KHL/MHL", nation:"RUS",
+    scores:{production:65,skating:67,hockey_iq:73,compete:72,ceiling:76},
+    grade:"C+", verdict:"Top Russian goalie prospect. Exceptional reflexes and compete level in Russian junior leagues.",
+    comps:["Ilya Sorokin floor","Andrei Vasilevskiy hope"]
+  },
+  "Markus Ruck": {
+    rank:44, pos:"LW/RW", league:"WHL", nation:"CAN",
+    scores:{production:64,skating:69,hockey_iq:68,compete:70,ceiling:73},
+    grade:"C+", verdict:"WHL winger with good offensive tools. Consistent producer.",
+    comps:["Josh Leivo","Tanner Pearson"]
+  },
+  "Adam Valentini": {
+    rank:45, pos:"C/LW", league:"OHL", nation:"CAN",
+    scores:{production:63,skating:67,hockey_iq:69,compete:70,ceiling:72},
+    grade:"C+", verdict:"OHL forward with solid compete and two-way awareness. Good character pick in round two.",
+    comps:["Ryan Poehling","Riley Sheahan"]
+  },
+  "Giorgos Pantellas": {
+    rank:46, pos:"D", league:"WHL", nation:"CAN",
+    scores:{production:63,skating:69,hockey_iq:70,compete:71,ceiling:74},
+    grade:"C+", verdict:"Greek-Canadian defender with good mobility. Interesting story and solid prospect.",
+    comps:["Josh Morrissey floor","Erik Gudbranson"]
+  },
+  "William Zellers": {
+    rank:47, pos:"C", league:"USHL", nation:"USA",
+    scores:{production:63,skating:68,hockey_iq:69,compete:70,ceiling:73},
+    grade:"C", verdict:"American centre from the USHL. Good skating and hockey sense. Mid-second round value.",
+    comps:["Nick Bonino","Paul Stastny floor"]
+  },
+  "Mattias Havelid": {
+    rank:48, pos:"D", league:"SHL", nation:"SWE",
+    scores:{production:62,skating:70,hockey_iq:70,compete:69,ceiling:74},
+    grade:"C", verdict:"Son of former NHLer Niclas Havelid. Smooth skating defenceman with good positional play.",
+    comps:["Niclas Havelid (father)","Calle Rosen"]
+  },
+  "Maxim Strbak": {
+    rank:49, pos:"D", league:"WHL", nation:"SVK",
+    scores:{production:62,skating:69,hockey_iq:68,compete:70,ceiling:73},
+    grade:"C", verdict:"Slovak defender in the WHL. Physical presence with good mobility.",
+    comps:["Zdeno Chara floor","Andrej Sekera"]
+  },
+  "Colby Barlow": {
+    rank:50, pos:"LW", league:"OHL", nation:"CAN",
+    scores:{production:63,skating:67,hockey_iq:68,compete:72,ceiling:73},
+    grade:"C", verdict:"OHL winger with strong compete. Power forward profile, battles for every inch.",
+    comps:["Kyle Okposo","Zach Parise floor"]
+  },
+  "David Reinbacher Jr.": {
+    rank:51, pos:"D", league:"QMJHL", nation:"AUT",
+    scores:{production:61,skating:68,hockey_iq:69,compete:70,ceiling:74},
+    grade:"C", verdict:"Austrian defender in the Q. International background adds intrigue.",
+    comps:["Thomas Vanek (skater parallel)","Michael Grabner"]
+  },
+  "Brady Lyle": {
+    rank:52, pos:"D", league:"OHL", nation:"CAN",
+    scores:{production:62,skating:67,hockey_iq:68,compete:70,ceiling:72},
+    grade:"C", verdict:"OHL defenceman with solid defensive awareness. Mid-second round floor.",
+    comps:["Josh Gorges","Brayden McNabb"]
+  },
+  "Felix Unger Sörum": {
+    rank:53, pos:"LW", league:"SHL", nation:"SWE",
+    scores:{production:61,skating:70,hockey_iq:68,compete:68,ceiling:73},
+    grade:"C", verdict:"Swedish winger with good skating and offensive instincts.",
+    comps:["Pontus Aberg","Jacob de la Rose"]
+  },
+  "Luca Pinelli": {
+    rank:54, pos:"C", league:"OHL", nation:"CAN",
+    scores:{production:62,skating:66,hockey_iq:70,compete:70,ceiling:72},
+    grade:"C", verdict:"OHL centre with good playmaking and compete. Reliable mid-second round pick.",
+    comps:["Andrew Poturalski","Adam Gaudette"]
+  },
+  "Evan Konyen": {
+    rank:55, pos:"C", league:"WHL", nation:"CAN",
+    scores:{production:61,skating:66,hockey_iq:68,compete:70,ceiling:71},
+    grade:"C", verdict:"WHL centre with consistent production. Good character player.",
+    comps:["Landon Ferraro","Derrick Pouliot floor"]
+  },
+  "Sebastiano Corradini": {
+    rank:56, pos:"C/LW", league:"OHL", nation:"ITA",
+    scores:{production:60,skating:65,hockey_iq:68,compete:69,ceiling:71},
+    grade:"C", verdict:"Italian-Canadian forward. Solid two-way game and good compete level.",
+    comps:["Roberto Luongo (parallel)","Anthony Mantha floor"]
+  },
+  "Nathan Larose": {
+    rank:57, pos:"C", league:"QMJHL", nation:"CAN",
+    scores:{production:62,skating:66,hockey_iq:67,compete:70,ceiling:71},
+    grade:"C", verdict:"QMJHL centre with solid two-way awareness. Reliable second-round pick.",
+    comps:["David Desharnais","Eric Bélanger"]
+  },
+  "Charlie Trethewey": {
+    rank:58, pos:"D", league:"USHL", nation:"USA",
+    scores:{production:60,skating:67,hockey_iq:68,compete:68,ceiling:72},
+    grade:"C", verdict:"American defender from the USHL heading to a top NCAA program.",
+    comps:["Derek Forbort","Matt Niskanen floor"]
+  },
+  "Sam Rinzel": {
+    rank:59, pos:"D", league:"USHL", nation:"USA",
+    scores:{production:59,skating:68,hockey_iq:68,compete:67,ceiling:73},
+    grade:"C", verdict:"Mobile American defender. Strong skating and smart reads.",
+    comps:["Seth Jones floor","Justin Faulk"]
+  },
+  "Lleyton Roed": {
+    rank:60, pos:"LW", league:"BCHL", nation:"CAN",
+    scores:{production:61,skating:67,hockey_iq:66,compete:70,ceiling:71},
+    grade:"C", verdict:"BCHL winger with good compete and offensive tools. Mid-second round value.",
+    comps:["Brock Nelson floor","Logan Shaw"]
+  },
+  "Oscar Fisker Molgaard": {
+    rank:61, pos:"C", league:"SHL", nation:"DNK",
+    scores:{production:60,skating:68,hockey_iq:69,compete:67,ceiling:72},
+    grade:"C", verdict:"Danish centre with SHL experience. Smart two-way game. Good late second-round value.",
+    comps:["Frans Nielsen","Mikkel Boedker"]
+  },
+  "Riley Heidt": {
+    rank:62, pos:"C", league:"WHL", nation:"CAN",
+    scores:{production:63,skating:67,hockey_iq:69,compete:70,ceiling:72},
+    grade:"C", verdict:"WHL centre with solid production. Consistent two-way game.",
+    comps:["Michael Raffl","Carl Hagelin"]
+  },
+  "Maxim Masse": {
+    rank:63, pos:"LW/RW", league:"QMJHL", nation:"CAN",
+    scores:{production:61,skating:66,hockey_iq:66,compete:69,ceiling:70},
+    grade:"C", verdict:"QMJHL winger with good skating and compete. Late second-round depth pick.",
+    comps:["Nicolas Deslauriers","Gabriel Bourque"]
+  },
+  "Braeden Cootes": {
+    rank:64, pos:"C", league:"WHL", nation:"CAN",
+    scores:{production:60,skating:65,hockey_iq:67,compete:68,ceiling:70},
+    grade:"C", verdict:"WHL centre with good work ethic. Depth pick at the back end of round two.",
+    comps:["Justin Bailey","Tanner Pearson floor"]
+  },
+
+  // ── ROUND 3 (65-96) ─────────────────────────────────────────────
+  "Lukas Dragicevic": {
+    rank:65, pos:"D", league:"WHL", nation:"CAN",
+    scores:{production:60,skating:65,hockey_iq:67,compete:67,ceiling:70},
+    grade:"C-", verdict:"WHL defender with good defensive instincts. Third-round value.",
+    comps:["Kris Russell","Marc-Andre Gragnani"]
+  },
+  "Kalan Lind": {
+    rank:66, pos:"RW", league:"WHL", nation:"CAN",
+    scores:{production:61,skating:65,hockey_iq:65,compete:68,ceiling:70},
+    grade:"C-", verdict:"WHL winger with consistent production and compete. Solid third-round pick.",
+    comps:["Tanner Pearson","Brayden Schenn floor"]
+  },
+  "Carey Terrance": {
+    rank:67, pos:"LW", league:"OHL", nation:"CAN",
+    scores:{production:60,skating:64,hockey_iq:65,compete:67,ceiling:69},
+    grade:"C-", verdict:"OHL winger with good compete. Depth pick with character.",
+    comps:["Daniel Carcillo","Jay McClement"]
+  },
+  "Berkly Catton": {
+    rank:68, pos:"C", league:"WHL", nation:"CAN",
+    scores:{production:62,skating:65,hockey_iq:66,compete:68,ceiling:70},
+    grade:"C-", verdict:"WHL centre with solid two-way game. Consistent performer all season.",
+    comps:["Nic Dowd","Kyle Chipchura"]
+  },
+  "Gavin Garland": {
+    rank:69, pos:"LW", league:"OHL", nation:"CAN",
+    scores:{production:60,skating:64,hockey_iq:65,compete:67,ceiling:69},
+    grade:"C-", verdict:"OHL winger with power forward tendencies. Third-round depth.",
+    comps:["Tom Wilson floor","Eric Nystrom"]
+  },
+  "Henry Mews": {
+    rank:70, pos:"C", league:"USHL", nation:"USA",
+    scores:{production:59,skating:64,hockey_iq:66,compete:66,ceiling:69},
+    grade:"C-", verdict:"American centre heading to the NCAA. Smart player with good hockey sense.",
+    comps:["Jack Drury","T.J. Hensick"]
+  },
+  "Jake Furlong": {
+    rank:71, pos:"D", league:"OHL", nation:"CAN",
+    scores:{production:58,skating:64,hockey_iq:65,compete:67,ceiling:69},
+    grade:"C-", verdict:"OHL defender with solid defensive awareness. Third-round value.",
+    comps:["Mike Commodore","Colton Parayko floor"]
+  },
+  "Cole Knuble": {
+    rank:72, pos:"LW", league:"USHL", nation:"USA",
+    scores:{production:59,skating:63,hockey_iq:64,compete:66,ceiling:68},
+    grade:"C-", verdict:"Son of former NHLer Mike Knuble. Power forward profile with natural scoring instincts.",
+    comps:["Mike Knuble (father)","Matt Calvert"]
+  },
+  "Felix Nilsson": {
+    rank:73, pos:"C", league:"SHL", nation:"SWE",
+    scores:{production:58,skating:64,hockey_iq:66,compete:65,ceiling:69},
+    grade:"C-", verdict:"Swedish centre with solid hockey sense. Good third-round gamble.",
+    comps:["Carl Soderberg floor","Marcus Kruger"]
+  },
+  "Rasmus Kumpulainen": {
+    rank:74, pos:"C", league:"Liiga", nation:"FIN",
+    scores:{production:58,skating:63,hockey_iq:66,compete:65,ceiling:69},
+    grade:"C-", verdict:"Finnish centre with pro experience. Smart game, good two-way awareness.",
+    comps:["Valtteri Filppula floor","Mikael Granlund"]
+  },
+  "Mathias Landrum": {
+    rank:75, pos:"LW", league:"QMJHL", nation:"CAN",
+    scores:{production:59,skating:63,hockey_iq:64,compete:66,ceiling:68},
+    grade:"C-", verdict:"QMJHL winger with consistent compete. Depth pick in round three.",
+    comps:["P.A. Parenteau","Tomas Fleischmann"]
+  },
+  "Jakob Ihs-Wozniak": {
+    rank:76, pos:"C", league:"SHL", nation:"SWE",
+    scores:{production:57,skating:63,hockey_iq:65,compete:64,ceiling:68},
+    grade:"C-", verdict:"Swedish centre with smart two-way game. SHL experience is a bonus at this range.",
+    comps:["Oscar Lindberg","Joel Armia"]
+  },
+  "Owen Milligan": {
+    rank:77, pos:"D", league:"WHL", nation:"CAN",
+    scores:{production:57,skating:62,hockey_iq:64,compete:65,ceiling:67},
+    grade:"D+", verdict:"WHL defender with decent mobility. Late third-round depth pick.",
+    comps:["Brogan Rafferty","Bryce Salvador"]
+  },
+  "Marek Vanacker": {
+    rank:78, pos:"C/LW", league:"OHL", nation:"CAN",
+    scores:{production:58,skating:62,hockey_iq:63,compete:65,ceiling:67},
+    grade:"D+", verdict:"OHL forward with good work ethic. Depth forward profile.",
+    comps:["Zac Rinaldo","Mike Brown"]
+  },
+  "Cruz Lucius": {
+    rank:79, pos:"LW", league:"NCAA", nation:"USA",
+    scores:{production:58,skating:64,hockey_iq:63,compete:64,ceiling:68},
+    grade:"D+", verdict:"American winger in the NCAA. Good skating and compete for his age.",
+    comps:["Trevor Moore","Rocco Grimaldi"]
+  },
+  "Matyas Melovsky": {
+    rank:80, pos:"C", league:"Czech Extraliga", nation:"CZE",
+    scores:{production:57,skating:62,hockey_iq:64,compete:63,ceiling:67},
+    grade:"D+", verdict:"Czech centre with pro experience. Smart play and good compete.",
+    comps:["Radim Vrbata floor","Roman Cervenka"]
+  },
+  "Cole Hutson": {
+    rank:81, pos:"D", league:"NCAA", nation:"USA",
+    scores:{production:58,skating:64,hockey_iq:63,compete:64,ceiling:68},
+    grade:"D+", verdict:"American defender in the NCAA. Mobile with good offensive instincts.",
+    comps:["Seth Jones floor","Christian Djoos"]
+  },
+  "Jett Luchanko": {
+    rank:82, pos:"C", league:"OHL", nation:"CAN",
+    scores:{production:59,skating:63,hockey_iq:64,compete:65,ceiling:68},
+    grade:"D+", verdict:"OHL centre with solid two-way game. Good depth pick in round three.",
+    comps:["Joe Nieuwendyk floor","Nic Dowd"]
+  },
+  "Tristan Luneau": {
+    rank:83, pos:"D", league:"QMJHL", nation:"CAN",
+    scores:{production:57,skating:62,hockey_iq:63,compete:64,ceiling:67},
+    grade:"D+", verdict:"QMJHL defenceman with steady defensive play. Round three depth.",
+    comps:["Francis Bouillon","David Savard floor"]
+  },
+  "Marcus Gidlof": {
+    rank:84, pos:"C", league:"SHL", nation:"SWE",
+    scores:{production:56,skating:62,hockey_iq:63,compete:63,ceiling:66},
+    grade:"D+", verdict:"Swedish centre with good skating and positioning. SHL exposure is a bonus.",
+    comps:["Marcus Kruger","Mike Cammalleri floor"]
+  },
+  "Zachary Ostapchuk": {
+    rank:85, pos:"C", league:"WHL", nation:"CAN",
+    scores:{production:57,skating:61,hockey_iq:63,compete:65,ceiling:67},
+    grade:"D+", verdict:"WHL centre with solid compete and two-way game.",
+    comps:["Ryan Poehling","Andrew Cogliano"]
+  },
+  "Tanner Molendyk": {
+    rank:86, pos:"D", league:"WHL", nation:"CAN",
+    scores:{production:57,skating:62,hockey_iq:62,compete:63,ceiling:66},
+    grade:"D+", verdict:"WHL defender with decent mobility. Late-round depth pick.",
+    comps:["Luke Schenn floor","Bryan Allen"]
+  },
+  "Tommy Lafreniere": {
+    rank:87, pos:"LW", league:"QMJHL", nation:"CAN",
+    scores:{production:58,skating:62,hockey_iq:62,compete:64,ceiling:67},
+    grade:"D+", verdict:"QMJHL winger with good skating and compete. Round three value.",
+    comps:["Gabriel Bourque","Charles Hudon"]
+  },
+  "Mathis Olimb": {
+    rank:88, pos:"LW", league:"SHL", nation:"NOR",
+    scores:{production:56,skating:61,hockey_iq:63,compete:63,ceiling:66},
+    grade:"D+", verdict:"Norwegian winger with SHL experience. Interesting international pick.",
+    comps:["Patrick Thoresen","Martin Lapointe"]
+  },
+  "Reid Schaefer": {
+    rank:89, pos:"LW", league:"WHL", nation:"CAN",
+    scores:{production:57,skating:61,hockey_iq:61,compete:65,ceiling:67},
+    grade:"D+", verdict:"Power forward from the WHL. Battles in corners and drives the net.",
+    comps:["Zach Aston-Reese","Nate Thompson"]
+  },
+  "Sacha Boisvert": {
+    rank:90, pos:"C", league:"QMJHL", nation:"CAN",
+    scores:{production:56,skating:60,hockey_iq:62,compete:63,ceiling:65},
+    grade:"D+", verdict:"QMJHL centre with smart play and solid compete. Depth pick.",
+    comps:["Martin Hanzal floor","Boyd Gordon"]
+  },
+  "Brady Burns": {
+    rank:91, pos:"C/LW", league:"OHL", nation:"CAN",
+    scores:{production:56,skating:61,hockey_iq:61,compete:63,ceiling:65},
+    grade:"D+", verdict:"OHL forward with good character and compete. Depth forward.",
+    comps:["Troy Bodie","Jay McClement"]
+  },
+  "Oliver Bonk": {
+    rank:92, pos:"D", league:"OHL", nation:"CAN",
+    scores:{production:56,skating:61,hockey_iq:62,compete:62,ceiling:66},
+    grade:"D+", verdict:"OHL defender with decent mobility and positioning. Late round pick.",
+    comps:["Cody Goloubef","Mark Borowiecki"]
+  },
+  "Theo Lindstein": {
+    rank:93, pos:"D", league:"SHL", nation:"SWE",
+    scores:{production:55,skating:62,hockey_iq:62,compete:62,ceiling:66},
+    grade:"D+", verdict:"Swedish defender with solid fundamentals. SHL experience at this age is noteworthy.",
+    comps:["Anton Stralman floor","Victor Hedman (very long shot)"]
+  },
+  "Patrick Moynihan": {
+    rank:94, pos:"LW", league:"USHL", nation:"USA",
+    scores:{production:56,skating:60,hockey_iq:61,compete:63,ceiling:65},
+    grade:"D+", verdict:"American winger with good compete and skating. Late-round depth gamble.",
+    comps:["Matt Calvert","T.J. Oshie floor"]
+  },
+  "Noel Nordh": {
+    rank:95, pos:"LW", league:"SHL", nation:"SWE",
+    scores:{production:55,skating:62,hockey_iq:61,compete:61,ceiling:65},
+    grade:"D", verdict:"Swedish winger with solid skating. Long-shot development pick.",
+    comps:["Joakim Lindstrom","Patric Hornqvist floor"]
+  },
+  "Markus Vidicek": {
+    rank:96, pos:"C", league:"WHL", nation:"CAN",
+    scores:{production:55,skating:59,hockey_iq:61,compete:62,ceiling:64},
+    grade:"D", verdict:"WHL centre with good compete. Pure depth pick at the end of round three.",
+    comps:["Maxim Lapierre","Boyd Gordon"]
+  }
 };
 
 // ── STATE ────────────────────────────────────────────────────────────────────
 let selectedTeam = null;
 let pickCount = 0;
 
-// ── INIT ─────────────────────────────────────────────────────────────────────
 function init() {
   buildTeamGrid();
   addPickRow();
@@ -810,10 +1018,7 @@ function addPickRow() {
   const row = document.createElement('div');
   row.className = 'pick-row';
   row.id = `pick-${id}`;
-
-  const prospectNames = Object.keys(PROSPECTS);
-  const options = prospectNames.map(n => `<option value="${n}">${n}</option>`).join('');
-
+  const options = Object.keys(PROSPECTS).map(n => `<option value="${n}">${n}</option>`).join('');
   row.innerHTML = `
     <select class="round-select">
       <option value="1">Round 1</option>
@@ -838,7 +1043,6 @@ function addPickRow() {
     </select>
     <button class="remove-btn" onclick="removePick(${id})">✕</button>
   `;
-
   document.getElementById('pickRows').appendChild(row);
 }
 
@@ -847,131 +1051,81 @@ function removePick(id) {
   if (row) row.remove();
 }
 
-// ── GRADING LOGIC ────────────────────────────────────────────────────────────
-
-function getPickGrade(prospectName, round) {
-  const p = PROSPECTS[prospectName];
-  if (!p) return null;
-
-  // Base score from prospect quality
-  let score = (
-    p.scores.production * 0.30 +
-    p.scores.skating * 0.20 +
-    p.scores.hockey_iq * 0.25 +
-    p.scores.compete * 0.15 +
-    p.scores.ceiling * 0.10
-  );
-
-  // Round context: was this a reach or a steal?
-  const expectedRound = Math.ceil((p.rank / 32) * 7);
-  const roundDiff = round - expectedRound;
-
-  let roundBonus = 0;
-  let roundVerdict = '';
-  if (roundDiff >= 2) {
-    roundBonus = 12;
-    roundVerdict = `Exceptional value — ${prospectName} was available ${roundDiff} round(s) later than expected.`;
-  } else if (roundDiff === 1) {
-    roundBonus = 6;
-    roundVerdict = `Good value pick — slightly later than their consensus ranking.`;
-  } else if (roundDiff === 0) {
-    roundBonus = 0;
-    roundVerdict = `Picked right on consensus — exactly where most boards had them.`;
-  } else if (roundDiff === -1) {
-    roundBonus = -8;
-    roundVerdict = `Slight reach — taken one round earlier than most boards projected.`;
-  } else {
-    roundBonus = -18;
-    roundVerdict = `Significant reach — taken ${Math.abs(roundDiff)} rounds earlier than projected. Hard to justify unless your scouts know something others don't.`;
-  }
-
-  score = Math.min(100, Math.max(0, score + roundBonus));
-
-  // Letter grade
-  let grade, gradeClass;
-  if (score >= 90) { grade = 'A+'; gradeClass = 'grade-A'; }
-  else if (score >= 82) { grade = 'A'; gradeClass = 'grade-A'; }
-  else if (score >= 75) { grade = 'A-'; gradeClass = 'grade-A'; }
-  else if (score >= 68) { grade = 'B+'; gradeClass = 'grade-B'; }
-  else if (score >= 62) { grade = 'B'; gradeClass = 'grade-B'; }
-  else if (score >= 55) { grade = 'B-'; gradeClass = 'grade-B'; }
-  else if (score >= 48) { grade = 'C+'; gradeClass = 'grade-C'; }
-  else if (score >= 40) { grade = 'C'; gradeClass = 'grade-C'; }
-  else if (score >= 32) { grade = 'D'; gradeClass = 'grade-D'; }
-  else { grade = 'F'; gradeClass = 'grade-F'; }
-
-  return { score: Math.round(score), grade, gradeClass, roundVerdict, prospect: p };
-}
-
-function getBarColor(value) {
-  if (value >= 85) return 'var(--green)';
-  if (value >= 70) return '#86EFAC';
-  if (value >= 55) return 'var(--yellow)';
-  if (value >= 40) return 'var(--orange)';
+function getBarColor(v) {
+  if (v >= 85) return 'var(--green)';
+  if (v >= 70) return '#86EFAC';
+  if (v >= 55) return 'var(--yellow)';
+  if (v >= 40) return 'var(--orange)';
   return 'var(--red)';
 }
 
-function gradeDraft() {
-  if (!selectedTeam) {
-    alert('Please select your team first.');
-    return;
-  }
+function getPickGrade(name, round) {
+  const p = PROSPECTS[name];
+  if (!p) return null;
+  let score = p.scores.production*0.30 + p.scores.skating*0.20 + p.scores.hockey_iq*0.25 + p.scores.compete*0.15 + p.scores.ceiling*0.10;
+  const expectedRound = p.rank <= 32 ? 1 : p.rank <= 64 ? 2 : 3;
+  const diff = round - expectedRound;
+  let roundBonus = 0, roundVerdict = '';
+  if (diff >= 2)      { roundBonus = 12; roundVerdict = `Exceptional value — available ${diff} round(s) later than expected.`; }
+  else if (diff === 1){ roundBonus = 6;  roundVerdict = `Good value — slightly later than their consensus ranking.`; }
+  else if (diff === 0){ roundBonus = 0;  roundVerdict = `Picked right on consensus — exactly where most boards had them.`; }
+  else if (diff === -1){ roundBonus = -8; roundVerdict = `Slight reach — one round earlier than most boards projected.`; }
+  else                { roundBonus = -18; roundVerdict = `Significant reach — ${Math.abs(diff)} rounds earlier than projected.`; }
+  score = Math.min(100, Math.max(0, score + roundBonus));
+  let grade, gradeClass;
+  if (score >= 90)      { grade = 'A+'; gradeClass = 'grade-A'; }
+  else if (score >= 82) { grade = 'A';  gradeClass = 'grade-A'; }
+  else if (score >= 75) { grade = 'A-'; gradeClass = 'grade-A'; }
+  else if (score >= 68) { grade = 'B+'; gradeClass = 'grade-B'; }
+  else if (score >= 62) { grade = 'B';  gradeClass = 'grade-B'; }
+  else if (score >= 55) { grade = 'B-'; gradeClass = 'grade-B'; }
+  else if (score >= 48) { grade = 'C+'; gradeClass = 'grade-C'; }
+  else if (score >= 40) { grade = 'C';  gradeClass = 'grade-C'; }
+  else if (score >= 32) { grade = 'D';  gradeClass = 'grade-D'; }
+  else                  { grade = 'F';  gradeClass = 'grade-F'; }
+  return { score: Math.round(score), grade, gradeClass, roundVerdict, prospect: p };
+}
 
+function gradeDraft() {
+  if (!selectedTeam) { alert('Please select your team first.'); return; }
   const rows = document.querySelectorAll('.pick-row');
   const picks = [];
-
   rows.forEach(row => {
     const round = parseInt(row.querySelector('.round-select').value);
     const player = row.querySelector('.player-input').value;
-    if (player && player !== '') {
-      picks.push({ round, player });
-    }
+    if (player) picks.push({ round, player });
   });
-
-  if (picks.length === 0) {
-    alert('Please add at least one pick.');
-    return;
-  }
-
-  // Calculate results
-  const results = picks.map(p => ({
-    ...p,
-    result: getPickGrade(p.player, p.round)
-  })).filter(p => p.result);
-
-  if (results.length === 0) return;
-
-  const avgScore = Math.round(results.reduce((s, r) => s + r.result.score, 0) / results.length);
-  let overallGrade, overallClass;
-  if (avgScore >= 88) { overallGrade = 'A+'; overallClass = 'grade-A'; }
-  else if (avgScore >= 80) { overallGrade = 'A'; overallClass = 'grade-A'; }
-  else if (avgScore >= 73) { overallGrade = 'A-'; overallClass = 'grade-A'; }
-  else if (avgScore >= 66) { overallGrade = 'B+'; overallClass = 'grade-B'; }
-  else if (avgScore >= 60) { overallGrade = 'B'; overallClass = 'grade-B'; }
-  else if (avgScore >= 53) { overallGrade = 'B-'; overallClass = 'grade-B'; }
-  else if (avgScore >= 45) { overallGrade = 'C'; overallClass = 'grade-C'; }
-  else if (avgScore >= 35) { overallGrade = 'D'; overallClass = 'grade-D'; }
-  else { overallGrade = 'F'; overallClass = 'grade-F'; }
-
+  if (!picks.length) { alert('Please add at least one pick.'); return; }
+  const results = picks.map(p => ({ ...p, result: getPickGrade(p.player, p.round) })).filter(p => p.result);
+  if (!results.length) return;
+  const avg = Math.round(results.reduce((s,r) => s + r.result.score, 0) / results.length);
+  let og, oc;
+  if (avg >= 88)      { og='A+'; oc='grade-A'; }
+  else if (avg >= 80) { og='A';  oc='grade-A'; }
+  else if (avg >= 73) { og='A-'; oc='grade-A'; }
+  else if (avg >= 66) { og='B+'; oc='grade-B'; }
+  else if (avg >= 60) { og='B';  oc='grade-B'; }
+  else if (avg >= 53) { og='B-'; oc='grade-B'; }
+  else if (avg >= 45) { og='C';  oc='grade-C'; }
+  else if (avg >= 35) { og='D';  oc='grade-D'; }
+  else                { og='F';  oc='grade-F'; }
   const summaries = {
-    'A+': 'Outstanding draft. Your scouts were locked in — value at every pick, no questionable reaches.',
-    'A': 'Excellent draft. Strong selections throughout. A few picks that will look very smart in hindsight.',
-    'A-': 'Very good draft with a couple minor quibbles. Overall a strong class that should develop well.',
-    'B+': 'Solid draft. Good foundational picks with some upside. A couple choices raise eyebrows.',
-    'B': 'Decent draft. More hits than misses, but a few picks leave value on the board.',
-    'B-': 'Average to slightly above. Some bright spots but also a notable reach or two.',
-    'C': 'Middling draft. The value wasn\'t maximized, and some picks look like fits rather than best available.',
-    'D': 'Tough draft. Several reaches and questionable fits will be hard to justify come opening night.',
-    'F': 'Difficult to defend. Significant reaches throughout suggest the scouts were off their game.',
+    'A+':'Outstanding draft. Your scouts were locked in — elite value at every pick.',
+    'A':'Excellent draft. Strong selections throughout with smart value picks.',
+    'A-':'Very good draft. A couple minor quibbles but a strong class overall.',
+    'B+':'Solid draft. Good picks with upside. A couple choices raise minor eyebrows.',
+    'B':'Decent draft. More hits than misses, but a few picks left value on the board.',
+    'B-':'Above average. Some bright spots but also a notable reach or two.',
+    'C':'Middling draft. Value wasn\'t maximized and some picks feel like fits over best available.',
+    'D':'Tough draft. Several reaches that will be hard to justify come opening night.',
+    'F':'Difficult to defend. Significant reaches throughout.'
   };
-
-  renderResults(selectedTeam, overallGrade, overallClass, avgScore, summaries[overallGrade] || '', results);
+  renderResults(selectedTeam, og, oc, avg, summaries[og]||'', results);
 }
 
 function renderResults(team, grade, gradeClass, score, summary, results) {
   const container = document.getElementById('results');
   container.className = 'results visible';
-
   let html = `
     <div class="section-label">Draft Results — ${team}</div>
     <div class="overall-card">
@@ -986,62 +1140,46 @@ function renderResults(team, grade, gradeClass, score, summary, results) {
       </div>
     </div>
   `;
-
   results.forEach((pick, i) => {
     const { result, player, round } = pick;
     const p = result.prospect;
-    const bars = Object.entries(p.scores);
-    const delay = i * 0.1;
-
     html += `
-      <div class="pick-result" style="animation-delay: ${delay}s">
+      <div class="pick-result" style="animation-delay:${i*0.1}s">
         <div class="pick-result-header">
           <div>
             <div class="pick-meta">
               <span class="round-badge">Round ${round}</span>
-              <span class="round-badge" style="background: rgba(255,255,255,0.04); color: var(--text-muted); border: 1px solid var(--border);">#${p.rank} Overall Rank</span>
+              <span class="round-badge" style="background:rgba(255,255,255,0.04);color:var(--text-muted);border:1px solid var(--border);">#${p.rank} Overall</span>
             </div>
-            <div class="pick-name" style="margin-top: 8px;">${player}</div>
+            <div class="pick-name">${player}</div>
             <div class="pick-details">${p.pos} · ${p.league} · ${p.nation}</div>
           </div>
           <div class="pick-grade-badge ${result.gradeClass}">${result.grade}</div>
         </div>
-
         <div class="stat-bars">
-          ${bars.map(([key, val]) => `
-            <div class="stat-bar-item" data-val="${val}">
+          ${Object.entries(p.scores).map(([k,v]) => `
+            <div class="stat-bar-item">
               <div class="stat-bar-label">
-                <span class="stat-bar-name">${key.replace('_', ' ')}</span>
-                <span class="stat-bar-value" style="color: ${getBarColor(val)}">${val}</span>
+                <span class="stat-bar-name">${k.replace('_',' ')}</span>
+                <span class="stat-bar-value" style="color:${getBarColor(v)}">${v}</span>
               </div>
-              <div class="bar-track">
-                <div class="bar-fill" style="background: ${getBarColor(val)}; width: 0%" data-target="${val}"></div>
-              </div>
+              <div class="bar-track"><div class="bar-fill" style="background:${getBarColor(v)}" data-target="${v}"></div></div>
             </div>
           `).join('')}
         </div>
-
         <div class="pick-verdict">
-          <strong style="color: var(--text-dim);">Scouting Report:</strong> ${p.verdict}
-          <br><br>
-          <strong style="color: var(--text-dim);">Value Assessment:</strong> ${result.roundVerdict}
-          <br>
+          <strong style="color:var(--text-dim)">Scouting Report:</strong> ${p.verdict}<br><br>
+          <strong style="color:var(--text-dim)">Value Assessment:</strong> ${result.roundVerdict}<br>
           ${p.comps.map(c => `<span class="comp-tag">Comp: <span>${c}</span></span>`).join('')}
         </div>
       </div>
     `;
   });
-
   container.innerHTML = html;
-
-  // Animate bars after render
   setTimeout(() => {
-    document.querySelectorAll('.bar-fill').forEach(bar => {
-      bar.style.width = bar.dataset.target + '%';
-    });
+    document.querySelectorAll('.bar-fill').forEach(b => { b.style.width = b.dataset.target + '%'; });
   }, 100);
-
-  container.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  container.scrollIntoView({ behavior:'smooth', block:'start' });
 }
 
 init();
