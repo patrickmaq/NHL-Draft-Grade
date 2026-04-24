@@ -1,0 +1,1050 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Board — 2026 NHL Draft Grader</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg: #0D0F12;
+  --surface: #13161A;
+  --surface2: #1A1E24;
+  --border: rgba(255,255,255,0.06);
+  --border2: rgba(255,255,255,0.1);
+  --gold: #D4AF37;
+  --gold-dim: rgba(212,175,55,0.15);
+  --gold-glow: rgba(212,175,55,0.08);
+  --blue: #1A3A5C;
+  --blue-bright: #2A5A8C;
+  --text: #F0F2F5;
+  --text-muted: #6B7280;
+  --text-dim: #9CA3AF;
+  --green: #22C55E;
+  --yellow: #EAB308;
+  --orange: #F97316;
+  --red: #EF4444;
+  --grade-a: #22C55E;
+  --grade-b: #86EFAC;
+  --grade-c: #EAB308;
+  --grade-d: #F97316;
+  --grade-f: #EF4444;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Grid background */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Top glow */
+body::after {
+  content: '';
+  position: fixed;
+  top: -200px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 600px;
+  height: 400px;
+  background: radial-gradient(ellipse, rgba(212,175,55,0.08) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.wrapper {
+  position: relative;
+  z-index: 1;
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 0 24px 80px;
+}
+
+/* Header */
+header {
+  padding: 48px 0 40px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 48px;
+}
+
+.logo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.logo-mark {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 3rem;
+  letter-spacing: 0.08em;
+  line-height: 1;
+  color: var(--text);
+}
+
+.logo-mark span {
+  color: var(--gold);
+}
+
+.logo-sub {
+  font-size: 0.7rem;
+  letter-spacing: 0.2em;
+  color: var(--text-muted);
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+.header-right {
+  text-align: right;
+}
+
+.draft-year {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.1rem;
+  letter-spacing: 0.15em;
+  color: var(--gold);
+}
+
+.draft-label {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+
+/* Team selector */
+.section-label {
+  font-size: 0.65rem;
+  letter-spacing: 0.2em;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  margin-bottom: 12px;
+  font-weight: 600;
+}
+
+.team-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 8px;
+  margin-bottom: 40px;
+}
+
+.team-btn {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.78rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+  letter-spacing: 0.02em;
+}
+
+.team-btn:hover {
+  border-color: var(--border2);
+  color: var(--text);
+  background: var(--surface2);
+}
+
+.team-btn.active {
+  border-color: var(--gold);
+  color: var(--gold);
+  background: var(--gold-glow);
+}
+
+/* Pick builder */
+.pick-builder {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 28px;
+  margin-bottom: 32px;
+}
+
+.pick-builder h2 {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.2rem;
+  letter-spacing: 0.1em;
+  color: var(--text);
+  margin-bottom: 20px;
+}
+
+.pick-row {
+  display: grid;
+  grid-template-columns: 100px 1fr 120px auto;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.pick-row select,
+.pick-row input {
+  background: var(--bg);
+  border: 1px solid var(--border2);
+  color: var(--text);
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.85rem;
+  outline: none;
+  transition: border-color 0.2s;
+  width: 100%;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.pick-row select:focus,
+.pick-row input:focus {
+  border-color: var(--gold);
+}
+
+.pick-row input::placeholder {
+  color: var(--text-muted);
+}
+
+.pick-row select option {
+  background: var(--bg);
+}
+
+.remove-btn {
+  background: none;
+  border: 1px solid rgba(239,68,68,0.2);
+  color: rgba(239,68,68,0.5);
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.remove-btn:hover {
+  border-color: var(--red);
+  color: var(--red);
+  background: rgba(239,68,68,0.08);
+}
+
+.add-pick-btn {
+  background: none;
+  border: 1px dashed var(--border2);
+  color: var(--text-muted);
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-top: 4px;
+  letter-spacing: 0.05em;
+}
+
+.add-pick-btn:hover {
+  border-color: var(--gold);
+  color: var(--gold);
+}
+
+.grade-btn {
+  display: block;
+  width: 100%;
+  background: var(--gold);
+  color: var(--bg);
+  border: none;
+  padding: 16px;
+  border-radius: 8px;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.1rem;
+  letter-spacing: 0.15em;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-top: 20px;
+}
+
+.grade-btn:hover {
+  background: #E8C84A;
+  transform: translateY(-1px);
+}
+
+.grade-btn:active {
+  transform: translateY(0);
+}
+
+/* Results */
+.results {
+  display: none;
+}
+
+.results.visible {
+  display: block;
+  animation: fadeUp 0.5s ease both;
+}
+
+/* Overall grade card */
+.overall-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 32px;
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  gap: 32px;
+}
+
+.grade-circle {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 3rem;
+  letter-spacing: 0.05em;
+  border: 2px solid;
+  position: relative;
+}
+
+.grade-circle::after {
+  content: '';
+  position: absolute;
+  inset: -8px;
+  border-radius: 50%;
+  opacity: 0.15;
+}
+
+.grade-A { color: var(--green); border-color: var(--green); background: rgba(34,197,94,0.08); }
+.grade-A::after { background: var(--green); }
+.grade-B { color: #86EFAC; border-color: #86EFAC; background: rgba(134,239,172,0.08); }
+.grade-B::after { background: #86EFAC; }
+.grade-C { color: var(--yellow); border-color: var(--yellow); background: rgba(234,179,8,0.08); }
+.grade-C::after { background: var(--yellow); }
+.grade-D { color: var(--orange); border-color: var(--orange); background: rgba(249,115,22,0.08); }
+.grade-D::after { background: var(--orange); }
+.grade-F { color: var(--red); border-color: var(--red); background: rgba(239,68,68,0.08); }
+.grade-F::after { background: var(--red); }
+
+.overall-info {
+  flex: 1;
+}
+
+.overall-team {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.8rem;
+  letter-spacing: 0.08em;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+
+.overall-summary {
+  font-size: 0.9rem;
+  color: var(--text-dim);
+  line-height: 1.6;
+  max-width: 500px;
+}
+
+.overall-score {
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.score-num {
+  font-family: 'DM Mono', monospace;
+  font-size: 2rem;
+  font-weight: 500;
+  color: var(--gold);
+  line-height: 1;
+}
+
+.score-label {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  margin-top: 4px;
+}
+
+/* Individual pick results */
+.pick-result {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 16px;
+  animation: fadeUp 0.4s ease both;
+}
+
+.pick-result-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  gap: 16px;
+}
+
+.pick-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.round-badge {
+  background: var(--gold-dim);
+  color: var(--gold);
+  padding: 3px 10px;
+  border-radius: 4px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+.pick-name {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.4rem;
+  letter-spacing: 0.05em;
+  color: var(--text);
+}
+
+.pick-details {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.pick-grade-badge {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.6rem;
+  letter-spacing: 0.05em;
+  padding: 6px 16px;
+  border-radius: 8px;
+  border: 1.5px solid;
+  flex-shrink: 0;
+}
+
+/* Stat bars */
+.stat-bars {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px 24px;
+  margin-bottom: 16px;
+}
+
+.stat-bar-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.stat-bar-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.stat-bar-name {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-weight: 500;
+}
+
+.stat-bar-value {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.bar-track {
+  height: 4px;
+  background: var(--bg);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.bar-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+  width: 0%;
+}
+
+.pick-verdict {
+  font-size: 0.82rem;
+  color: var(--text-dim);
+  line-height: 1.6;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+/* Comp tag */
+.comp-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  color: var(--text-dim);
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 0.72rem;
+  margin-top: 8px;
+  margin-right: 6px;
+}
+
+.comp-tag span {
+  color: var(--gold);
+  font-weight: 600;
+}
+
+/* No team selected state */
+.no-team {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  letter-spacing: 0.05em;
+}
+
+/* Divider */
+.divider {
+  height: 1px;
+  background: var(--border);
+  margin: 40px 0;
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .pick-row {
+    grid-template-columns: 80px 1fr;
+    grid-template-rows: auto auto;
+  }
+  .pick-row .round-select { grid-column: 1; }
+  .pick-row .player-input { grid-column: 2; }
+  .pick-row .position-select { grid-column: 1; }
+  .pick-row .remove-btn { grid-column: 2; justify-self: end; }
+  .stat-bars { grid-template-columns: 1fr; }
+  .overall-card { flex-direction: column; gap: 20px; }
+  .overall-score { text-align: left; }
+  header { flex-direction: column; align-items: flex-start; gap: 12px; }
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+</style>
+</head>
+<body>
+<div class="wrapper">
+
+  <header>
+    <div class="logo">
+      <div class="logo-mark">THE <span>BOARD</span></div>
+      <div class="logo-sub">NHL Draft Grade Tool</div>
+    </div>
+    <div class="header-right">
+      <div class="draft-year">2026</div>
+      <div class="draft-label">Draft Class</div>
+    </div>
+  </header>
+
+  <!-- Step 1: Pick your team -->
+  <div class="section-label">Select Your Team</div>
+  <div class="team-grid" id="teamGrid"></div>
+
+  <!-- Step 2: Build picks -->
+  <div class="pick-builder" id="pickBuilder">
+    <h2>YOUR PICKS</h2>
+    <div id="pickRows"></div>
+    <button class="add-pick-btn" onclick="addPickRow()">+ Add Pick</button>
+    <button class="grade-btn" onclick="gradeDraft()">GRADE MY DRAFT</button>
+  </div>
+
+  <!-- Results -->
+  <div class="results" id="results"></div>
+
+</div>
+
+<script>
+// ── DATA ─────────────────────────────────────────────────────────────────────
+
+const NHL_TEAMS = [
+  "Anaheim","Boston","Buffalo","Calgary","Carolina","Chicago","Colorado",
+  "Columbus","Dallas","Detroit","Edmonton","Florida","Los Angeles","Minnesota",
+  "Montreal","Nashville","New Jersey","NY Islanders","NY Rangers","Ottawa",
+  "Philadelphia","Pittsburgh","San Jose","Seattle","St. Louis","Tampa Bay",
+  "Toronto","Utah","Vancouver","Vegas","Washington","Winnipeg"
+];
+
+// 2026 Draft Class — real prospects
+const PROSPECTS = {
+  "Gavin McKenna": {
+    rank: 1, pos: "LW", league: "NCAA (Penn State)", nation: "CAN",
+    scores: { production: 97, skating: 94, hockey_iq: 96, compete: 88, ceiling: 98 },
+    age_score: 96, contract_score: 100,
+    grade: "A+", verdict: "Generational talent. Consensus #1 overall. Elite offensive instincts, elite skating, plays with pace and purpose. Comps to McDavid-lite ceiling.",
+    comps: ["Connor McDavid", "Nathan MacKinnon"],
+    reach_round: 99, // pick # where this becomes a reach
+  },
+  "Ivar Stenberg": {
+    rank: 2, pos: "C/LW", league: "SHL (Frölunda)", nation: "SWE",
+    scores: { production: 95, skating: 92, hockey_iq: 97, compete: 90, ceiling: 95 },
+    age_score: 95, contract_score: 100,
+    grade: "A+", verdict: "Record-breaking SHL season at 18. Elite two-way game, leads by example in every situation. NHL-ready today. First overall in most European scouting departments.",
+    comps: ["Anze Kopitar", "Elias Lindholm"],
+    reach_round: 99,
+  },
+  "Keaton Verhoeff": {
+    rank: 3, pos: "D", league: "NCAA (North Dakota)", nation: "CAN",
+    scores: { production: 88, skating: 90, hockey_iq: 89, compete: 92, ceiling: 93 },
+    age_score: 94, contract_score: 100,
+    grade: "A", verdict: "Best defenceman in the class. Two-way excellence, quarterback power play, massive NHL upside. Top-3 pick.",
+    comps: ["Cale Makar", "Quinn Hughes"],
+    reach_round: 95,
+  },
+  "Tynan Lawrence": {
+    rank: 4, pos: "C", league: "OHL", nation: "CAN",
+    scores: { production: 85, skating: 84, hockey_iq: 93, compete: 91, ceiling: 88 },
+    age_score: 93, contract_score: 100,
+    grade: "A", verdict: "The most mature two-way centre in the class. Projects as an NHL captain. Won't wow you statistically but wins every intangible metric.",
+    comps: ["Patrice Bergeron", "Ryan O'Reilly"],
+    reach_round: 90,
+  },
+  "Ethan Belchetz": {
+    rank: 5, pos: "C", league: "OHL", nation: "CAN",
+    scores: { production: 84, skating: 83, hockey_iq: 86, compete: 88, ceiling: 95 },
+    age_score: 93, contract_score: 100,
+    grade: "A", verdict: "Unicorn size-skill package. 6'4\" with elite hands — every team craves this profile. Upside is massive if it all comes together.",
+    comps: ["Eric Staal", "Logan Couture"],
+    reach_round: 88,
+  },
+  "Viggo Björck": {
+    rank: 6, pos: "LW", league: "SHL", nation: "SWE",
+    scores: { production: 82, skating: 88, hockey_iq: 84, compete: 83, ceiling: 88 },
+    age_score: 92, contract_score: 100,
+    grade: "A-", verdict: "Elite skater with top-six NHL upside. Swedish pedigree at 18 in SHL is a strong signal. Dangerous on the rush.",
+    comps: ["Filip Forsberg (comp)", "Rickard Rakell"],
+    reach_round: 82,
+  },
+  "Chase Reid": {
+    rank: 7, pos: "D", league: "WHL", nation: "CAN",
+    scores: { production: 83, skating: 85, hockey_iq: 82, compete: 84, ceiling: 87 },
+    age_score: 92, contract_score: 100,
+    grade: "A-", verdict: "Dynamic offensive defenceman with elite passing. Consistency is the only question mark — when locked in, one of the best defenders in the class.",
+    comps: ["Jakob Chychrun", "Shea Theodore"],
+    reach_round: 80,
+  },
+  "Caleb Malhotra": {
+    rank: 8, pos: "C", league: "OHL (Brantford)", nation: "CAN",
+    scores: { production: 80, skating: 82, hockey_iq: 85, compete: 86, ceiling: 84 },
+    age_score: 91, contract_score: 100,
+    grade: "B+", verdict: "Outstanding OHL playoffs performer. Cerebral centre with strong two-way awareness. Late riser who keeps climbing boards.",
+    comps: ["Ryan Nugent-Hopkins", "Adam Lowry"],
+    reach_round: 75,
+  },
+  "Alberts Smits": {
+    rank: 9, pos: "C", league: "QMJHL", nation: "LAT",
+    scores: { production: 79, skating: 80, hockey_iq: 83, compete: 82, ceiling: 85 },
+    age_score: 91, contract_score: 100,
+    grade: "B+", verdict: "Latvian centre with excellent two-way instincts. Underrated in most public rankings. Smart pickup in the top 10-15.",
+    comps: ["Zemgus Girgensons (ceiling)", "Frans Nielsen"],
+    reach_round: 72,
+  },
+  "Maddox Dagenais": {
+    rank: 10, pos: "LW", league: "QMJHL (Quebec)", nation: "CAN",
+    scores: { production: 78, skating: 82, hockey_iq: 80, compete: 80, ceiling: 84 },
+    age_score: 90, contract_score: 100,
+    grade: "B+", verdict: "Risen sharply in second half. Elite athleticism, heavy shot from the left side. One of the most exciting late-round climbers.",
+    comps: ["Nicolas Roy", "Kyle Connor (upside)"],
+    reach_round: 68,
+  },
+  "Mathis Preston": {
+    rank: 11, pos: "RW", league: "WHL", nation: "CAN",
+    scores: { production: 77, skating: 79, hockey_iq: 78, compete: 80, ceiling: 82 },
+    age_score: 90, contract_score: 100,
+    grade: "B", verdict: "Reliable top-6 winger profile. Doesn't have elite flashiness but brings consistency and compete every night.",
+    comps: ["Darnell Nurse (scoring comp)", "Brock Boeser"],
+    reach_round: 62,
+  },
+  "Oscar Hemming": {
+    rank: 12, pos: "C", league: "SHL", nation: "SWE",
+    scores: { production: 75, skating: 80, hockey_iq: 82, compete: 78, ceiling: 82 },
+    age_score: 89, contract_score: 100,
+    grade: "B", verdict: "SHL-seasoned Swedish centre. High-IQ play drives value here more than raw production numbers.",
+    comps: ["Carl Soderberg", "Marcus Kruger (upside)"],
+    reach_round: 55,
+  },
+  "Daxon Rudolph": {
+    rank: 13, pos: "C", league: "WHL", nation: "CAN",
+    scores: { production: 74, skating: 76, hockey_iq: 80, compete: 82, ceiling: 80 },
+    age_score: 89, contract_score: 100,
+    grade: "B", verdict: "Solid two-way centre with good instincts. NHL floor is quite safe, ceiling is top-9 or better.",
+    comps: ["Nic Dowd", "Michael Raffl"],
+    reach_round: 48,
+  },
+  "Tommy Bleyl": {
+    rank: 14, pos: "D", league: "QMJHL (Moncton)", nation: "CAN",
+    scores: { production: 76, skating: 78, hockey_iq: 77, compete: 76, ceiling: 81 },
+    age_score: 88, contract_score: 100,
+    grade: "B", verdict: "One of the most dynamic offensive defenders outside the top tier. Second half surge pushed him up boards.",
+    comps: ["Rasmus Sandin", "Mark Friedman"],
+    reach_round: 45,
+  },
+  "Ryan Lin": {
+    rank: 15, pos: "C", league: "BCHL", nation: "CAN",
+    scores: { production: 72, skating: 74, hockey_iq: 78, compete: 75, ceiling: 79 },
+    age_score: 87, contract_score: 100,
+    grade: "B-", verdict: "Smart, skilled centre from the BCHL. Needs more seasoning but the tools are there for a solid NHL career.",
+    comps: ["Jean-Gabriel Pageau", "Yanni Gourde"],
+    reach_round: 38,
+  },
+  "Elton Hermansson": {
+    rank: 16, pos: "D", league: "SHL", nation: "SWE",
+    scores: { production: 71, skating: 75, hockey_iq: 76, compete: 74, ceiling: 78 },
+    age_score: 87, contract_score: 100,
+    grade: "B-", verdict: "Steady Swedish defender with good fundamentals. Not a flashy pick but reliable long-term value.",
+    comps: ["Hampus Lindholm (floor)", "Dennis Cholowski"],
+    reach_round: 32,
+  },
+  "Adam Novotny": {
+    rank: 17, pos: "C", league: "Czech Extraliga", nation: "CZE",
+    scores: { production: 70, skating: 72, hockey_iq: 75, compete: 74, ceiling: 77 },
+    age_score: 86, contract_score: 100,
+    grade: "B-", verdict: "Czech centre with a polished all-around game. Good value in rounds 1-2.",
+    comps: ["David Krejci (hope)", "Jakub Voracek"],
+    reach_round: 28,
+  },
+  "Carson Carels": {
+    rank: 18, pos: "C", league: "WHL", nation: "CAN",
+    scores: { production: 69, skating: 73, hockey_iq: 74, compete: 76, ceiling: 76 },
+    age_score: 86, contract_score: 100,
+    grade: "C+", verdict: "Solid mid-round centre. Good character player with a compete level that teams love.",
+    comps: ["Luke Philp", "Lias Andersson"],
+    reach_round: 22,
+  },
+  "Oliver Suvanto": {
+    rank: 19, pos: "LW", league: "Liiga", nation: "FIN",
+    scores: { production: 68, skating: 70, hockey_iq: 73, compete: 72, ceiling: 75 },
+    age_score: 85, contract_score: 100,
+    grade: "C+", verdict: "Finnish winger with solid fundamentals. Steady mid-round value, more of a depth piece than a star.",
+    comps: ["Patrik Laine (floor)", "Teuvo Teravainen"],
+    reach_round: 18,
+  },
+  "Ryder Cali": {
+    rank: 20, pos: "C", league: "OHL (North Bay)", nation: "CAN",
+    scores: { production: 67, skating: 71, hockey_iq: 72, compete: 74, ceiling: 78 },
+    age_score: 85, contract_score: 100,
+    grade: "C+", verdict: "One of the youngest players in the class. Shows real upside — one of the bigger wildcards in the draft.",
+    comps: ["Nico Hischier (hope)", "Troy Terry"],
+    reach_round: 15,
+  },
+};
+
+// ── STATE ────────────────────────────────────────────────────────────────────
+let selectedTeam = null;
+let pickCount = 0;
+
+// ── INIT ─────────────────────────────────────────────────────────────────────
+function init() {
+  buildTeamGrid();
+  addPickRow();
+  addPickRow();
+  addPickRow();
+}
+
+function buildTeamGrid() {
+  const grid = document.getElementById('teamGrid');
+  NHL_TEAMS.forEach(team => {
+    const btn = document.createElement('button');
+    btn.className = 'team-btn';
+    btn.textContent = team;
+    btn.onclick = () => selectTeam(team, btn);
+    grid.appendChild(btn);
+  });
+}
+
+function selectTeam(team, btn) {
+  selectedTeam = team;
+  document.querySelectorAll('.team-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function addPickRow() {
+  pickCount++;
+  const id = pickCount;
+  const row = document.createElement('div');
+  row.className = 'pick-row';
+  row.id = `pick-${id}`;
+
+  const prospectNames = Object.keys(PROSPECTS);
+  const options = prospectNames.map(n => `<option value="${n}">${n}</option>`).join('');
+
+  row.innerHTML = `
+    <select class="round-select">
+      <option value="1">Round 1</option>
+      <option value="2">Round 2</option>
+      <option value="3">Round 3</option>
+      <option value="4">Round 4</option>
+      <option value="5">Round 5</option>
+      <option value="6">Round 6</option>
+      <option value="7">Round 7</option>
+    </select>
+    <select class="player-input">
+      <option value="">— Select Prospect —</option>
+      ${options}
+    </select>
+    <select class="position-select">
+      <option value="">Position</option>
+      <option value="C">Centre</option>
+      <option value="LW">Left Wing</option>
+      <option value="RW">Right Wing</option>
+      <option value="D">Defenceman</option>
+      <option value="G">Goalie</option>
+    </select>
+    <button class="remove-btn" onclick="removePick(${id})">✕</button>
+  `;
+
+  document.getElementById('pickRows').appendChild(row);
+}
+
+function removePick(id) {
+  const row = document.getElementById(`pick-${id}`);
+  if (row) row.remove();
+}
+
+// ── GRADING LOGIC ────────────────────────────────────────────────────────────
+
+function getPickGrade(prospectName, round) {
+  const p = PROSPECTS[prospectName];
+  if (!p) return null;
+
+  // Base score from prospect quality
+  let score = (
+    p.scores.production * 0.30 +
+    p.scores.skating * 0.20 +
+    p.scores.hockey_iq * 0.25 +
+    p.scores.compete * 0.15 +
+    p.scores.ceiling * 0.10
+  );
+
+  // Round context: was this a reach or a steal?
+  const expectedRound = Math.ceil((p.rank / 32) * 7);
+  const roundDiff = round - expectedRound;
+
+  let roundBonus = 0;
+  let roundVerdict = '';
+  if (roundDiff >= 2) {
+    roundBonus = 12;
+    roundVerdict = `Exceptional value — ${prospectName} was available ${roundDiff} round(s) later than expected.`;
+  } else if (roundDiff === 1) {
+    roundBonus = 6;
+    roundVerdict = `Good value pick — slightly later than their consensus ranking.`;
+  } else if (roundDiff === 0) {
+    roundBonus = 0;
+    roundVerdict = `Picked right on consensus — exactly where most boards had them.`;
+  } else if (roundDiff === -1) {
+    roundBonus = -8;
+    roundVerdict = `Slight reach — taken one round earlier than most boards projected.`;
+  } else {
+    roundBonus = -18;
+    roundVerdict = `Significant reach — taken ${Math.abs(roundDiff)} rounds earlier than projected. Hard to justify unless your scouts know something others don't.`;
+  }
+
+  score = Math.min(100, Math.max(0, score + roundBonus));
+
+  // Letter grade
+  let grade, gradeClass;
+  if (score >= 90) { grade = 'A+'; gradeClass = 'grade-A'; }
+  else if (score >= 82) { grade = 'A'; gradeClass = 'grade-A'; }
+  else if (score >= 75) { grade = 'A-'; gradeClass = 'grade-A'; }
+  else if (score >= 68) { grade = 'B+'; gradeClass = 'grade-B'; }
+  else if (score >= 62) { grade = 'B'; gradeClass = 'grade-B'; }
+  else if (score >= 55) { grade = 'B-'; gradeClass = 'grade-B'; }
+  else if (score >= 48) { grade = 'C+'; gradeClass = 'grade-C'; }
+  else if (score >= 40) { grade = 'C'; gradeClass = 'grade-C'; }
+  else if (score >= 32) { grade = 'D'; gradeClass = 'grade-D'; }
+  else { grade = 'F'; gradeClass = 'grade-F'; }
+
+  return { score: Math.round(score), grade, gradeClass, roundVerdict, prospect: p };
+}
+
+function getBarColor(value) {
+  if (value >= 85) return 'var(--green)';
+  if (value >= 70) return '#86EFAC';
+  if (value >= 55) return 'var(--yellow)';
+  if (value >= 40) return 'var(--orange)';
+  return 'var(--red)';
+}
+
+function gradeDraft() {
+  if (!selectedTeam) {
+    alert('Please select your team first.');
+    return;
+  }
+
+  const rows = document.querySelectorAll('.pick-row');
+  const picks = [];
+
+  rows.forEach(row => {
+    const round = parseInt(row.querySelector('.round-select').value);
+    const player = row.querySelector('.player-input').value;
+    if (player && player !== '') {
+      picks.push({ round, player });
+    }
+  });
+
+  if (picks.length === 0) {
+    alert('Please add at least one pick.');
+    return;
+  }
+
+  // Calculate results
+  const results = picks.map(p => ({
+    ...p,
+    result: getPickGrade(p.player, p.round)
+  })).filter(p => p.result);
+
+  if (results.length === 0) return;
+
+  const avgScore = Math.round(results.reduce((s, r) => s + r.result.score, 0) / results.length);
+  let overallGrade, overallClass;
+  if (avgScore >= 88) { overallGrade = 'A+'; overallClass = 'grade-A'; }
+  else if (avgScore >= 80) { overallGrade = 'A'; overallClass = 'grade-A'; }
+  else if (avgScore >= 73) { overallGrade = 'A-'; overallClass = 'grade-A'; }
+  else if (avgScore >= 66) { overallGrade = 'B+'; overallClass = 'grade-B'; }
+  else if (avgScore >= 60) { overallGrade = 'B'; overallClass = 'grade-B'; }
+  else if (avgScore >= 53) { overallGrade = 'B-'; overallClass = 'grade-B'; }
+  else if (avgScore >= 45) { overallGrade = 'C'; overallClass = 'grade-C'; }
+  else if (avgScore >= 35) { overallGrade = 'D'; overallClass = 'grade-D'; }
+  else { overallGrade = 'F'; overallClass = 'grade-F'; }
+
+  const summaries = {
+    'A+': 'Outstanding draft. Your scouts were locked in — value at every pick, no questionable reaches.',
+    'A': 'Excellent draft. Strong selections throughout. A few picks that will look very smart in hindsight.',
+    'A-': 'Very good draft with a couple minor quibbles. Overall a strong class that should develop well.',
+    'B+': 'Solid draft. Good foundational picks with some upside. A couple choices raise eyebrows.',
+    'B': 'Decent draft. More hits than misses, but a few picks leave value on the board.',
+    'B-': 'Average to slightly above. Some bright spots but also a notable reach or two.',
+    'C': 'Middling draft. The value wasn\'t maximized, and some picks look like fits rather than best available.',
+    'D': 'Tough draft. Several reaches and questionable fits will be hard to justify come opening night.',
+    'F': 'Difficult to defend. Significant reaches throughout suggest the scouts were off their game.',
+  };
+
+  renderResults(selectedTeam, overallGrade, overallClass, avgScore, summaries[overallGrade] || '', results);
+}
+
+function renderResults(team, grade, gradeClass, score, summary, results) {
+  const container = document.getElementById('results');
+  container.className = 'results visible';
+
+  let html = `
+    <div class="section-label">Draft Results — ${team}</div>
+    <div class="overall-card">
+      <div class="grade-circle ${gradeClass}">${grade}</div>
+      <div class="overall-info">
+        <div class="overall-team">${team.toUpperCase()} DRAFT CLASS</div>
+        <div class="overall-summary">${summary}</div>
+      </div>
+      <div class="overall-score">
+        <div class="score-num">${score}</div>
+        <div class="score-label">Draft Score</div>
+      </div>
+    </div>
+  `;
+
+  results.forEach((pick, i) => {
+    const { result, player, round } = pick;
+    const p = result.prospect;
+    const bars = Object.entries(p.scores);
+    const delay = i * 0.1;
+
+    html += `
+      <div class="pick-result" style="animation-delay: ${delay}s">
+        <div class="pick-result-header">
+          <div>
+            <div class="pick-meta">
+              <span class="round-badge">Round ${round}</span>
+              <span class="round-badge" style="background: rgba(255,255,255,0.04); color: var(--text-muted); border: 1px solid var(--border);">#${p.rank} Overall Rank</span>
+            </div>
+            <div class="pick-name" style="margin-top: 8px;">${player}</div>
+            <div class="pick-details">${p.pos} · ${p.league} · ${p.nation}</div>
+          </div>
+          <div class="pick-grade-badge ${result.gradeClass}">${result.grade}</div>
+        </div>
+
+        <div class="stat-bars">
+          ${bars.map(([key, val]) => `
+            <div class="stat-bar-item" data-val="${val}">
+              <div class="stat-bar-label">
+                <span class="stat-bar-name">${key.replace('_', ' ')}</span>
+                <span class="stat-bar-value" style="color: ${getBarColor(val)}">${val}</span>
+              </div>
+              <div class="bar-track">
+                <div class="bar-fill" style="background: ${getBarColor(val)}; width: 0%" data-target="${val}"></div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+
+        <div class="pick-verdict">
+          <strong style="color: var(--text-dim);">Scouting Report:</strong> ${p.verdict}
+          <br><br>
+          <strong style="color: var(--text-dim);">Value Assessment:</strong> ${result.roundVerdict}
+          <br>
+          ${p.comps.map(c => `<span class="comp-tag">Comp: <span>${c}</span></span>`).join('')}
+        </div>
+      </div>
+    `;
+  });
+
+  container.innerHTML = html;
+
+  // Animate bars after render
+  setTimeout(() => {
+    document.querySelectorAll('.bar-fill').forEach(bar => {
+      bar.style.width = bar.dataset.target + '%';
+    });
+  }, 100);
+
+  container.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+init();
+</script>
+</body>
+</html>
