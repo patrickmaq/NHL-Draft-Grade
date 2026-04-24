@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Grade my Draft — 2026 NHL Draft Grader</title>
+<title>The Board — 2026 NHL Draft Grader</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -87,7 +87,7 @@ header { padding:48px 0 40px; display:flex; align-items:flex-end; justify-conten
 <div class="wrapper">
   <header>
     <div>
-      <div class="logo-mark">GRADE MY <span>DRAFT</span></div>
+      <div class="logo-mark">THE <span>BOARD</span></div>
       <div class="logo-sub">2026 NHL Draft Grade Tool</div>
     </div>
     <div>
@@ -241,7 +241,148 @@ function removePick(id){const e=document.getElementById('pick-'+id);if(e)e.remov
 function getBarColor(v){if(v>=85)return'#16A34A';if(v>=70)return'#15803D';if(v>=55)return'#CA8A04';if(v>=40)return'#EA580C';return'#DC2626';}
 function getPickGrade(name,round){const p=PROSPECTS[name];if(!p)return null;let score=p.scores.production*0.30+p.scores.skating*0.20+p.scores.hockey_iq*0.25+p.scores.compete*0.15+p.scores.ceiling*0.10;const er=p.rank<=32?1:p.rank<=64?2:3;const diff=round-er;let bonus=0,rv='';if(diff>=2){bonus=12;rv=`Exceptional value — available ${diff} round(s) later than expected.`;}else if(diff===1){bonus=6;rv='Good value — slightly later than their consensus ranking.';}else if(diff===0){bonus=0;rv='Picked right on consensus — exactly where most boards have them.';}else if(diff===-1){bonus=-8;rv='Slight reach — one round earlier than most boards projected.';}else{bonus=-18;rv=`Significant reach — ${Math.abs(diff)} rounds earlier than projected.`;}score=Math.min(100,Math.max(0,score+bonus));let grade,gc;if(score>=90){grade='A+';gc='grade-A';}else if(score>=82){grade='A';gc='grade-A';}else if(score>=75){grade='A-';gc='grade-A';}else if(score>=68){grade='B+';gc='grade-B';}else if(score>=62){grade='B';gc='grade-B';}else if(score>=55){grade='B-';gc='grade-B';}else if(score>=48){grade='C+';gc='grade-C';}else if(score>=40){grade='C';gc='grade-C';}else if(score>=32){grade='D';gc='grade-D';}else{grade='F';gc='grade-F';}return{score:Math.round(score),grade,gc,roundVerdict:rv,prospect:p};}
 function gradeDraft(){if(!selectedTeam){alert('Please select your team first.');return;}const picks=[];document.querySelectorAll('.pick-row').forEach(row=>{const round=parseInt(row.querySelector('.round-select').value);const player=row.querySelector('.player-input').value;if(player)picks.push({round,player});});if(!picks.length){alert('Please add at least one pick.');return;}const results=picks.map(p=>({...p,result:getPickGrade(p.player,p.round)})).filter(p=>p.result);if(!results.length)return;const avg=Math.round(results.reduce((s,r)=>s+r.result.score,0)/results.length);let og,oc;if(avg>=88){og='A+';oc='grade-A';}else if(avg>=80){og='A';oc='grade-A';}else if(avg>=73){og='A-';oc='grade-A';}else if(avg>=66){og='B+';oc='grade-B';}else if(avg>=60){og='B';oc='grade-B';}else if(avg>=53){og='B-';oc='grade-B';}else if(avg>=45){og='C';oc='grade-C';}else if(avg>=35){og='D';oc='grade-D';}else{og='F';oc='grade-F';}const s={'A+':'Outstanding draft. Elite value at every pick — scouts were locked in.','A':'Excellent draft. Strong selections throughout with smart value picks.','A-':'Very good draft with minor quibbles. A strong class that should develop well.','B+':'Solid draft with good picks. A couple choices raise minor eyebrows.','B':'Decent draft. More hits than misses but a few picks left value on the board.','B-':'Above average. Some bright spots but also a notable reach or two.','C':"Middling draft. Value wasn't maximized and some picks feel like fits over best available.",'D':'Tough draft. Several reaches that will be hard to justify come opening night.','F':'Difficult to defend. Significant reaches throughout suggest scouts were off.'};renderResults(selectedTeam,og,oc,avg,s[og]||'',results);}
-function renderResults(team,grade,gc,score,summary,results){const c=document.getElementById('results');c.className='results visible';let html=`<div class="section-label">Draft Results — ${team}</div><div class="overall-card"><div class="grade-circle ${gc}">${grade}</div><div class="overall-info"><div class="overall-team">${team.toUpperCase()} DRAFT CLASS</div><div class="overall-summary">${summary}</div></div><div class="overall-score"><div class="score-num">${score}</div><div class="score-label">Draft Score</div></div></div>`;results.forEach((pick,i)=>{const{result,player,round}=pick;const p=result.prospect;html+=`<div class="pick-result" style="animation-delay:${i*0.1}s"><div class="pick-result-header"><div><div class="pick-meta"><span class="round-badge">Round ${round}</span><span class="rank-badge">#${p.rank} Consensus</span>${p.nhle?`<span class="rank-badge">NHLe ${p.nhle}</span>`:''}</div><div class="pick-name">${player}</div><div class="pick-details">${p.pos} · ${p.league} · ${p.nation}</div></div><div class="pick-grade-badge ${result.gc}">${result.grade}</div></div><div class="stat-bars">${Object.entries(p.scores).map(([k,v])=>`<div class="stat-bar-item"><div class="stat-bar-label"><span class="stat-bar-name">${k.replace('_',' ')}</span><span class="stat-bar-value" style="color:${getBarColor(v)}">${v}</span></div><div class="bar-track"><div class="bar-fill" style="background:${getBarColor(v)}" data-target="${v}"></div></div></div>`).join('')}</div><div class="pick-verdict"><strong style="color:var(--text-dim)">Scouting Report:</strong> ${p.verdict}<br><br><strong style="color:var(--text-dim)">Value Assessment:</strong> ${result.roundVerdict}<br><span class="comp-tag">Comp: <span>${p.comps}</span></span></div></div>`;});c.innerHTML=html;setTimeout(()=>{document.querySelectorAll('.bar-fill').forEach(b=>{b.style.width=b.dataset.target+'%';});},100);c.scrollIntoView({behavior:'smooth',block:'start'});}
+function renderResults(team,grade,gc,score,summary,results){const c=document.getElementById('results');c.className='results visible';let html=`<div class="section-label">Draft Results — ${team}</div><div class="overall-card"><div class="grade-circle ${gc}">${grade}</div><div class="overall-info"><div class="overall-team">${team.toUpperCase()} DRAFT CLASS</div><div class="overall-summary">${summary}</div></div><div class="overall-score"><div class="score-num">${score}</div><div class="score-label">Draft Score</div></div></div>`;results.forEach((pick,i)=>{const{result,player,round}=pick;const p=result.prospect;html+=`<div class="pick-result" style="animation-delay:${i*0.1}s"><div class="pick-result-header"><div><div class="pick-meta"><span class="round-badge">Round ${round}</span><span class="rank-badge">#${p.rank} Consensus</span>${p.nhle?`<span class="rank-badge">NHLe ${p.nhle}</span>`:''}</div><div class="pick-name">${player}</div><div class="pick-details">${p.pos} · ${p.league} · ${p.nation}</div></div><div class="pick-grade-badge ${result.gc}">${result.grade}</div></div><div class="stat-bars">${Object.entries(p.scores).map(([k,v])=>`<div class="stat-bar-item"><div class="stat-bar-label"><span class="stat-bar-name">${k.replace('_',' ')}</span><span class="stat-bar-value" style="color:${getBarColor(v)}">${v}</span></div><div class="bar-track"><div class="bar-fill" style="background:${getBarColor(v)}" data-target="${v}"></div></div></div>`).join('')}</div><div class="pick-verdict"><strong style="color:var(--text-dim)">Scouting Report:</strong> ${p.verdict}<br><br><strong style="color:var(--text-dim)">Value Assessment:</strong> ${result.roundVerdict}<br><span class="comp-tag">Comp: <span>${p.comps}</span></span></div></div>`;});c.innerHTML=html;setTimeout(()=>{document.querySelectorAll('.bar-fill').forEach(b=>{b.style.width=b.dataset.target+'%';});},100);// Add share button
+html += `<div style="text-align:center;margin-top:8px;"><button onclick="shareGrade()" style="background:var(--text);color:var(--bg);border:none;padding:14px 32px;border-radius:8px;font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:0.15em;cursor:pointer;transition:all 0.2s;">⬇ DOWNLOAD DRAFT CARD</button></div>`;
+c.innerHTML=html;
+// Store for share function
+window._shareData={team,grade,score,summary,results};
+setTimeout(()=>{document.querySelectorAll('.bar-fill').forEach(b=>{b.style.width=b.dataset.target+'%';});},100);c.scrollIntoView({behavior:'smooth',block:'start'});}
+
+function shareGrade(){
+  const d=window._shareData;
+  if(!d)return;
+  const W=600,H=120+d.results.length*90+80;
+  const canvas=document.createElement('canvas');
+  canvas.width=W*2;canvas.height=H*2;
+  const ctx=canvas.getContext('2d');
+  ctx.scale(2,2);
+
+  // Background
+  ctx.fillStyle='#FAF8F3';
+  ctx.fillRect(0,0,W,H);
+
+  // Top bar
+  ctx.fillStyle='#0C0C0C';
+  ctx.fillRect(0,0,W,56);
+
+  // Logo
+  ctx.fillStyle='#FFFFFF';
+  ctx.font='bold 22px Georgia,serif';
+  ctx.fillText('THE',20,36);
+  ctx.fillStyle='#B8860B';
+  ctx.fillText(' BOARD',62,36);
+
+  // Team + grade in header
+  ctx.fillStyle='#FFFFFF';
+  ctx.font='bold 13px Arial,sans-serif';
+  ctx.fillText(d.team.toUpperCase()+' DRAFT CLASS',20,52);
+
+  // Big grade circle
+  const gradeColors={'A+':'#16A34A','A':'#16A34A','A-':'#16A34A','B+':'#15803D','B':'#15803D','B-':'#15803D','C+':'#CA8A04','C':'#CA8A04','D':'#EA580C','F':'#DC2626'};
+  const gc=gradeColors[d.grade]||'#16A34A';
+  ctx.beginPath();
+  ctx.arc(W-60,28,22,0,Math.PI*2);
+  ctx.strokeStyle=gc;ctx.lineWidth=2;ctx.stroke();
+  ctx.fillStyle=gc;
+  ctx.font='bold 20px Georgia,serif';
+  ctx.textAlign='center';
+  ctx.fillText(d.grade,W-60,35);
+  ctx.textAlign='left';
+
+  // Score
+  ctx.fillStyle='#B8860B';
+  ctx.font='bold 11px Arial,sans-serif';
+  ctx.textAlign='center';
+  ctx.fillText('SCORE: '+d.score+'/100',W-60,50);
+  ctx.textAlign='left';
+
+  // Each pick
+  let y=76;
+  d.results.forEach((pick)=>{
+    const p=pick.result.prospect;
+    const pg=pick.result.grade;
+    const pgc=gradeColors[pg]||'#16A34A';
+
+    // Card bg
+    ctx.fillStyle='#FFFFFF';
+    roundRect(ctx,16,y,W-32,76,8);
+    ctx.fill();
+
+    // Round badge
+    ctx.fillStyle='rgba(184,134,11,0.12)';
+    roundRect(ctx,28,y+10,68,18,4);
+    ctx.fill();
+    ctx.fillStyle='#B8860B';
+    ctx.font='bold 9px Arial,sans-serif';
+    ctx.fillText('ROUND '+pick.round,34,y+22);
+
+    // Rank badge
+    ctx.fillStyle='#F3F0E8';
+    roundRect(ctx,104,y+10,70,18,4);
+    ctx.fill();
+    ctx.fillStyle='#6B6B6B';
+    ctx.fillText('#'+p.rank+' CONSENSUS',110,y+22);
+
+    // Player name
+    ctx.fillStyle='#0C0C0C';
+    ctx.font='bold 15px Georgia,serif';
+    ctx.fillText(pick.player,28,y+46);
+
+    // Details
+    ctx.fillStyle='#6B6B6B';
+    ctx.font='11px Arial,sans-serif';
+    ctx.fillText(p.pos+' · '+p.league,28,y+62);
+
+    // Grade badge
+    ctx.fillStyle=pgc;
+    ctx.font='bold 18px Georgia,serif';
+    ctx.textAlign='right';
+    ctx.fillText(pg,W-28,y+48);
+    ctx.textAlign='left';
+
+    // Mini bars
+    const barY=y+68;
+    const barW=(W-64)/5;
+    Object.values(p.scores).forEach((v,i)=>{
+      const bx=28+i*(barW+4);
+      ctx.fillStyle='#F3F0E8';
+      ctx.fillRect(bx,barY,barW,3);
+      ctx.fillStyle=v>=85?'#16A34A':v>=70?'#15803D':v>=55?'#CA8A04':v>=40?'#EA580C':'#DC2626';
+      ctx.fillRect(bx,barY,barW*(v/100),3);
+    });
+
+    y+=90;
+  });
+
+  // Footer
+  ctx.fillStyle='#0C0C0C';
+  ctx.fillRect(0,H-36,W,36);
+  ctx.fillStyle='#FFFFFF';
+  ctx.font='bold 11px Arial,sans-serif';
+  ctx.textAlign='center';
+  ctx.fillText('THE BOARD — 2026 NHL DRAFT GRADE TOOL', W/2, H-16);
+  ctx.textAlign='left';
+
+  // Download
+  const link=document.createElement('a');
+  link.download=d.team.replace(/\s+/g,'-')+'-2026-draft-grade.png';
+  link.href=canvas.toDataURL('image/png');
+  link.click();
+}
+
+function roundRect(ctx,x,y,w,h,r){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);
+  ctx.lineTo(x+w-r,y);
+  ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+  ctx.lineTo(x+w,y+h-r);
+  ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+  ctx.lineTo(x+r,y+h);
+  ctx.quadraticCurveTo(x,y+h,x,y+h-r);
+  ctx.lineTo(x,y+r);
+  ctx.quadraticCurveTo(x,y,x+r,y);
+  ctx.closePath();
+}
 init();
 </script>
 </body>
