@@ -3,7 +3,7 @@ export default async function handler(req, res) {
   if (!team) return res.status(400).json({ error: 'Team abbreviation required' });
 
   const SEASON = '20252026';
-  const MIN_GAMES = 5;
+  const MIN_GAMES = 3;
 
   const headers = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
@@ -12,7 +12,6 @@ export default async function handler(req, res) {
   };
 
   try {
-    // Fetch roster (for handedness) and stats (for points/TOI) in parallel
     const [rosterRes, statsRes] = await Promise.all([
       fetch(`https://api-web.nhle.com/v1/roster/${team}/${SEASON}`, { headers }),
       fetch(`https://api-web.nhle.com/v1/club-stats/${team}/${SEASON}/2`, { headers })
@@ -26,7 +25,7 @@ export default async function handler(req, res) {
       statsRes.json()
     ]);
 
-    // Build lookup: player ID -> shoot hand + position from roster endpoint
+    // Build lookup: player ID -> shoot hand + registered position
     const handMap = {};
     const posMap = {};
 
@@ -42,7 +41,6 @@ export default async function handler(req, res) {
       posMap[p.id] = 'G';
     });
 
-    // Convert MM:SS to seconds
     const toiToSeconds = (toi) => {
       if (!toi) return 0;
       const [m, s] = toi.split(':').map(Number);
@@ -51,7 +49,7 @@ export default async function handler(req, res) {
 
     const getName = (p) => `${p.firstName.default} ${p.lastName.default}`;
 
-    // Merge stats with position/handedness, filter by min games
+    // Merge stats with position/handedness
     const skaters = (statsData.skaters || [])
       .filter(p => p.gamesPlayed >= MIN_GAMES)
       .map(p => ({
@@ -63,22 +61,52 @@ export default async function handler(req, res) {
         points: (p.goals || 0) + (p.assists || 0)
       }));
 
-    // Sort forwards by points desc, then TOI desc as tiebreaker
-    const sortForwards = (arr) => arr.sort((a, b) => 
+    // Sort forwards by points desc, TOI as tiebreaker
+    const sortForwards = (arr) => arr.sort((a, b) =>
       b.points !== a.points ? b.points - a.points : b.toiSeconds - a.toiSeconds
     );
 
-    // Sort defence by TOI desc (most reliable metric for D)
+    // Sort defence by TOI desc
     const sortDefence = (arr) => arr.sort((a, b) => b.toiSeconds - a.toiSeconds);
 
-    const centres    = sortForwards(skaters.filter(p => p.posCode === 'C')).slice(0, 4).map(p => p.name);
-    const leftWings  = sortForwards(skaters.filter(p => p.posCode === 'L')).slice(0, 4).map(p => p.name);
-    const rightWings = sortForwards(skaters.filter(p => p.posCode === 'R')).slice(0, 4).map(p => p.name);
+    // Get forwards by registered position, sorted by points
+    const allForwards = sortForwards([...skaters.filter(p => ['C','L','R'].includes(p.posCode))]);
+    
+    // Fill lines greedily — place each forward into their registered position first
+    // If that slot is full (4 slots per position), place into best available adjacent slot
+    const centres    = [];
+    const leftWings  = [];
+    const rightWings = [];
+    const overflow   = []; // players whose primary slot is full
 
-    // D split by shoot hand, sorted by TOI
-    const dmen = sortDefence(skaters.filter(p => p.posCode === 'D'));
-    const leftDef  = dmen.filter(p => p.shoots === 'L').slice(0, 3).map(p => p.name);
-    const rightDef = dmen.filter(p => p.shoots === 'R').slice(0, 3).map(p => p.name);
+    // First pass — fill registered positions up to 4 each
+    for (const p of allForwards) {
+      if (p.posCode === 'C' && centres.length < 4)        centres.push(p.name);
+      else if (p.posCode === 'L' && leftWings.length < 4)  leftWings.push(p.name);
+      else if (p.posCode === 'R' && rightWings.length < 4) rightWings.push(p.name);
+      else overflow.push(p);
+    }
+
+    // Second pass — fill open wing slots with overflow forwards (by points)
+    for (const p of overflow) {
+      if (leftWings.length < 4)       leftWings.push(p.name);
+      else if (rightWings.length < 4) rightWings.push(p.name);
+      else if (centres.length < 4)    centres.push(p.name);
+    }
+
+    // Defence split by shoot hand, sorted by TOI
+    const dmen      = sortDefence(skaters.filter(p => p.posCode === 'D'));
+    const leftDef   = dmen.filter(p => p.shoots === 'L').slice(0, 3).map(p => p.name);
+    const rightDef  = dmen.filter(p => p.shoots === 'R').slice(0, 3).map(p => p.name);
+
+    // If one side is short, fill from the other side's overflow
+    const dmenOverflow = dmen.filter(p =>
+      (p.shoots === 'L' && leftDef.length >= 3) ||
+      (p.shoots === 'R' && rightDef.length >= 3)
+    ).map(p => p.name);
+
+    while (leftDef.length < 3 && dmenOverflow.length)  leftDef.push(dmenOverflow.shift());
+    while (rightDef.length < 3 && dmenOverflow.length) rightDef.push(dmenOverflow.shift());
 
     // Goalies by games started
     const goalieList = (statsData.goalies || [])
@@ -95,16 +123,15 @@ export default async function handler(req, res) {
       RD: rightDef,
       G:  goalieList,
       _meta: {
-        team,
-        season: SEASON,
-        minGames: MIN_GAMES,
+        team, season: SEASON, minGames: MIN_GAMES,
         totalSkaters: (statsData.skaters || []).length,
         filtered: skaters.length,
         centres: centres.length,
         leftWings: leftWings.length,
         rightWings: rightWings.length,
         leftDef: leftDef.length,
-        rightDef: rightDef.length
+        rightDef: rightDef.length,
+        overflowForwards: overflow.length
       }
     };
 
