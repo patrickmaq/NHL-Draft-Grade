@@ -1,7 +1,5 @@
 {
-  "functions": {
-    "api/roster.js": {
-      "runtime": "edge"
-    }
-  }
+  "rewrites": [
+    { "source": "/api/roster", "destination": "/api/roster.js" }
+  ]
 }
