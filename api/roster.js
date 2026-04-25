@@ -3,7 +3,6 @@ export default async function handler(req, res) {
   if (!team) return res.status(400).json({ error: 'Team abbreviation required' });
 
   const SEASON = '20252026';
-
   const headers = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
     'Accept': 'application/json',
@@ -24,53 +23,36 @@ export default async function handler(req, res) {
       statsRes.json()
     ]);
 
-    // Debug: capture first player from each endpoint to see field names
-    const firstRosterF = (rosterData.forwards || [])[0] || {};
-    const firstStatsS = (statsData.skaters || [])[0] || {};
-
-    // Build lookup using ALL possible ID field names from roster endpoint
+    // Roster uses 'id', stats uses 'playerId' - confirmed from meta
+    // Build maps keyed on roster 'id'
     const handMap = {};
     const posMap = {};
 
-    const addToMaps = (players, pos) => {
-      players.forEach(p => {
-        // Try all possible ID fields
-        const ids = [p.id, p.playerId, p.player_id, p.personId].filter(Boolean);
-        ids.forEach(id => {
-          handMap[id] = p.shootsCatches;
-          posMap[id] = pos;
-        });
-        // Also index by name as fallback
-        const name = `${p.firstName?.default || p.firstName} ${p.lastName?.default || p.lastName}`;
-        handMap[`name_${name}`] = p.shootsCatches;
-        posMap[`name_${name}`] = pos;
-      });
-    };
-
-    addToMaps(rosterData.forwards || [], null); // pos set per player below
     (rosterData.forwards || []).forEach(p => {
-      const ids = [p.id, p.playerId, p.player_id, p.personId].filter(Boolean);
-      ids.forEach(id => { posMap[id] = p.positionCode; }); // C, L, R
-      const name = `${p.firstName?.default || p.firstName} ${p.lastName?.default || p.lastName}`;
-      posMap[`name_${name}`] = p.positionCode;
+      handMap[p.id] = p.shootsCatches;
+      posMap[p.id] = p.positionCode; // C, L, R
     });
     (rosterData.defensemen || []).forEach(p => {
-      const ids = [p.id, p.playerId, p.player_id, p.personId].filter(Boolean);
-      ids.forEach(id => { handMap[id] = p.shootsCatches; posMap[id] = 'D'; });
-      const name = `${p.firstName?.default || p.firstName} ${p.lastName?.default || p.lastName}`;
-      handMap[`name_${name}`] = p.shootsCatches;
-      posMap[`name_${name}`] = 'D';
+      handMap[p.id] = p.shootsCatches;
+      posMap[p.id] = 'D';
     });
     (rosterData.goalies || []).forEach(p => {
-      const ids = [p.id, p.playerId, p.player_id, p.personId].filter(Boolean);
-      ids.forEach(id => { posMap[id] = 'G'; });
+      posMap[p.id] = 'G';
     });
 
-    const toiToSeconds = (toi) => {
-      if (!toi) return 0;
-      const parts = String(toi).split(':');
-      return (parseInt(parts[0]) || 0) * 60 + (parseInt(parts[1]) || 0);
-    };
+    // Also build name-based fallback map
+    const handByName = {};
+    const posByName = {};
+    (rosterData.forwards || []).forEach(p => {
+      const name = `${p.firstName.default} ${p.lastName.default}`;
+      handByName[name] = p.shootsCatches;
+      posByName[name] = p.positionCode;
+    });
+    (rosterData.defensemen || []).forEach(p => {
+      const name = `${p.firstName.default} ${p.lastName.default}`;
+      handByName[name] = p.shootsCatches;
+      posByName[name] = 'D';
+    });
 
     const getName = (p) => {
       const first = p.firstName?.default || p.firstName || '';
@@ -78,40 +60,54 @@ export default async function handler(req, res) {
       return `${first} ${last}`.trim();
     };
 
-    // Process skaters — try multiple ID fields + name fallback
-    const skaters = (statsData.skaters || [])
-      .map(p => {
-        const name = getName(p);
-        const nameKey = `name_${name}`;
-        // Try all ID fields
-        const id = p.playerId || p.id || p.player_id || p.personId;
-        
-        // Get position and handedness — try ID first, name as fallback
-        let posCode = posMap[id] || posMap[nameKey] || p.positionCode;
-        let shoots = handMap[id] || handMap[nameKey] || 'L';
-        
-        // Normalize position codes (some APIs use 'L'/'R' others 'LW'/'RW')
-        if (posCode === 'LW') posCode = 'L';
-        if (posCode === 'RW') posCode = 'R';
-
-        return {
-          ...p,
-          name,
-          toiSeconds: toiToSeconds(p.avgToi),
-          posCode,
-          shoots,
-          points: (p.goals || 0) + (p.assists || 0)
-        };
-      })
-      .filter(p => p.toiSeconds >= 60); // at least 1 min avg TOI
-
-    // Sort forwards by points, then TOI
-    const sortF = (arr) => arr.sort((a, b) =>
-      b.points !== a.points ? b.points - a.points : b.toiSeconds - a.toiSeconds
+    // Inspect first skater to find TOI field name
+    const firstSkater = (statsData.skaters || [])[0] || {};
+    const toiFields = Object.keys(firstSkater).filter(k => 
+      k.toLowerCase().includes('toi') || k.toLowerCase().includes('time')
     );
 
-    // Sort D by TOI
-    const sortD = (arr) => arr.sort((a, b) => b.toiSeconds - a.toiSeconds);
+    // Find the right TOI field
+    const toiField = toiFields.find(f => firstSkater[f] && String(firstSkater[f]).includes(':')) 
+      || toiFields[0] 
+      || 'avgToi';
+
+    const toiToSeconds = (toi) => {
+      if (!toi) return 0;
+      const str = String(toi);
+      if (str.includes(':')) {
+        const [m, s] = str.split(':').map(Number);
+        return (m || 0) * 60 + (s || 0);
+      }
+      return parseFloat(str) || 0;
+    };
+
+    // Process all skaters — no TOI filter, just get everyone
+    const skaters = (statsData.skaters || []).map(p => {
+      const name = getName(p);
+      const id = p.playerId; // stats uses playerId
+      
+      // Look up by ID first, name as fallback
+      const posCode = posMap[id] || posByName[name] || p.positionCode || 'C';
+      const shoots = handMap[id] || handByName[name] || 'L';
+      const toi = p[toiField] || p.avgToi || p.timeOnIcePerGame || p.avgTimeOnIce || 0;
+
+      return {
+        name,
+        id,
+        toiSeconds: toiToSeconds(toi),
+        rawToi: toi,
+        posCode: posCode === 'LW' ? 'L' : posCode === 'RW' ? 'R' : posCode,
+        shoots,
+        points: (p.goals || 0) + (p.assists || 0),
+        gamesPlayed: p.gamesPlayed || 0
+      };
+    }).filter(p => ['C','L','R','D'].includes(p.posCode));
+
+    // Sort forwards by points then TOI
+    const sortF = (arr) => arr.sort((a,b) => 
+      b.points !== a.points ? b.points - a.points : b.toiSeconds - a.toiSeconds
+    );
+    const sortD = (arr) => arr.sort((a,b) => b.toiSeconds - a.toiSeconds);
 
     const allForwards = sortF(skaters.filter(p => ['C','L','R'].includes(p.posCode)));
     const centres = [], leftWings = [], rightWings = [], overflow = [];
@@ -138,7 +134,7 @@ export default async function handler(req, res) {
     while (rightDef.length < 3 && dOverflow.length) rightDef.push(dOverflow.shift());
 
     const goalieList = (statsData.goalies || [])
-      .sort((a, b) => b.gamesStarted - a.gamesStarted)
+      .sort((a,b) => (b.gamesStarted||0) - (a.gamesStarted||0))
       .slice(0, 2)
       .map(getName);
 
@@ -147,17 +143,19 @@ export default async function handler(req, res) {
       LD: leftDef, RD: rightDef, G: goalieList,
       _meta: {
         team, season: SEASON,
-        rosterForwardCount: (rosterData.forwards||[]).length,
-        statsSkaterCount: (statsData.skaters||[]).length,
+        toiFieldUsed: toiField,
+        allToiFields: toiFields,
+        firstSkaterKeys: Object.keys(firstSkater),
+        firstSkaterToi: firstSkater[toiField],
+        totalSkaters: (statsData.skaters||[]).length,
         filteredSkaters: skaters.length,
-        rosterFirstPlayerIdFields: Object.keys(firstRosterF).filter(k => k.toLowerCase().includes('id')),
-        statsFirstPlayerIdFields: Object.keys(firstStatsS).filter(k => k.toLowerCase().includes('id')),
+        sampleSkater: skaters[0] || null,
         centres: centres.length, leftWings: leftWings.length,
         rightWings: rightWings.length, leftDef: leftDef.length, rightDef: rightDef.length
       }
     };
 
-    res.setHeader('Cache-Control', 'no-store'); // no cache while debugging
+    res.setHeader('Cache-Control', 'no-store');
     res.setHeader('Access-Control-Allow-Origin', '*');
     return res.status(200).json(roster);
 
