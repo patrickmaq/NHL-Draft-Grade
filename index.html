@@ -277,7 +277,7 @@ async function fetchNHLRoster(team) {
 
   // Try Vercel proxy first (no CORS issues)
   try {
-    const res = await fetch(\`/api/roster?team=\${abbrev}\`);
+    const res = await fetch('/api/roster?team=' + abbrev);
     if (res.ok) {
       const data = await res.json();
       if (data.forwards) {
@@ -290,7 +290,7 @@ async function fetchNHLRoster(team) {
 
   // Try direct NHL API as backup
   try {
-    const res = await fetch(\`https://api-web.nhle.com/v1/roster/\${abbrev}/20252026\`);
+    const res = await fetch('https://api-web.nhle.com/v1/roster/' + abbrev + '/20252026');
     if (res.ok) {
       const data = await res.json();
       const roster = parseNHLApiResponse(data);
