@@ -280,44 +280,64 @@ const FALLBACK_ROSTERS = {
   "Tampa Bay":   {C:["Brayden Point","Anthony Cirelli","Steven Stamkos","Pierre-Edouard Bellemare"],LW:["Ondrej Palat","Pat Maroon","Tanner Jeannot","Gabriel Fortier"],RW:["Nikita Kucherov","Brandon Hagel","Corey Perry","Alex Barre-Boulet"],LD:["Victor Hedman","Mikhail Sergachev","Nick Perbix","Darren Raddysh"],RD:["Ryan McDonagh","Erik Cernak","Ian Cole","Phil Myers"],G:["Andrei Vasilevskiy","Brian Elliott"]},
   "Toronto":     {C:["Auston Matthews","John Tavares","David Kampf","Adam Gaudette"],LW:["Matthew Knies","Zach Aston-Reese","Bobby McMann","Joey Anderson"],RW:["Mitch Marner","William Nylander","Michael Bunting","Alex Kerfoot"],LD:["Morgan Rielly","Timothy Liljegren","Conor Timmins","Carl Dahlstrom"],RD:["TJ Brodie","Jake McCabe","Mark Giordano","Jordie Benn"],G:["Joseph Woll","Matt Murray"]},
   "Utah":        {C:["Clayton Keller","Nick Schmaltz","Alexander Kerfoot","Barrett Hayton"],LW:["Lawson Crouse","Michael Carcone","Liam O'Brien","Hudson Fasching"],RW:["Dylan Guenther","Matias Maccelli","Nick Bjugstad","Josh Doan"],LD:["Mikhail Sergachev","Juuso Valimaki","Sean Durzi","Vladislav Kolyachonok"],RD:["Travis Dermott","Patrik Nemeth","Michael Kesselring","Arber Xhekaj"],G:["Connor Ingram","Karel Vejmelka"]},
-  "Vancouver":   {C:["Elias Pettersson","Pius Suter","Teddy Blueger","Nils Hoglander"],LW:["Brock Boeser","Conor Garland","Sheldon Dries","Phil Di Giuseppe"],RW:["Jake DeBrusk","Ilya Mikheyev","Vasily Podkolzin","Anthony Beauvillier"],LD:["Quinn Hughes","Carson Soucy","Mark Giordano","Guillaume Brisebois"],RD:["Filip Hronek","Tyler Myers","Kyle Burroughs","Noah Juulsen"],G:["Thatcher Demko","Collin Delia"]},
+  "Vancouver":   {C:["Filip Chytil","Teddy Blueger","Curtis Douglas","Kiefer Sherwood"],LW:["Brock Boeser","Conor Garland","Jake DeBrusk","Drew O'Connor"],RW:["Nils Aman","Danton Heinen","Liam Ohgren","Max Sasson"],LD:["Zeev Buium","Derek Forbort","Pierre-Olivier Joseph","Marcus Pettersson"],RD:["Filip Hronek","Tom Willander","Victor Mancini","Elias Pettersson"],G:["Thatcher Demko","Kevin Lankinen"]},
   "Vegas":       {C:["Jack Eichel","Chandler Stephenson","Nicolas Roy","Brett Howden"],LW:["Mark Stone","William Carrier","Keegan Kolesar","Jonas Rondbjerg"],RW:["Jonathan Marchessault","Michael Amadio","Reilly Smith","Pavel Dorofeyev"],LD:["Alex Pietrangelo","Brayden McNabb","Zach Whitecloud","Ben Hutton"],RD:["Shea Theodore","Nic Hague","Alec Martinez","Daniil Miromanov"],G:["Adin Hill","Logan Thompson"]},
   "Washington":  {C:["Dylan Strome","Lars Eller","Nic Dowd","Michael Sgarbossa"],LW:["Alex Ovechkin","Tom Wilson","Beck Malenstyn","Sonny Milano"],RW:["T.J. Oshie","Anthony Mantha","Garnet Hathaway","Carl Hagelin"],LD:["John Carlson","Matt Irwin","Trevor van Riemsdyk","Nick Jensen"],RD:["Dmitry Orlov","Rasmus Sandin","Erik Gustafsson","Dylan McIlrath"],G:["Charlie Lindgren","Darcy Kuemper"]},
   "Winnipeg":    {C:["Mark Scheifele","Adam Lowry","Sean Monahan","Morgan Barron"],LW:["Kyle Connor","Nikolaj Ehlers","Mason Appleton","Axel Jonsson-Fjallby"],RW:["Blake Wheeler","Gabriel Vilardi","Nino Niederreiter","Cole Perfetti"],LD:["Josh Morrissey","Dylan Samberg","Brenden Dillon","Logan Stanley"],RD:["Neal Pionk","Dylan DeMelo","Nate Schmidt","Ville Heinola"],G:["Connor Hellebuyck","David Rittich"]},
 };
 
+function parseNHLApiResponse(data) {
+  const roster = { C:[], LW:[], RW:[], LD:[], RD:[], G:[] };
+  (data.forwards||[]).forEach(p => {
+    const name = p.firstName.default + ' ' + p.lastName.default;
+    if (p.positionCode==='C') roster.C.push(name);
+    else if (p.positionCode==='L') roster.LW.push(name);
+    else if (p.positionCode==='R') roster.RW.push(name);
+  });
+  (data.defensemen||[]).forEach(p => {
+    const name = p.firstName.default + ' ' + p.lastName.default;
+    if (p.shootsCatches==='L') roster.LD.push(name);
+    else roster.RD.push(name);
+  });
+  (data.goalies||[]).forEach(p => {
+    roster.G.push(p.firstName.default + ' ' + p.lastName.default);
+  });
+  return roster;
+}
+
 async function fetchNHLRoster(team) {
   if (ROSTER_CACHE[team]) return ROSTER_CACHE[team];
   const abbrev = TEAM_ABBREVS[team];
   if (!abbrev) return FALLBACK_ROSTERS[team] || null;
+
+  // Try proxy first (Vercel serverless function — no CORS issues)
+  try {
+    const res = await fetch(`/api/roster?team=${abbrev}`);
+    if (res.ok) {
+      const data = await res.json();
+      if (data.forwards) {
+        const roster = parseNHLApiResponse(data);
+        ROSTER_CACHE[team] = roster;
+        return roster;
+      }
+    }
+  } catch(e) { /* proxy not available, try direct */ }
+
+  // Try direct NHL API (works on localhost, blocked on some domains)
   try {
     const res = await fetch(`https://api-web.nhle.com/v1/roster/${abbrev}/20252026`);
-    if (!res.ok) throw new Error('API failed');
-    const data = await res.json();
-    const roster = { C:[], LW:[], RW:[], LD:[], RD:[], G:[] };
-    (data.forwards||[]).forEach(p => {
-      const name = p.firstName.default + ' ' + p.lastName.default;
-      const pos = p.positionCode;
-      if (pos==='C') roster.C.push(name);
-      else if (pos==='L') roster.LW.push(name);
-      else if (pos==='R') roster.RW.push(name);
-    });
-    (data.defensemen||[]).forEach(p => {
-      const name = p.firstName.default + ' ' + p.lastName.default;
-      if (p.shootsCatches==='L') roster.LD.push(name);
-      else roster.RD.push(name);
-    });
-    (data.goalies||[]).forEach(p => {
-      roster.G.push(p.firstName.default + ' ' + p.lastName.default);
-    });
-    ROSTER_CACHE[team] = roster;
-    return roster;
-  } catch(e) {
-    // API blocked — use fallback
-    const fallback = FALLBACK_ROSTERS[team] || null;
-    if (fallback) ROSTER_CACHE[team] = fallback;
-    return fallback;
-  }
+    if (res.ok) {
+      const data = await res.json();
+      const roster = parseNHLApiResponse(data);
+      ROSTER_CACHE[team] = roster;
+      return roster;
+    }
+  } catch(e) { /* blocked — use fallback */ }
+
+  // Use hardcoded fallback
+  const fallback = FALLBACK_ROSTERS[team] || null;
+  if (fallback) ROSTER_CACHE[team] = fallback;
+  return fallback;
 }
 
 function getDevTimeline(prospect) {
