@@ -29,14 +29,14 @@ export default async function handler(req, res) {
       return `${first} ${last}`.trim();
     };
 
-    // Build name-based maps from roster (most reliable cross-reference)
+    // Build name-based position and handedness maps from roster
     const shootsByName = {};
     const posByName = {};
 
     (rosterData.forwards || []).forEach(p => {
       const name = getName(p);
       shootsByName[name] = p.shootsCatches || 'L';
-      posByName[name] = p.positionCode; // C, L, R
+      posByName[name] = p.positionCode; // C, L, or R
     });
     (rosterData.defensemen || []).forEach(p => {
       const name = getName(p);
@@ -44,127 +44,88 @@ export default async function handler(req, res) {
       posByName[name] = 'D';
     });
     (rosterData.goalies || []).forEach(p => {
-      const name = getName(p);
-      posByName[name] = 'G';
+      posByName[getName(p)] = 'G';
     });
 
-    // Also build ID-based maps
-    const shootsById = {};
-    const posById = {};
-    (rosterData.forwards || []).forEach(p => {
-      shootsById[p.id] = p.shootsCatches || 'L';
-      posById[p.id] = p.positionCode;
-    });
-    (rosterData.defensemen || []).forEach(p => {
-      shootsById[p.id] = p.shootsCatches || 'L';
-      posById[p.id] = 'D';
-    });
-
-    // Get first skater to inspect field structure
-    const sample = (statsData.skaters || [])[0] || {};
-
-    // Find TOI field — look for anything with a colon (MM:SS format)
-    let toiField = 'avgToi';
-    for (const [key, val] of Object.entries(sample)) {
-      if (typeof val === 'string' && val.includes(':') && val.length < 10) {
-        toiField = key;
-        break;
-      }
-    }
-
-    const toiToSeconds = (val) => {
-      if (!val) return 0;
-      const s = String(val);
-      if (s.includes(':')) {
-        const [m, sec] = s.split(':').map(Number);
-        return (m || 0) * 60 + (sec || 0);
-      }
-      return parseFloat(s) || 0;
-    };
-
-    // Process ALL skaters from stats endpoint
+    // Process all skaters — sort by points + games played (no TOI, it returns 0)
     const allSkaters = (statsData.skaters || []).map(p => {
       const name = getName(p);
-      const id = p.playerId || p.id;
-
-      // Get position: name lookup first, then ID, then API field
-      let pos = posByName[name] || posById[id] || p.positionCode || '';
-      // Normalize
+      let pos = posByName[name] || p.positionCode || '';
       if (pos === 'LW') pos = 'L';
       if (pos === 'RW') pos = 'R';
 
-      // Get shoots: name lookup first, then ID
-      const shoots = shootsByName[name] || shootsById[id] || 'L';
-
-      const toi = p[toiField] || 0;
-
       return {
         name,
-        id,
         pos,
-        shoots,
-        toiSeconds: toiToSeconds(toi),
+        shoots: shootsByName[name] || 'L',
         points: (p.goals || 0) + (p.assists || 0),
+        goals: p.goals || 0,
         gamesPlayed: p.gamesPlayed || 0
       };
     });
 
-    // Separate by position — use pos from roster, not stats
-    // No filters — include everyone, sort by production then TOI
-    const forwards = allSkaters.filter(p => ['C','L','R'].includes(p.pos));
-    const dmen = allSkaters.filter(p => p.pos === 'D');
-
-    // If a player isn't in posMap (traded in mid-season), check stats positionCode
-    // and add them based on what the stats endpoint says
-    const unmapped = allSkaters.filter(p => !p.pos);
-    
-    const sortByProd = (arr) => arr.sort((a,b) =>
-      b.points !== a.points ? b.points - a.points : b.toiSeconds - a.toiSeconds
+    // Sort by points desc, then goals, then games played
+    const sortByProduction = (arr) => arr.sort((a, b) =>
+      b.points !== a.points ? b.points - a.points :
+      b.goals !== a.goals ? b.goals - a.goals :
+      b.gamesPlayed - a.gamesPlayed
     );
-    const sortByToi = (arr) => arr.sort((a,b) => b.toiSeconds - a.toiSeconds);
 
-    const sorted = sortByProd(forwards);
+    // Sort defence by games played (most games = most important player)
+    const sortDefence = (arr) => arr.sort((a, b) =>
+      b.gamesPlayed !== a.gamesPlayed ? b.gamesPlayed - a.gamesPlayed :
+      b.points - a.points
+    );
+
+    // Fill forward lines
+    const forwards = sortByProduction(allSkaters.filter(p => ['C','L','R'].includes(p.pos)));
     const centres = [], lw = [], rw = [], overflow = [];
 
-    for (const p of sorted) {
+    for (const p of forwards) {
       if      (p.pos === 'C' && centres.length < 4) centres.push(p.name);
       else if (p.pos === 'L' && lw.length < 4)      lw.push(p.name);
       else if (p.pos === 'R' && rw.length < 4)      rw.push(p.name);
       else overflow.push(p);
     }
+    // Fill open slots with overflow
     for (const p of overflow) {
       if      (lw.length < 4)      lw.push(p.name);
       else if (rw.length < 4)      rw.push(p.name);
       else if (centres.length < 4) centres.push(p.name);
     }
 
-    const sortedD = sortByToi(dmen);
-    const leftDef  = sortedD.filter(p => p.shoots === 'L').slice(0,3).map(p => p.name);
-    const rightDef = sortedD.filter(p => p.shoots === 'R').slice(0,3).map(p => p.name);
+    // Fill defence — sort by games played
+    const dmen = sortDefence(allSkaters.filter(p => p.pos === 'D'));
+    const leftDef  = dmen.filter(p => p.shoots === 'L').slice(0, 3).map(p => p.name);
+    const rightDef = dmen.filter(p => p.shoots === 'R').slice(0, 3).map(p => p.name);
 
     // Fill gaps from overflow D
     const usedD = new Set([...leftDef, ...rightDef]);
-    const dOver = sortedD.filter(p => !usedD.has(p.name));
+    const dOver = dmen.filter(p => !usedD.has(p.name));
     while (leftDef.length < 3 && dOver.length)  leftDef.push(dOver.shift().name);
     while (rightDef.length < 3 && dOver.length) rightDef.push(dOver.shift().name);
 
     const goalies = (statsData.goalies || [])
-      .sort((a,b) => (b.gamesStarted||0) - (a.gamesStarted||0))
-      .slice(0,2).map(getName);
+      .sort((a, b) => (b.gamesStarted || 0) - (a.gamesStarted || 0))
+      .slice(0, 2).map(getName);
+
+    // Re-enable caching now that it's working
+    res.setHeader('Cache-Control', 's-maxage=21600, stale-while-revalidate=3600');
+    res.setHeader('Access-Control-Allow-Origin', '*');
 
     return res.status(200).json({
       C: centres, LW: lw, RW: rw,
       LD: leftDef, RD: rightDef, G: goalies,
       _meta: {
-        team, toiField,
-        rosterF: (rosterData.forwards||[]).length,
-        rosterD: (rosterData.defensemen||[]).length,
-        statsSkaters: (statsData.skaters||[]).length,
+        team, season: SEASON,
         totalForwards: forwards.length,
         totalDmen: dmen.length,
-        unmapped: unmapped.length,
-        sampleFields: Object.keys(sample),
-        firstFewSkaters: allSkaters.slice(0,5).map(p => ({name:p.name, pos:p.pos, shoots:p.shoots, toi:p.toiSeconds, pts:p.points}))
+        topForwards: allSkaters
+          .filter(p => ['C','L','R'].includes(p.pos))
+          .sort((a,b) => b.points - a.points)
+          .slice(0, 5)
+          .map(p => ({ name: p.name, pos: p.pos, pts: p.points, gp: p.gamesPlayed })),
+        topDmen: dmen.slice(0, 6).map(p => ({ name: p.name, shoots: p.shoots, gp: p.gamesPlayed, pts: p.points }))
       }
     });
 
