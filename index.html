@@ -291,7 +291,7 @@ async function fetchNHLRoster(team) {
   const abbrev = TEAM_ABBREVS[team];
   if (!abbrev) return FALLBACK_ROSTERS[team] || null;
   try {
- const res = await fetch(`/api/roster?team=${abbrev}`);
+    const res = await fetch(`https://api-web.nhle.com/v1/roster/${abbrev}/20252026`);
     if (!res.ok) throw new Error('API failed');
     const data = await res.json();
     const roster = { C:[], LW:[], RW:[], LD:[], RD:[], G:[] };
@@ -370,8 +370,9 @@ async function buildRosterDiagram(team, picks) {
     G:  pad(apiRoster ? apiRoster.G  : [], 2),
   };
 
-  // Place draft picks — match to exact position, respect priority order
-  const draftedSlots = {}; // "C-0", "LW-2", etc.
+  // Place draft picks — insert into depth chart by dev timeline
+  // NHL-ready → top lines, longer dev → lower lines
+  const draftedSlots = {};
   picks.forEach(pick => {
     const p = pick.result.prospect;
     const positions = getProspectPositions(p.pos);
@@ -379,12 +380,13 @@ async function buildRosterDiagram(team, picks) {
     for (const pos of positions) {
       const arr = displayRoster[pos];
       if (!arr) continue;
-      const idx = arr.indexOf('?');
-      if (idx !== -1) {
-        arr[idx] = pick.player;
-        draftedSlots[pos+'-'+idx] = { name: pick.player, dev };
-        break;
-      }
+      const maxLen = (pos==='G') ? 2 : (['LD','RD'].includes(pos)) ? 3 : 4;
+      // Insert position based on dev years — closer to ready = higher line
+      let insertIdx = Math.min(dev.years, maxLen - 1);
+      arr.splice(insertIdx, 0, pick.player);
+      arr.splice(maxLen); // keep length correct
+      draftedSlots[pos+'-'+insertIdx] = { name: pick.player, dev };
+      break;
     }
   });
 
@@ -429,8 +431,8 @@ async function buildRosterDiagram(team, picks) {
     html += `<div style="margin-bottom:8px;">
       <div style="font-size:0.58rem;color:var(--text-muted);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:4px;font-weight:600;">${lineLabels[i]}</div>
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;">
-        ${playerCard(displayRoster.C[i], 'C-'+i)}
         ${playerCard(displayRoster.LW[i],'LW-'+i)}
+        ${playerCard(displayRoster.C[i], 'C-'+i)}
         ${playerCard(displayRoster.RW[i],'RW-'+i)}
       </div></div>`;
   }
