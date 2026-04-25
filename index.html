@@ -250,27 +250,61 @@ const TEAM_ABBREVS = {
 // Cache fetched rosters so we don't re-fetch on same session
 const ROSTER_CACHE = {};
 
+// Hardcoded 2025-26 rosters as fallback (NHL API has CORS restrictions)
+const FALLBACK_ROSTERS = {
+  "Anaheim":     {C:["Leo Carlsson","Mason McTavish","Adam Henrique","Sam Carrick"],LW:["Alex Killorn","Brock McGinn","Buddy Robinson","Olen Zellweger"],RW:["Frank Vatrano","Jakob Silfverberg","Troy Terry","Robby Fabbri"],LD:["Jackson LaCombe","Dmitry Kulikov","Cam Fowler","Simon Benoit"],RD:["John Klingberg","Brian Dumoulin","Radko Gudas","Pavel Mintyukov"],G:["Lukas Dostal","John Gibson"]},
+  "Boston":      {C:["Charlie Coyle","Elias Lindholm","Trent Frederic","John Beecher"],LW:["Brad Marchand","Milan Lucic","Patrick Brown","Matt Filipe"],RW:["David Pastrnak","Justin Brazeau","Mark Kastelic","Morgan Geekie"],LD:["Charlie McAvoy","Derek Forbort","Matt Grzelcyk","Parker Wotherspoon"],RD:["Brandon Carlo","Hampus Lindholm","Mason Lohrei","Nikolas Matinpalo"],G:["Jeremy Swayman","Joonas Korpisalo"]},
+  "Buffalo":     {C:["Tage Thompson","Casey Mittelstadt","Dylan Cozens","Peyton Krebs"],LW:["JJ Peterka","Zemgus Girgensons","Beck Malenstyn","Zach Benson"],RW:["Alex Tuch","Nicolas Aube-Kubel","Jason Zucker","Jack Quinn"],LD:["Rasmus Dahlin","Lawrence Pilut","Jacob Bryson","Owen Power"],RD:["Henri Jokiharju","Bowen Byram","Dennis Gilbert","Mattias Samuelsson"],G:["Ukko-Pekka Luukkonen","Devon Levi"]},
+  "Calgary":     {C:["Nazem Kadri","Mikael Backlund","Jonathan Huberdeau","Blake Coleman"],LW:["Andrew Mangiapane","Matt Coronato","Walker Duehr","Ryan Lomberg"],RW:["Elias Lindholm","Tyler Toffoli","Adam Klapka","Cole Schwindt"],LD:["Rasmus Andersson","Dennis Gilbert","MacKenzie Weegar","Noah Hanifin"],RD:["Chris Tanev","Kevin Bahl","Daniil Miromanov","Brayden Pachal"],G:["Dan Vladar","Dustin Wolf"]},
+  "Carolina":    {C:["Sebastian Aho","Jordan Staal","Jesperi Kotkaniemi","Jack Drury"],LW:["Teuvo Teravainen","Jordan Martinook","William Carrier","Brendan Lemieux"],RW:["Andrei Svechnikov","Seth Jarvis","Stefan Noesen","Julien Gauthier"],LD:["Jaccob Slavin","Brady Skjei","Dmitry Orlov","Sean Walker"],RD:["Brent Burns","Tony DeAngelo","Shayne Gostisbehere","Dylan Coghlan"],G:["Pyotr Kochetkov","Frederik Andersen"]},
+  "Chicago":     {C:["Connor Bedard","Jason Dickinson","Tyler Johnson","David Gust"],LW:["Taylor Hall","Anton Frondell","Lukas Reichel","MacKenzie Entwistle"],RW:["Nick Foligno","Boris Katchouk","Andreas Athanasiou","Colin Blackwell"],LD:["Alex Vlasic","Artyom Levshunov","Seth Jones","Alec Martinez"],RD:["TJ Brodie","Louis Crevier","Wyatt Kaiser","Connor Murphy"],G:["Petr Mrazek","Spencer Knight"]},
+  "Colorado":    {C:["Nathan MacKinnon","Ross Colton","Lars Eller","Ben Meyers"],LW:["Gabriel Landeskog","Miles Wood","Logan O'Connor","Matt Nieto"],RW:["Mikko Rantanen","Valeri Nichushkin","Nikolai Kovalenko","Brandon Duhaime"],LD:["Cale Makar","Devon Toews","Erik Johnson","Sam Malinski"],RD:["Josh Manson","Calvin de Haan","Andreas Englund","Brad Hunt"],G:["Alexandar Georgiev","Justus Annunen"]},
+  "Columbus":    {C:["Adam Fantilli","Boone Jenner","Cole Sillinger","Sean Kuraly"],LW:["Johnny Gaudreau","Dmitri Voronkov","Alexandre Texier","James Malatesta"],RW:["Kirill Marchenko","Jakub Voracek","Cam Atkinson","Mathieu Olivier"],LD:["Zach Werenski","Jake Bean","Tim Berni","David Jiricek"],RD:["Ivan Provorov","Nick Blankenburg","Denton Mateychuk","Erik Gudbranson"],G:["Elvis Merzlikins","Jet Greaves"]},
+  "Dallas":      {C:["Roope Hintz","Tyler Seguin","Wyatt Johnston","Craig Smith"],LW:["Mason Marchment","Jamie Benn","Ty Dellandrea","Riley Damiani"],RW:["Jason Robertson","Joe Pavelski","Evgenii Dadonov","Radek Faksa"],LD:["Miro Heiskanen","Thomas Harley","Ryan Suter","Nils Lundkvist"],RD:["Esa Lindell","Colin Miller","Joel Hanley","Lian Bichsel"],G:["Jake Oettinger","Casey DeSmith"]},
+  "Detroit":     {C:["Dylan Larkin","Andrew Copp","Robby Fabbri","Austin Watson"],LW:["Lucas Raymond","Klim Kostin","David Perron","Elmer Soderblom"],RW:["Patrick Kane","Alex DeBrincat","Christian Fischer","Jonatan Berggren"],LD:["Moritz Seider","Ben Chiarot","Justin Holl","Simon Edvinsson"],RD:["Shayne Gostisbehere","Jeff Petry","Marc Staal","Albert Johansson"],G:["Alex Lyon","James Reimer"]},
+  "Edmonton":    {C:["Connor McDavid","Leon Draisaitl","Ryan McLeod","Mattias Janmark"],LW:["Zach Hyman","Warren Foegele","James Neal","Brendan Perlini"],RW:["Corey Perry","Evander Kane","Kailer Yamamoto","Dylan Holloway"],LD:["Darnell Nurse","Cody Ceci","Brett Kulak","Vincent Desharnais"],RD:["Evan Bouchard","Philip Broberg","Tyson Barrie","Mattias Ekholm"],G:["Stuart Skinner","Calvin Pickard"]},
+  "Florida":     {C:["Sam Reinhart","Eetu Luostarinen","Anton Lundell","Kevin Stenlund"],LW:["Matthew Tkachuk","Ryan Lomberg","Jonah Gadjovich","Givani Smith"],RW:["Carter Verhaeghe","Nick Cousins","Rudolfs Balcers","AJ Greer"],LD:["Aaron Ekblad","Radko Gudas","Gustav Forsling","Niko Mikkola"],RD:["Brandon Montour","Marc Staal","Dmitry Kulikov","Ethan Bear"],G:["Sergei Bobrovsky","Anthony Stolarz"]},
+  "Los Angeles": {C:["Anze Kopitar","Phillip Danault","Gabriel Vilardi","Blake Lizotte"],LW:["Kevin Fiala","Brendan Lemieux","Carl Grundstrom","Rasmus Kupari"],RW:["Adrian Kempe","Viktor Arvidsson","Alex Iafallo","Arthur Kaliyev"],LD:["Drew Doughty","Matt Roy","Mikey Anderson","Sean Durzi"],RD:["Alexander Edler","Joel Edmundson","Brian Dumoulin","Vladislav Gavrikov"],G:["David Rittich","Pheonix Copley"]},
+  "Minnesota":   {C:["Joel Eriksson Ek","Ryan Hartman","Frederick Gaudreau","Tyson Jost"],LW:["Kirill Kaprizov","Marcus Foligno","Connor Dewar","Adam Beckman"],RW:["Mats Zuccarello","Matt Boldy","Brandon Duhaime","Nico Sturm"],LD:["Jared Spurgeon","Jonas Brodin","Jon Merrill","Alex Goligoski"],RD:["Matt Dumba","Jake Middleton","Dmitry Kulikov","Calen Addison"],G:["Marc-Andre Fleury","Filip Gustavsson"]},
+  "Montreal":    {C:["Nick Suzuki","Christian Dvorak","Jake Evans","Michael Pezzetta"],LW:["Juraj Slafkovsky","Alex Belzile","Rafael Harvey-Pinard","Joel Armia"],RW:["Cole Caufield","Josh Anderson","Brendan Gallagher","Sean Monahan"],LD:["Kaiden Guhle","David Savard","Mike Matheson","Arber Xhekaj"],RD:["Jeff Petry","Jordan Harris","Justin Barron","Johnathan Kovacevic"],G:["Sam Montembeault","Cayden Primeau"]},
+  "Nashville":   {C:["Ryan O'Reilly","Tommy Novak","Colton Sissons","Michael McCarron"],LW:["Filip Forsberg","Yakov Trenin","Kiefer Sherwood","Adam Wilsby"],RW:["Mark Jankowski","Cole Smith","Zachary L'Heureux","Fedor Svechkov"],LD:["Roman Josi","Tyson Barrie","Alexandre Carrier","Jeremy Davies"],RD:["Ryan McDonagh","Mattias Ekholm","Mark Borowiecki","Spencer Stastney"],G:["Juuse Saros","Kevin Lankinen"]},
+  "New Jersey":  {C:["Jack Hughes","Dawson Mercer","Nico Hischier","Michael McLeod"],LW:["Ondrej Palat","Andreas Johnsson","Nathan Bastian","Fabian Zetterlund"],RW:["Jesper Bratt","Timo Meier","Alexander Holtz","Yegor Sharangovich"],LD:["Dougie Hamilton","Jonas Siegenthaler","Luke Hughes","Brendan Smith"],RD:["John Marino","Ryan Graves","Damon Severson","Kevin Bahl"],G:["Jacob Markstrom","Nico Daws"]},
+  "NY Islanders":{C:["Bo Horvat","Jean-Gabriel Pageau","Kyle MacLean","Ruslan Iskhakov"],LW:["Anders Lee","Matt Martin","Kieffer Bellows","Ross Johnston"],RW:["Brock Nelson","Josh Bailey","Oliver Wahlstrom","Hudson Fasching"],LD:["Ryan Pulock","Scott Mayfield","Adam Pelech","Parker Wotherspoon"],RD:["Noah Dobson","Samuel Bolduc","Robin Salo","Matthew Schaefer"],G:["Semyon Varlamov","Ilya Sorokin"]},
+  "NY Rangers":  {C:["Mika Zibanejad","Vincent Trocheck","Barclay Goodrow","Filip Chytil"],LW:["Artemi Panarin","Chris Kreider","Alexis Lafreniere","Brennan Othmann"],RW:["Will Cuylle","Blake Wheeler","Julien Gauthier","Kaapo Kakko"],LD:["Adam Fox","Ryan Lindgren","Braden Schneider","Zac Jones"],RD:["Jacob Trouba","Erik Gustafsson","Libor Hajek","K'Andre Miller"],G:["Igor Shesterkin","Jonathan Quick"]},
+  "Ottawa":      {C:["Tim Stutzle","Shane Pinto","Ridly Greig","Mark Kastelic"],LW:["Brady Tkachuk","Zack MacEwen","Parker Kelly","Derick Brassard"],RW:["Claude Giroux","Alex DeBrincat","Drake Batherson","Mathieu Joseph"],LD:["Thomas Chabot","Jacob Bernard-Docker","Artem Zub","Nikolas Matinpalo"],RD:["Jakob Chychrun","Travis Hamonic","Erik Brannstrom","Tyler Kleven"],G:["Linus Ullmark","Anton Forsberg"]},
+  "Philadelphia":{C:["Sean Couturier","Scott Laughton","Morgan Frost","Tyson Foerster"],LW:["Joel Farabee","Tanner Laczynski","Garnet Hathaway","Olle Lycksell"],RW:["Travis Konecny","Owen Tippett","Cam Atkinson","Raffl Michael"],LD:["Ivan Provorov","Marc Staal","Nick Seeler","Emil Andrae"],RD:["Jamie Drysdale","Tony DeAngelo","Cam York","Rasmus Ristolainen"],G:["Samuel Ersson","Cal Petersen"]},
+  "Pittsburgh":  {C:["Sidney Crosby","Evgeni Malkin","Lars Eller","Teddy Blueger"],LW:["Jake Guentzel","Rickard Rakell","Jason Zucker","Sam Poulin"],RW:["Reilly Smith","Bryan Rust","Danton Heinen","Radim Zohorna"],LD:["Kris Letang","Marcus Pettersson","Erik Karlsson","Ryan Graves"],RD:["Jeff Petry","Chad Ruhwedel","Mikael Luszczak","Pierre-Olivier Joseph"],G:["Tristan Jarry","Alex Nedeljkovic"]},
+  "San Jose":    {C:["Macklin Celebrini","Will Smith","Mikael Granlund","Luke Kunin"],LW:["William Eklund","Anthony Duclair","Fabian Zetterlund","Alexander Barabanov"],RW:["Michael Misa","Tomas Hertl","Kevin Labanc","Noah Gregor"],LD:["Mario Ferraro","Henry Thrun","Jake Walman","Marc-Edouard Vlasic"],RD:["Erik Karlsson","Ty Emberson","Cal Foote","Scott Harrington"],G:["Yaroslav Askarov","Mackenzie Blackwood"]},
+  "Seattle":     {C:["Matty Beniers","Jared McCann","Yanni Gourde","Morgan Geekie"],LW:["Oliver Bjorkstrand","Brandon Tanev","Tye Kartye","Jaden Schwartz"],RW:["Jordan Eberle","Eeli Tolvanen","Daniel Sprong","Will Borgen"],LD:["Vince Dunn","Carson Soucy","Adam Larsson","Brian Dumoulin"],RD:["Justin Schultz","Mark Giordano","Jamie Oleksiak","Ryker Evans"],G:["Philipp Grubauer","Joey Daccord"]},
+  "St. Louis":   {C:["Brayden Schenn","Robert Thomas","Oskar Sundqvist","Tyler Bozak"],LW:["David Perron","Pavel Buchnevich","Nathan Walker","Sammy Blais"],RW:["Vladimir Tarasenko","Ivan Barbashev","Ryan O'Reilly","Alexei Toropchenko"],LD:["Torey Krug","Marco Scandella","Scott Perunovich","Nick Leddy"],RD:["Colton Parayko","Justin Faulk","Robert Bortuzzo","Tyler Tucker"],G:["Jordan Binnington","Thomas Greiss"]},
+  "Tampa Bay":   {C:["Brayden Point","Anthony Cirelli","Steven Stamkos","Pierre-Edouard Bellemare"],LW:["Ondrej Palat","Pat Maroon","Tanner Jeannot","Gabriel Fortier"],RW:["Nikita Kucherov","Brandon Hagel","Corey Perry","Alex Barre-Boulet"],LD:["Victor Hedman","Mikhail Sergachev","Nick Perbix","Darren Raddysh"],RD:["Ryan McDonagh","Erik Cernak","Ian Cole","Phil Myers"],G:["Andrei Vasilevskiy","Brian Elliott"]},
+  "Toronto":     {C:["Auston Matthews","John Tavares","David Kampf","Adam Gaudette"],LW:["Matthew Knies","Zach Aston-Reese","Bobby McMann","Joey Anderson"],RW:["Mitch Marner","William Nylander","Michael Bunting","Alex Kerfoot"],LD:["Morgan Rielly","Timothy Liljegren","Conor Timmins","Carl Dahlstrom"],RD:["TJ Brodie","Jake McCabe","Mark Giordano","Jordie Benn"],G:["Joseph Woll","Matt Murray"]},
+  "Utah":        {C:["Clayton Keller","Nick Schmaltz","Alexander Kerfoot","Barrett Hayton"],LW:["Lawson Crouse","Michael Carcone","Liam O'Brien","Hudson Fasching"],RW:["Dylan Guenther","Matias Maccelli","Nick Bjugstad","Josh Doan"],LD:["Mikhail Sergachev","Juuso Valimaki","Sean Durzi","Vladislav Kolyachonok"],RD:["Travis Dermott","Patrik Nemeth","Michael Kesselring","Arber Xhekaj"],G:["Connor Ingram","Karel Vejmelka"]},
+  "Vancouver":   {C:["Elias Pettersson","Pius Suter","Teddy Blueger","Nils Hoglander"],LW:["Brock Boeser","Conor Garland","Sheldon Dries","Phil Di Giuseppe"],RW:["Jake DeBrusk","Ilya Mikheyev","Vasily Podkolzin","Anthony Beauvillier"],LD:["Quinn Hughes","Carson Soucy","Mark Giordano","Guillaume Brisebois"],RD:["Filip Hronek","Tyler Myers","Kyle Burroughs","Noah Juulsen"],G:["Thatcher Demko","Collin Delia"]},
+  "Vegas":       {C:["Jack Eichel","Chandler Stephenson","Nicolas Roy","Brett Howden"],LW:["Mark Stone","William Carrier","Keegan Kolesar","Jonas Rondbjerg"],RW:["Jonathan Marchessault","Michael Amadio","Reilly Smith","Pavel Dorofeyev"],LD:["Alex Pietrangelo","Brayden McNabb","Zach Whitecloud","Ben Hutton"],RD:["Shea Theodore","Nic Hague","Alec Martinez","Daniil Miromanov"],G:["Adin Hill","Logan Thompson"]},
+  "Washington":  {C:["Dylan Strome","Lars Eller","Nic Dowd","Michael Sgarbossa"],LW:["Alex Ovechkin","Tom Wilson","Beck Malenstyn","Sonny Milano"],RW:["T.J. Oshie","Anthony Mantha","Garnet Hathaway","Carl Hagelin"],LD:["John Carlson","Matt Irwin","Trevor van Riemsdyk","Nick Jensen"],RD:["Dmitry Orlov","Rasmus Sandin","Erik Gustafsson","Dylan McIlrath"],G:["Charlie Lindgren","Darcy Kuemper"]},
+  "Winnipeg":    {C:["Mark Scheifele","Adam Lowry","Sean Monahan","Morgan Barron"],LW:["Kyle Connor","Nikolaj Ehlers","Mason Appleton","Axel Jonsson-Fjallby"],RW:["Blake Wheeler","Gabriel Vilardi","Nino Niederreiter","Cole Perfetti"],LD:["Josh Morrissey","Dylan Samberg","Brenden Dillon","Logan Stanley"],RD:["Neal Pionk","Dylan DeMelo","Nate Schmidt","Ville Heinola"],G:["Connor Hellebuyck","David Rittich"]},
+};
+
 async function fetchNHLRoster(team) {
   if (ROSTER_CACHE[team]) return ROSTER_CACHE[team];
   const abbrev = TEAM_ABBREVS[team];
-  if (!abbrev) return null;
+  if (!abbrev) return FALLBACK_ROSTERS[team] || null;
   try {
     const res = await fetch(`https://api-web.nhle.com/v1/roster/${abbrev}/20252026`);
-    if (!res.ok) return null;
+    if (!res.ok) throw new Error('API failed');
     const data = await res.json();
-    // Organise by position
     const roster = { C:[], LW:[], RW:[], LD:[], RD:[], G:[] };
     (data.forwards||[]).forEach(p => {
       const name = p.firstName.default + ' ' + p.lastName.default;
-      const pos = p.positionCode; // C, L, R
+      const pos = p.positionCode;
       if (pos==='C') roster.C.push(name);
       else if (pos==='L') roster.LW.push(name);
       else if (pos==='R') roster.RW.push(name);
     });
     (data.defensemen||[]).forEach(p => {
       const name = p.firstName.default + ' ' + p.lastName.default;
-      const hand = p.shootsCatches; // L or R
-      if (hand==='L') roster.LD.push(name);
+      if (p.shootsCatches==='L') roster.LD.push(name);
       else roster.RD.push(name);
     });
     (data.goalies||[]).forEach(p => {
@@ -278,7 +312,12 @@ async function fetchNHLRoster(team) {
     });
     ROSTER_CACHE[team] = roster;
     return roster;
-  } catch(e) { return null; }
+  } catch(e) {
+    // API blocked — use fallback
+    const fallback = FALLBACK_ROSTERS[team] || null;
+    if (fallback) ROSTER_CACHE[team] = fallback;
+    return fallback;
+  }
 }
 
 function getDevTimeline(prospect) {
