@@ -235,6 +235,172 @@ const PROSPECTS={
 "Axel Brongel-Larsson":{rank:122,pos:"LD",league:"U20 Nationell (Frölunda)",nation:"SWE",nhle:null,scores:{production:57,skating:66,hockey_iq:65,compete:64,ceiling:68},verdict:"Swedish defender at Frölunda's U20 program — elite organization. 12 points in 36 games. Long-term development pick.",comps:"Anton Stralman floor / Petter Granberg"}
 };
 
+// ── TEAM PROSPECT PIPELINES ─────────────────────────────────────────────────
+// Rule: <10 NHL games for their drafted team = prospect
+// Sources: ESPN (March 2026), Daily Faceoff, The Hockey Writers, Upside Hockey, NHL.com
+const TEAM_PROSPECTS = {
+  "Anaheim":     [
+    { name:"Roger McQueen",       pos:"C",  draftYear:2023, draftRound:1, desc:"6'5" centre with elite hands and two-way upside. Developing at Providence (NCAA). Top Ducks prospect." },
+    { name:"Pavel Mintyukov",     pos:"RD", draftYear:2022, draftRound:1, desc:"Offensive D with elite skating. Power-play QB of the future for Anaheim." },
+    { name:"Tristan Luneau",      pos:"LD", draftYear:2022, draftRound:1, desc:"Smart offensive LD developing steadily in AHL. Good puck-mover." },
+  ],
+  "Boston":      [
+    { name:"James Hagens",        pos:"C",  draftYear:2025, draftRound:1, desc:"Hockey East scoring title winner. Elite processing and edge work. Signed AHL deal — NHL-ready." },
+    { name:"Matthew Poitras",     pos:"C",  draftYear:2023, draftRound:1, desc:"Two-way centre with strong compete and hockey sense. AHL development." },
+    { name:"Fabian Lysell",       pos:"RW", draftYear:2022, draftRound:1, desc:"Swedish winger with elite speed and hands. AHL standout pushing for NHL role." },
+  ],
+  "Buffalo":     [
+    { name:"Radim Mrtka",         pos:"RD", draftYear:2023, draftRound:1, desc:"6'6" right-shot D with elite mobility. Projects as top-4 anchor for Buffalo's blue line." },
+    { name:"Jiri Kulich",         pos:"RW", draftYear:2022, draftRound:1, desc:"Czech winger with strong scoring instincts. Consistent AHL producer." },
+    { name:"Noah Ostlund",        pos:"C",  draftYear:2022, draftRound:1, desc:"Swedish centre with elite hockey sense. Smart two-way game developing." },
+  ],
+  "Calgary":     [
+    { name:"Zayne Parekh",        pos:"RD", draftYear:2023, draftRound:1, desc:"Best offensive D toolkit in prospect hockey. WJC record 13pts. Must fix NHL development path." },
+    { name:"Samuel Savoie",       pos:"C",  draftYear:2022, draftRound:1, desc:"Smart two-way centre developing in AHL. Good compete level." },
+    { name:"Ethan Ritchie",       pos:"RW", draftYear:2024, draftRound:1, desc:"Power forward with elite size-skill combination. Long-term top-6 winger." },
+  ],
+  "Carolina":    [
+    { name:"Bradly Nadeau",       pos:"LW", draftYear:2022, draftRound:1, desc:"Elite goal scorer averaging 0.5+ goals/game in AHL. Top-6 winger projection for the Canes." },
+    { name:"Dmitri Simashev",     pos:"LD", draftYear:2023, draftRound:1, desc:"Russian defender with top-4 upside. Physical and mobile." },
+    { name:"Luca Pinelli",        pos:"C",  draftYear:2023, draftRound:3, desc:"Smart centre with good playmaking. Developing steadily in AHL." },
+  ],
+  "Chicago":     [
+    { name:"Artyom Levshunov",    pos:"RD", draftYear:2024, draftRound:1, desc:"Top-3 pick 2024. Elite offensive D. Franchise blue-liner of the future alongside Vlasic." },
+    { name:"Frank Nazar",         pos:"C",  draftYear:2022, draftRound:1, desc:"Fast, skilled centre with high offensive upside. Developing in AHL." },
+    { name:"Roman Kantserov",     pos:"LW", draftYear:2022, draftRound:2, desc:"Russian winger with strong offensive instincts. Highly regarded by Chicago scouts." },
+  ],
+  "Colorado":    [
+    { name:"Ilya Nabokov",        pos:"G",  draftYear:2023, draftRound:1, desc:"Legitimate starter potential. Moves powerfully, cuts angles well. Could split with Georgiev." },
+    { name:"Sean Behrens",        pos:"LD", draftYear:2022, draftRound:2, desc:"Offensive LD with high ceiling. Two to three years away but toolset is excellent." },
+    { name:"Samuel Weatherspoon", pos:"LD", draftYear:2023, draftRound:2, desc:"Athletic D developing in USHL. Long-term depth blue-liner for Colorado." },
+  ],
+  "Columbus":    [
+    { name:"Cayden Lindstrom",    pos:"C",  draftYear:2023, draftRound:1, desc:"Elite power forward. 6'3" centre with dominant compete. Developing into NHL lineup piece." },
+    { name:"Denton Mateychuk",    pos:"LD", draftYear:2022, draftRound:1, desc:"Offensive LD developing in AHL. Blue-line anchor of the future for the Jackets." },
+    { name:"Luca Del Bel Belluz", pos:"C",  draftYear:2022, draftRound:2, desc:"Smart two-way centre. AHL development progressing well." },
+  ],
+  "Dallas":      [
+    { name:"Cameron Schmidt",     pos:"RW", draftYear:2025, draftRound:1, desc:"Unsettlingly fast winger. Would've been top-15 with 3 more inches. Elite skating and skill." },
+    { name:"Lian Bichsel",        pos:"LD", draftYear:2023, draftRound:1, desc:"6'4" Swiss D with good mobility. Physical with offensive upside. Long-term top-4 potential." },
+    { name:"Samu Tuomaala",       pos:"RW", draftYear:2022, draftRound:2, desc:"Fast and skilled Finnish winger. Should carve NHL bottom-six role soon." },
+  ],
+  "Detroit":     [
+    { name:"Axel Sandin-Pellikka",pos:"RD", draftYear:2023, draftRound:1, desc:"Marquee Red Wings prospect. Elite offensive D with elite skating. SHL standout. NHL impact soon." },
+    { name:"Carter Bear",         pos:"LW", draftYear:2023, draftRound:2, desc:"Highly regarded winger. Strong two-way game developing in AHL." },
+    { name:"Michael Brandsegg-Nygard",pos:"RW",draftYear:2023,draftRound:1,desc:"Norwegian winger with high offensive ceiling. Developing in European pro leagues." },
+  ],
+  "Edmonton":    [
+    { name:"Beau Akey",           pos:"RD", draftYear:2022, draftRound:2, desc:"Mobile defender dangerous in transition. Shutdown D potential for Edmonton's blue line." },
+    { name:"Isaac Howard",        pos:"LW", draftYear:2022, draftRound:1, desc:"Hobey Baker winner acquired from Tampa. Elite offensive winger. NHL-ready." },
+    { name:"Jakub Kovár",         pos:"G",  draftYear:2022, draftRound:3, desc:"Czech goalie developing in AHL. Long-term depth option behind Skinner." },
+  ],
+  "Florida":     [
+    { name:"Gracyn Sawchyn",      pos:"C",  draftYear:2023, draftRound:1, desc:"Best Panther prospect. Middle-six potential with skill and confidence. Could move to wing." },
+    { name:"Jack Devine",         pos:"RW", draftYear:2023, draftRound:2, desc:"Relentless motor. Late-round gem with real NHL depth potential." },
+    { name:"Marek Alscher",       pos:"LD", draftYear:2023, draftRound:3, desc:"Intriguing D prospect with size and defensive ability. Long-term bottom-pair option." },
+  ],
+  "Los Angeles": [
+    { name:"Alex Turcotte",       pos:"C",  draftYear:2020, draftRound:1, desc:"Former top-5 pick finally healthy. Skilled two-way centre knocking on NHL door." },
+    { name:"Jordan Spence",       pos:"RD", draftYear:2021, draftRound:4, desc:"Crafty offensive D who's knocked on NHL door. Smart blue-liner with offensive instincts." },
+    { name:"Samuel Helenius",     pos:"C",  draftYear:2021, draftRound:1, desc:"6'5" Finnish centre developing in AHL. Physical presence with skill." },
+  ],
+  "Minnesota":   [
+    { name:"Danila Yurov",        pos:"RW", draftYear:2022, draftRound:1, desc:"Russian winger with high-end offensive talent. Ready for regular NHL role soon." },
+    { name:"Carson Lambos",       pos:"LD", draftYear:2021, draftRound:1, desc:"Offensive LD developing in AHL. Smart puck-mover with good instincts." },
+    { name:"Liam Ohgren",         pos:"LW", draftYear:2022, draftRound:1, desc:"Swedish winger acquired from Vancouver. Developing toward NHL role." },
+  ],
+  "Montreal":    [
+    { name:"Ivan Demidov",        pos:"RW", draftYear:2024, draftRound:1, desc:"Generational skill. KHL standout at 18. Franchise winger of the future. Best Habs prospect in decades." },
+    { name:"David Reinbacher",    pos:"RD", draftYear:2023, draftRound:1, desc:"Shutdown D potential with top-4 upside. Developing in AHL." },
+    { name:"Michael Hage",        pos:"C",  draftYear:2024, draftRound:1, desc:"Middle-six scoring centre developing at NCAA level. Strong two-way awareness." },
+  ],
+  "Nashville":   [
+    { name:"Brady Martin",        pos:"C",  draftYear:2025, draftRound:1, desc:"Two-way centre with elite compete. Nashville got tremendous value. Projects middle-six C." },
+    { name:"David Edstrom",       pos:"C",  draftYear:2023, draftRound:1, desc:"Swedish centre with elite compete and two-way game. Developing in pro hockey." },
+    { name:"Tanner Molendyk",     pos:"LD", draftYear:2022, draftRound:2, desc:"Mobile LD with smart positional play. Developing steadily in AHL." },
+  ],
+  "New Jersey":  [
+    { name:"Mikhail Yegorov",     pos:"C",  draftYear:2023, draftRound:2, desc:"Strong playmaking and compete level. Favourite of multiple prospect analysts." },
+    { name:"Seamus Casey",        pos:"RD", draftYear:2023, draftRound:2, desc:"Elite offensive D skill from NCAA. Impact player in 1-2 years for New Jersey." },
+    { name:"Lenni Hameenaho",     pos:"RW", draftYear:2023, draftRound:2, desc:"Finnish winger projecting as future 20-goal scorer. AHL development on track." },
+  ],
+  "NY Islanders":[
+    { name:"Cole Eiserman",       pos:"LW", draftYear:2025, draftRound:1, desc:"67 goals in USHL — one of the best snipers drafted in years. Elite goal-scoring prospect." },
+    { name:"Aiden Hreschuk",      pos:"LD", draftYear:2022, draftRound:3, desc:"Offensive LD with good skating and puck skills. AHL development." },
+    { name:"Isaiah George",       pos:"LD", draftYear:2022, draftRound:2, desc:"Athletic defender with high upside. Developing toward NHL role." },
+  ],
+  "NY Rangers":  [
+    { name:"Gabe Perreault",      pos:"RW", draftYear:2023, draftRound:1, desc:"Made NHL debut. Elite offensive instincts and skill. Projects top-6 winger for Rangers." },
+    { name:"Liam Greentree",      pos:"LW", draftYear:2024, draftRound:1, desc:"Acquired via Panarin trade. Power forward with strong shot and compete in OHL." },
+    { name:"Adam Sykora",         pos:"RW", draftYear:2022, draftRound:2, desc:"Slovak winger with smart playmaking. Developing toward NHL depth role." },
+  ],
+  "Ottawa":      [
+    { name:"Carter Yakemchuk",    pos:"RD", draftYear:2023, draftRound:1, desc:"Top D prospect. Ramping up AHL offense while honing defensive game. Top-4 future." },
+    { name:"Luca Pinelli",        pos:"C",  draftYear:2023, draftRound:3, desc:"Smart centre with good playmaking and compete. AHL development solid." },
+    { name:"Chandler Romeo",      pos:"C",  draftYear:2022, draftRound:3, desc:"Two-way centre developing in AHL. Smart positional play." },
+  ],
+  "Philadelphia":[
+    { name:"Porter Martone",      pos:"RW", draftYear:2025, draftRound:1, desc:"#6 overall 2025. Vision and cannon shot. Top-line wing ceiling for the Flyers." },
+    { name:"Oliver Bonk",         pos:"RD", draftYear:2023, draftRound:1, desc:"Smart defensive D developing steadily. Projects bottom-pair to top-4 long-term." },
+    { name:"Samu Tuomaala",       pos:"RW", draftYear:2022, draftRound:2, desc:"Fast Finnish winger. Should carve NHL role soon." },
+  ],
+  "Pittsburgh":  [
+    { name:"Anton Silayev",       pos:"RD", draftYear:2023, draftRound:1, desc:"6'7" Russian D with surprising mobility. Long-term top-4 for Pittsburgh's rebuild." },
+    { name:"Rutger McGroarty",    pos:"LW", draftYear:2022, draftRound:1, desc:"Power forward with excellent compete. Acquired via trade. Physical winger." },
+    { name:"Vasily Ponomarev",    pos:"C",  draftYear:2021, draftRound:2, desc:"Smart two-way centre developing in AHL. Good compete and awareness." },
+  ],
+  "San Jose":    [
+    { name:"Quentin Musty",       pos:"LW", draftYear:2023, draftRound:1, desc:"AHL standout. Power forward with elite hands and compete. NHL-ready." },
+    { name:"Igor Chernyshov",     pos:"RW", draftYear:2023, draftRound:2, desc:"Size, speed, and skill. Fits alongside Celebrini and Smith perfectly." },
+    { name:"Lleyton Roed",        pos:"LW", draftYear:2023, draftRound:3, desc:"Physical winger with strong compete. Developing toward NHL depth role." },
+  ],
+  "Seattle":     [
+    { name:"Berkly Catton",       pos:"C",  draftYear:2024, draftRound:1, desc:"109 pts in WHL. One of the best prospects in hockey. Should be in Kraken lineup now." },
+    { name:"Tij Iginla",          pos:"LW", draftYear:2024, draftRound:1, desc:"Son of Jarome Iginla. WHL scoring efficiency leader. Dynamic power forward." },
+    { name:"Jake O'Brien",        pos:"RD", draftYear:2023, draftRound:1, desc:"OHL assist king. Visionary passing from the blue line. Offensive D prospect." },
+  ],
+  "St. Louis":   [
+    { name:"Jimmy Snuggerud",     pos:"RW", draftYear:2022, draftRound:1, desc:"NCAA standout with elite hockey sense. Nearly NHL-ready top-6 winger." },
+    { name:"Dalibor Dvorsky",     pos:"C",  draftYear:2023, draftRound:1, desc:"Slovak centre with strong two-way game. AHL development on track." },
+    { name:"Zach Dean",           pos:"C",  draftYear:2022, draftRound:1, desc:"Smart centre with good instincts. Developing toward NHL depth role." },
+  ],
+  "Tampa Bay":   [
+    { name:"Conor Geekie",        pos:"C",  draftYear:2022, draftRound:1, desc:"AHL dominant. First-line centre candidate. Size, skill, and IQ all elite. NHL-ready." },
+    { name:"Maxim Groshev",       pos:"LW", draftYear:2021, draftRound:2, desc:"Russian winger developing toward NHL role. AHL standout with offensive instincts." },
+    { name:"Gage Goncalves",      pos:"C",  draftYear:2021, draftRound:3, desc:"Smart offensive centre developing in AHL. Good compete and playmaking." },
+  ],
+  "Toronto":     [
+    { name:"Easton Cowan",        pos:"C",  draftYear:2023, draftRound:1, desc:"Already playing NHL games. Scoring pest with elite decision-making. Nearly graduated." },
+    { name:"Ben Danford",         pos:"LD", draftYear:2023, draftRound:2, desc:"Physical shutdown D. Perfect fit for Leafs defensive needs. Reliable and smart." },
+    { name:"Fraser Minten",       pos:"C",  draftYear:2022, draftRound:2, desc:"Two-way centre. Smart and gritty. Developing into NHL depth piece." },
+  ],
+  "Utah":        [
+    { name:"Tij Iginla",          pos:"LW", draftYear:2024, draftRound:1, desc:"WHL scoring efficiency leader. Dynamic power forward with complete game. Franchise piece." },
+    { name:"Maveric Lamoureux",   pos:"LD", draftYear:2023, draftRound:2, desc:"Massive offensive D with elite upside. One of the biggest blue-line prospects in years." },
+    { name:"Dmitri Simashev",     pos:"LD", draftYear:2023, draftRound:1, desc:"Russian physical D developing toward NHL role. Top-4 potential long-term." },
+  ],
+  "Vancouver":   [
+    { name:"Braeden Cootes",      pos:"C",  draftYear:2025, draftRound:1, desc:"Two-way centre with elite compete. WJC representative. Signed ELC. Could push for NHL role early." },
+    { name:"Jonathan Lekkerimäki",pos:"RW", draftYear:2022, draftRound:1, desc:"Elite shot release. 19 AHL goals in 36 games. Top-line sniper ceiling. Under 10 NHL games." },
+    { name:"Sawyer Mynio",        pos:"LD", draftYear:2023, draftRound:3, desc:"Two-way LD with elite skating. Abbotsford standout. Projects shutdown D with 40-50pt upside." },
+  ],
+  "Vegas":       [
+    { name:"Trevor Connelly",     pos:"LW", draftYear:2023, draftRound:1, desc:"Agile creativity in transition. Dazzling offensive upside. Top Vegas prospect." },
+    { name:"Brendan Brisson",     pos:"C",  draftYear:2021, draftRound:1, desc:"Former top-10 pick developing in AHL. High offensive ceiling still in play." },
+    { name:"Jakub Brabenec",      pos:"C",  draftYear:2022, draftRound:2, desc:"Czech centre developing in AHL. Smart and competitive two-way game." },
+  ],
+  "Washington":  [
+    { name:"Ryan Leonard",        pos:"RW", draftYear:2023, draftRound:1, desc:"Ready to make NHL impact. Elite winger with compete and offensive skill." },
+    { name:"Andrew Cristall",     pos:"LW", draftYear:2023, draftRound:1, desc:"High-end offensive talent on left side. Washington has elite depth on wings." },
+    { name:"Hendrix Lapierre",    pos:"C",  draftYear:2021, draftRound:1, desc:"Smart two-way centre developing in AHL. Former top-10 pick." },
+  ],
+  "Winnipeg":    [
+    { name:"Brayden Yager",       pos:"C",  draftYear:2023, draftRound:1, desc:"Adapting well to AHL with strong shot and smarts. Projects as solid NHL centre." },
+    { name:"Daniel Torgersson",   pos:"LW", draftYear:2021, draftRound:2, desc:"Swedish winger with strong compete and offensive instincts. AHL development solid." },
+    { name:"Ville Heinola",       pos:"LD", draftYear:2019, draftRound:1, desc:"Finnish D knocking on NHL door. Smart offensive game. Nearly NHL-ready." },
+  ],
+};
+
 // ── TEAM NEEDS DATABASE ──────────────────────────────────────────
 // status: 'rebuilding' | 'transitioning' | 'contending'
 // needs: position keys with 3=high, 2=medium, 1=low priority
@@ -428,12 +594,38 @@ async function buildRosterDiagram(team, picks) {
     </div>
   </div>`;
 
-  // Incoming prospects section
+  // Section 1 — This year's draft picks
   if (incomingProspects.length > 0) {
     html += `<div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);">
-      <div style="font-size:0.62rem;color:var(--text-muted);letter-spacing:0.15em;text-transform:uppercase;font-weight:600;margin-bottom:10px;">&#8593; Incoming Prospects</div>
+      <div style="font-size:0.62rem;color:var(--text-muted);letter-spacing:0.15em;text-transform:uppercase;font-weight:600;margin-bottom:10px;">2026 Draft Picks — Incoming</div>
       <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;">
         ${incomingProspects.map(p => prospectCard(p)).join('')}
+      </div>
+    </div>`;
+  }
+
+  // Section 2 — Existing prospect pipeline
+  const pipeline = TEAM_PROSPECTS[team] || [];
+  if (pipeline.length > 0) {
+    const pipelineCards = pipeline.map(p => {
+      const posColors = {C:'#3B82F6',LW:'#8B5CF6',RW:'#EC4899',LD:'#F59E0B',RD:'#F59E0B',G:'#10B981'};
+      const pc = posColors[p.pos] || '#6B7280';
+      return `<div style="background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:10px 12px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+          <div style="display:flex;align-items:center;gap:6px;">
+            <div style="background:${pc}22;border:1px solid ${pc}44;color:${pc};padding:2px 7px;border-radius:4px;font-size:0.6rem;font-weight:700;">${p.pos}</div>
+            <div style="font-size:0.6rem;color:var(--text-muted);letter-spacing:0.08em;">${p.draftYear} · Rd ${p.draftRound}</div>
+          </div>
+        </div>
+        <div style="font-size:0.82rem;font-weight:700;color:var(--text);margin-bottom:4px;">${p.name}</div>
+        <div style="font-size:0.68rem;color:var(--text-muted);line-height:1.4;">${p.desc}</div>
+      </div>`;
+    }).join('');
+
+    html += `<div style="margin-top:${incomingProspects.length > 0 ? '12px' : '16px'};${incomingProspects.length > 0 ? '' : 'padding-top:16px;border-top:1px solid var(--border);'}">
+      <div style="font-size:0.62rem;color:var(--text-muted);letter-spacing:0.15em;text-transform:uppercase;font-weight:600;margin-bottom:10px;">Prospect Pipeline</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px;">
+        ${pipelineCards}
       </div>
     </div>`;
   }
