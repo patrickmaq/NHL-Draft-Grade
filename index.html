@@ -236,6 +236,162 @@ const PROSPECTS={
 // status: 'rebuilding' | 'transitioning' | 'contending'
 // needs: position keys with 3=high, 2=medium, 1=low priority
 // Sources: NHL.com mock draft, Bleacher Report, Daily Faceoff, playoff standings
+// ── TEAM ROSTERS (Current NHL starters + key prospects, 2025-26) ─────────────
+const TEAM_ROSTERS = {
+  "Anaheim":     { f:["Leo Carlsson","Mason McTavish","Trevor Zegras","?","?","Frank Vatrano","?","?","?","?","?","?"], d:["Jackson LaCombe","Cam Fowler","?","?","Olen Zellweger","?"], g:["Lukas Dostal","?"] },
+  "Boston":      { f:["Brad Marchand","?","David Pastrnak","?","?","Pavel Zacha","?","Charlie Coyle","?","?","?","?"], d:["Charlie McAvoy","Matt Grzelcyk","Brandon Carlo","?","?","?"], g:["Jeremy Swayman","?"] },
+  "Buffalo":     { f:["Tage Thompson","JJ Peterka","Alex Tuch","?","Jason Zucker","?","Casey Mittelstadt","?","?","?","?","?"], d:["Rasmus Dahlin","Owen Power","?","?","Henri Jokiharju","?"], g:["Ukko-Pekka Luukkonen","?"] },
+  "Calgary":     { f:["Nazem Kadri","?","Jonathan Huberdeau","?","?","?","Mikael Backlund","?","?","?","?","?"], d:["Rasmus Andersson","?","MacKenzie Weegar","?","?","?"], g:["Dan Vladar","?"] },
+  "Carolina":    { f:["Sebastian Aho","Seth Jarvis","?","Andrei Svechnikov","?","?","Jordan Staal","?","?","?","?","?"], d:["Jaccob Slavin","Brent Burns","Brady Skjei","?","?","?"], g:["Pyotr Kochetkov","?"] },
+  "Chicago":     { f:["Connor Bedard","?","?","Anton Frondell","?","?","?","?","?","?","?","?"], d:["Alex Vlasic","?","?","?","?","?"], g:["Spencer Knight","?"] },
+  "Colorado":    { f:["Nathan MacKinnon","Mikko Rantanen","?","Valeri Nichushkin","?","?","Ross Colton","?","?","?","?","?"], d:["Cale Makar","Devon Toews","?","?","?","?"], g:["Alexandar Georgiev","?"] },
+  "Columbus":    { f:["Adam Fantilli","Kirill Marchenko","?","?","?","?","?","Boone Jenner","?","?","?","?"], d:["Zach Werenski","Ivan Provorov","?","?","?","?"], g:["Elvis Merzlikins","?"] },
+  "Dallas":      { f:["Roope Hintz","Jason Robertson","?","Tyler Seguin","?","?","Joe Pavelski","?","?","?","?","?"], d:["Miro Heiskanen","?","?","?","?","?"], g:["Jake Oettinger","?"] },
+  "Detroit":     { f:["Dylan Larkin","?","?","Lucas Raymond","?","?","?","?","?","?","?","?"], d:["Moritz Seider","?","?","?","?","?"], g:["Alex Lyon","?"] },
+  "Edmonton":    { f:["Connor McDavid","Leon Draisaitl","?","?","?","Zach Hyman","?","?","?","?","?","?"], d:["Evan Bouchard","?","?","Darnell Nurse","?","?"], g:["Stuart Skinner","?"] },
+  "Florida":     { f:["?","?","?","?","Matthew Tkachuk","?","?","?","?","?","?","?"], d:["Aaron Ekblad","?","?","?","?","?"], g:["Sergei Bobrovsky","?"] },
+  "Los Angeles": { f:["Anze Kopitar","Adrian Kempe","?","Kevin Fiala","?","?","?","?","?","?","?","?"], d:["Drew Doughty","?","Mikey Anderson","?","?","?"], g:["David Rittich","?"] },
+  "Minnesota":   { f:["Kirill Kaprizov","?","?","Joel Eriksson Ek","?","?","Matt Boldy","?","?","?","?","?"], d:["Jared Spurgeon","?","Jonas Brodin","?","?","?"], g:["Marc-Andre Fleury","?"] },
+  "Montreal":    { f:["Nick Suzuki","Cole Caufield","Juraj Slafkovsky","?","?","?","?","?","?","?","?","?"], d:["Kaiden Guhle","?","David Savard","?","?","?"], g:["Sam Montembeault","?"] },
+  "Nashville":   { f:["?","?","?","?","?","?","?","?","?","?","?","?"], d:["Roman Josi","?","?","?","?","?"], g:["Juuse Saros","?"] },
+  "New Jersey":  { f:["Jack Hughes","Timo Meier","?","Jesper Bratt","?","?","Dawson Mercer","?","?","?","?","?"], d:["Dougie Hamilton","?","Luke Hughes","?","?","?"], g:["Jacob Markstrom","?"] },
+  "NY Islanders":{ f:["?","?","?","?","?","?","?","?","?","?","?","?"], d:["Matthew Schaefer","Noah Dobson","Kashawn Aitcheson","?","?","?"], g:["Semyon Varlamov","?"] },
+  "NY Rangers":  { f:["Mika Zibanejad","?","Artemi Panarin","?","?","?","?","Vincent Trocheck","?","?","?","?"], d:["Adam Fox","?","?","?","?","?"], g:["Igor Shesterkin","?"] },
+  "Ottawa":      { f:["Tim Stutzle","?","Brady Tkachuk","?","?","?","?","?","?","?","?","?"], d:["Thomas Chabot","?","?","?","?","?"], g:["Linus Ullmark","?"] },
+  "Philadelphia":{ f:["Sean Couturier","Travis Konecny","?","?","?","?","?","?","?","?","?","?"], d:["Jamie Drysdale","?","?","?","?","?"], g:["Samuel Ersson","?"] },
+  "Pittsburgh":  { f:["Sidney Crosby","?","?","Evgeni Malkin","?","?","?","?","?","?","?","?"], d:["Erik Karlsson","?","?","?","?","?"], g:["Tristan Jarry","?"] },
+  "San Jose":    { f:["Macklin Celebrini","Will Smith","?","Michael Misa","?","?","?","?","?","?","?","?"], d:["Jake Walman","?","?","?","?","?"], g:["Yaroslav Askarov","?"] },
+  "Seattle":     { f:["Matty Beniers","?","?","Jared McCann","?","?","?","?","?","?","?","?"], d:["Vince Dunn","?","Adam Larsson","?","?","?"], g:["Philipp Grubauer","?"] },
+  "St. Louis":   { f:["?","?","?","?","?","?","?","?","?","?","?","?"], d:["Torey Krug","?","Colton Parayko","?","?","?"], g:["Jordan Binnington","?"] },
+  "Tampa Bay":   { f:["Brayden Point","Nikita Kucherov","?","Steven Stamkos","?","?","?","?","?","?","?","?"], d:["Victor Hedman","?","Mikhail Sergachev","?","?","?"], g:["Andrei Vasilevskiy","?"] },
+  "Toronto":     { f:["Auston Matthews","Mitch Marner","?","William Nylander","?","?","?","?","?","?","?","?"], d:["Morgan Rielly","?","TJ Brodie","?","?","?"], g:["Joseph Woll","?"] },
+  "Utah":        { f:["Clayton Keller","?","?","?","?","?","?","?","?","?","?","?"], d:["Mikhail Sergachev","?","?","?","?","?"], g:["Connor Ingram","?"] },
+  "Vancouver":   { f:["?","?","?","Elias Pettersson","?","Brock Boeser","?","?","?","?","?","?"], d:["Quinn Hughes","?","?","?","?","?"], g:["Thatcher Demko","?"] },
+  "Vegas":       { f:["Jack Eichel","?","?","?","Mark Stone","?","?","?","?","?","?","?"], d:["Alex Pietrangelo","?","Shea Theodore","?","?","?"], g:["Adin Hill","?"] },
+  "Washington":  { f:["Alex Ovechkin","?","?","Dylan Strome","?","?","?","?","?","?","?","?"], d:["John Carlson","?","?","?","?","?"], g:["Charlie Lindgren","?"] },
+  "Winnipeg":    { f:["Mark Scheifele","Kyle Connor","?","?","Nikolaj Ehlers","?","Adam Lowry","?","?","?","?","?"], d:["Josh Morrissey","?","Dylan DeMelo","?","?","?"], g:["Connor Hellebuyck","?"] },
+};
+
+function getDevTimeline(prospect) {
+  const p = prospect;
+  const readiness = (p.scores.production + p.scores.compete + p.scores.hockey_iq) / 3;
+  const league = p.league || '';
+  let baseYears = 2;
+  if (league.includes('SHL') || league.includes('Liiga') || league.includes('SM-sarja') || league.includes('Extraliga') || league.includes('NCAA')) baseYears = 1;
+  else if (league.includes('OHL') || league.includes('WHL') || league.includes('QMJHL')) baseYears = 2;
+  else if (league.includes('MHL') || league.includes('U20') || league.includes('NTDP') || league.includes('USHL') || league.includes('Division')) baseYears = 3;
+  if (readiness >= 88) baseYears = Math.max(0, baseYears - 1);
+  else if (readiness < 70) baseYears += 1;
+  if (p.rank <= 5) baseYears = Math.max(1, baseYears);
+  baseYears = Math.min(4, Math.max(0, baseYears));
+  const labels = ['NHL-Ready (0-1 yrs)','1-2 Years','2-3 Years','3-4 Years','4+ Years'];
+  const colors = ['#16A34A','#86EFAC','#EAB308','#F97316','#EF4444'];
+  return { years: baseYears, label: labels[baseYears], color: colors[baseYears] };
+}
+
+function getRosterSlot(pos, team) {
+  const roster = TEAM_ROSTERS[team];
+  if (!roster) return null;
+  const positions = getProspectPositions(pos);
+  const fSlots = ['C','LW','RW','C','LW','RW','C','LW','RW','C','LW','RW'];
+  const dSlots = ['LD','RD','LD','RD','LD','RD'];
+  for (const p of positions) {
+    if (p === 'G') {
+      const idx = roster.g.findIndex(x => x === '?');
+      if (idx !== -1) return { type:'G', idx, line: idx+1 };
+    } else if (['LD','RD'].includes(p)) {
+      const idx = roster.d.findIndex((x,i) => x === '?' && dSlots[i] === p);
+      if (idx !== -1) return { type:'D', idx, line: Math.floor(idx/2)+1 };
+    } else {
+      const idx = roster.f.findIndex((x,i) => x === '?' && fSlots[i] === p);
+      if (idx !== -1) return { type:'F', idx, line: Math.floor(idx/3)+1 };
+    }
+  }
+  const anyF = roster.f.findIndex(x => x === '?');
+  if (anyF !== -1 && (positions.includes('C')||positions.includes('LW')||positions.includes('RW')||positions.includes('F'))) {
+    return { type:'F', idx: anyF, line: Math.floor(anyF/3)+1 };
+  }
+  return null;
+}
+
+function buildRosterDiagram(team, picks) {
+  const rosterRaw = TEAM_ROSTERS[team];
+  if (!rosterRaw) return '';
+  const roster = JSON.parse(JSON.stringify(rosterRaw));
+  const fSlots  = ['C','LW','RW','C','LW','RW','C','LW','RW','C','LW','RW'];
+  const dLabels = ['LD','RD','LD','RD','LD','RD'];
+  const lineLabels = ['Line 1','Line 2','Line 3','Line 4'];
+  const draftedSlots = {};
+
+  picks.forEach(pick => {
+    const p = pick.result.prospect;
+    const slot = getRosterSlot(p.pos, team);
+    const dev = getDevTimeline(p);
+    if (slot) {
+      if (slot.type==='F' && roster.f[slot.idx]==='?') { roster.f[slot.idx]=pick.player; draftedSlots['F-'+slot.idx]={name:pick.player,dev}; }
+      else if (slot.type==='D' && roster.d[slot.idx]==='?') { roster.d[slot.idx]=pick.player; draftedSlots['D-'+slot.idx]={name:pick.player,dev}; }
+      else if (slot.type==='G' && roster.g[slot.idx]==='?') { roster.g[slot.idx]=pick.player; draftedSlots['G-'+slot.idx]={name:pick.player,dev}; }
+    }
+  });
+
+  const playerCard = (name, key, pos) => {
+    const isDrafted = draftedSlots[key];
+    const isEmpty = name === '?';
+    let bg, border, textColor, badge='';
+    if (isDrafted) {
+      bg=isDrafted.dev.color+'15'; border='2px solid '+isDrafted.dev.color; textColor='var(--text)';
+      badge=`<div style="font-size:0.58rem;color:${isDrafted.dev.color};font-weight:700;letter-spacing:0.06em;margin-top:2px;">${isDrafted.dev.label}</div>`;
+    } else if (isEmpty) {
+      bg='rgba(0,0,0,0.02)'; border='1.5px dashed rgba(0,0,0,0.12)'; textColor='var(--text-muted)';
+    } else {
+      bg='var(--surface2)'; border='1px solid var(--border2)'; textColor='var(--text-dim)';
+    }
+    return `<div style="background:${bg};border:${border};border-radius:8px;padding:8px 10px;min-width:0;flex:1;">
+      <div style="font-size:0.58rem;color:var(--text-muted);letter-spacing:0.12em;text-transform:uppercase;font-weight:600;">${pos}</div>
+      <div style="font-size:0.76rem;font-weight:600;color:${textColor};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px;">${isEmpty?'Open':name}</div>
+      ${badge}
+    </div>`;
+  };
+
+  let html = `<div style="background:var(--surface);border:1px solid var(--border2);border-radius:12px;padding:24px;margin-bottom:24px;box-shadow:0 1px 8px rgba(0,0,0,0.04);">
+    <div style="font-size:0.65rem;letter-spacing:0.2em;color:var(--text-muted);text-transform:uppercase;margin-bottom:4px;font-weight:600;">Projected Roster</div>
+    <div style="font-size:0.78rem;color:var(--text-muted);margin-bottom:16px;">Coloured borders = draft picks placed into projected spot</div>`;
+
+  for (let line=0;line<4;line++) {
+    const b=line*3;
+    html+=`<div style="margin-bottom:8px;">
+      <div style="font-size:0.58rem;color:var(--text-muted);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:4px;font-weight:600;">${lineLabels[line]}</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;">
+        ${playerCard(roster.f[b],'F-'+b,fSlots[b])}
+        ${playerCard(roster.f[b+1],'F-'+(b+1),fSlots[b+1])}
+        ${playerCard(roster.f[b+2],'F-'+(b+2),fSlots[b+2])}
+      </div></div>`;
+  }
+
+  html+=`<div style="margin-top:12px;margin-bottom:8px;">
+    <div style="font-size:0.58rem;color:var(--text-muted);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:4px;font-weight:600;">Defence</div>
+    ${[0,1,2].map(pair=>`<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px;">
+      ${playerCard(roster.d[pair*2],'D-'+(pair*2),dLabels[pair*2])}
+      ${playerCard(roster.d[pair*2+1],'D-'+(pair*2+1),dLabels[pair*2+1])}
+    </div>`).join('')}
+  </div>
+  <div>
+    <div style="font-size:0.58rem;color:var(--text-muted);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:4px;font-weight:600;">Goalies</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+      ${playerCard(roster.g[0],'G-0','G1')}
+      ${playerCard(roster.g[1],'G-1','G2')}
+    </div>
+  </div>
+  <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border);display:flex;gap:16px;flex-wrap:wrap;align-items:center;">
+    <div style="font-size:0.62rem;color:var(--text-muted);letter-spacing:0.1em;text-transform:uppercase;font-weight:600;">Dev Timeline:</div>
+    ${['#16A34A','#86EFAC','#EAB308','#F97316','#EF4444'].map((col,i)=>{
+      const labs=['NHL-Ready','1-2 Yrs','2-3 Yrs','3-4 Yrs','4+ Yrs'];
+      return `<div style="display:flex;align-items:center;gap:5px;"><div style="width:10px;height:10px;border-radius:50%;background:${col};flex-shrink:0;"></div><span style="font-size:0.68rem;color:var(--text-dim);">${labs[i]}</span></div>`;
+    }).join('')}
+  </div></div>`;
+  return html;
+}
+
 const TEAM_NEEDS = {
   "Anaheim":      { status:"rebuilding",    needs:{C:2,LW:3,RW:2,LD:2,RD:2,G:1}, note:"Leo Carlsson anchors C. Need scoring wingers and D depth." },
   "Boston":       { status:"transitioning", needs:{C:3,LW:2,RW:2,LD:2,RD:1,G:1}, note:"Aging core. Desperately need a franchise C post-Bergeron era." },
@@ -402,19 +558,23 @@ results.forEach((pick,i)=>{
   </div>`;
 });
 html+=`<div style="display:flex;gap:12px;justify-content:center;margin-top:24px;flex-wrap:wrap;">
-  <button onclick="shareGrade('download')" style="background:#0C0C0C;color:#FAF8F3;border:none;padding:14px 28px;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:600;cursor:pointer;letter-spacing:0.05em;">&#11015; Download Draft Card</button>
-  <button onclick="shareGrade('twitter')" style="background:#000;color:#fff;border:none;padding:14px 28px;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:600;cursor:pointer;letter-spacing:0.05em;">&#120143; Share on X</button>
+  <button onclick="shareGrade('twitter')" style="background:#0C0C0C;color:#FAF8F3;border:none;padding:14px 28px;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:600;cursor:pointer;letter-spacing:0.05em;">&#120143; Share on X</button>
 </div>`;
 c.innerHTML=html;
 window._shareData={team,grade,score,summary,results};
 setTimeout(()=>{document.querySelectorAll('.bar-fill').forEach(b=>{b.style.width=b.dataset.target+'%';});},100);// Share buttons
 html += `
 <div style="display:flex;gap:12px;justify-content:center;margin-top:24px;flex-wrap:wrap;">
-  <button onclick="shareGrade('download')" style="background:#0C0C0C;color:#FAF8F3;border:none;padding:14px 28px;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:600;cursor:pointer;letter-spacing:0.05em;transition:all 0.2s;">⬇ Download Draft Card</button>
-  <button onclick="shareGrade('twitter')" style="background:#000;color:#fff;border:none;padding:14px 28px;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:600;cursor:pointer;letter-spacing:0.05em;transition:all 0.2s;">𝕏 Share on X</button>
+
 </div>`;
 c.innerHTML=html;
 window._shareData={team,grade,score,summary,results};
+// Inject roster diagram before share button
+const rosterHtml = buildRosterDiagram(team, results);
+if(rosterHtml) {
+  const shareBtn = c.querySelector('div[style*="justify-content:center"]');
+  if(shareBtn) shareBtn.insertAdjacentHTML('beforebegin', rosterHtml);
+}
 setTimeout(()=>{document.querySelectorAll('.bar-fill').forEach(b=>{b.style.width=b.dataset.target+'%';});},100);
 c.scrollIntoView({behavior:'smooth',block:'start'});}
 
