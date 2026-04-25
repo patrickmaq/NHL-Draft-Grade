@@ -335,37 +335,29 @@ async function buildRosterDiagram(team, picks) {
     G:  pad(apiRoster.G,  2),
   };
 
-  // Place draft picks — insert into depth chart by dev timeline
-  // NHL-ready → top lines, longer dev → lower lines
+  // Draft picks shown as incoming prospects — NOT displacing current players
+  // Track which picks go where for highlighting
   const draftedSlots = {};
+  const incomingProspects = []; // {name, pos, dev, posLabel}
+
   picks.forEach(pick => {
     const p = pick.result.prospect;
     const positions = getProspectPositions(p.pos);
     const dev = getDevTimeline(p);
+    // Find best position slot to show prospect under
     for (const pos of positions) {
       const arr = displayRoster[pos];
       if (!arr) continue;
-      const maxLen = (pos==='G') ? 2 : (['LD','RD'].includes(pos)) ? 3 : 4;
-      // Insert position based on dev years — closer to ready = higher line
-      let insertIdx = Math.min(dev.years, maxLen - 1);
-      arr.splice(insertIdx, 0, pick.player);
-      arr.splice(maxLen); // keep length correct
-      draftedSlots[pos+'-'+insertIdx] = { name: pick.player, dev };
+      incomingProspects.push({ name: pick.player, pos, dev });
       break;
     }
   });
 
   const playerCard = (name, key) => {
-    const isDrafted = draftedSlots[key];
     const isEmpty = name === '?';
-    let bg, border, textColor, badge = '';
     const pos = key.split('-')[0];
-    if (isDrafted) {
-      bg = isDrafted.dev.color+'18';
-      border = '2px solid '+isDrafted.dev.color;
-      textColor = 'var(--text)';
-      badge = `<div style="font-size:0.58rem;color:${isDrafted.dev.color};font-weight:700;letter-spacing:0.06em;margin-top:2px;">${isDrafted.dev.label}</div>`;
-    } else if (isEmpty) {
+    let bg, border, textColor;
+    if (isEmpty) {
       bg = 'rgba(0,0,0,0.02)';
       border = '1.5px dashed rgba(0,0,0,0.12)';
       textColor = 'var(--text-muted)';
@@ -377,7 +369,20 @@ async function buildRosterDiagram(team, picks) {
     return `<div style="background:${bg};border:${border};border-radius:8px;padding:8px 10px;min-width:0;flex:1;">
       <div style="font-size:0.58rem;color:var(--text-muted);letter-spacing:0.12em;text-transform:uppercase;font-weight:600;">${pos}</div>
       <div style="font-size:0.76rem;font-weight:600;color:${textColor};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px;">${isEmpty?'Open':name}</div>
-      ${badge}
+    </div>`;
+  };
+
+  const prospectCard = (prospect) => {
+    const { name, pos, dev } = prospect;
+    return `<div style="background:${dev.color}12;border:2px solid ${dev.color};border-radius:8px;padding:8px 12px;display:flex;align-items:center;justify-content:space-between;gap:8px;">
+      <div>
+        <div style="font-size:0.58rem;color:var(--text-muted);letter-spacing:0.12em;text-transform:uppercase;font-weight:600;">${pos} PROSPECT</div>
+        <div style="font-size:0.82rem;font-weight:700;color:var(--text);margin-top:2px;">${name}</div>
+      </div>
+      <div style="text-align:right;flex-shrink:0;">
+        <div style="font-size:0.62rem;color:${dev.color};font-weight:700;letter-spacing:0.06em;">${dev.label}</div>
+        <div style="font-size:0.58rem;color:var(--text-muted);margin-top:1px;">to NHL</div>
+      </div>
     </div>`;
   };
 
@@ -419,6 +424,16 @@ async function buildRosterDiagram(team, picks) {
       ${playerCard(displayRoster.G[1],'G-1')}
     </div>
   </div>`;
+
+  // Incoming prospects section
+  if (incomingProspects.length > 0) {
+    html += `<div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);">
+      <div style="font-size:0.62rem;color:var(--text-muted);letter-spacing:0.15em;text-transform:uppercase;font-weight:600;margin-bottom:10px;">&#8593; Incoming Prospects</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;">
+        ${incomingProspects.map(p => prospectCard(p)).join('')}
+      </div>
+    </div>`;
+  }
 
   // Legend
   html += `<div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border);display:flex;gap:16px;flex-wrap:wrap;align-items:center;">
