@@ -251,51 +251,30 @@ const TEAM_ABBREVS = {
 const ROSTER_CACHE = {};
 
 
-function parseNHLApiResponse(data) {
-  const roster = { C:[], LW:[], RW:[], LD:[], RD:[], G:[] };
-  (data.forwards||[]).forEach(p => {
-    const name = p.firstName.default + ' ' + p.lastName.default;
-    if (p.positionCode==='C') roster.C.push(name);
-    else if (p.positionCode==='L') roster.LW.push(name);
-    else if (p.positionCode==='R') roster.RW.push(name);
-  });
-  (data.defensemen||[]).forEach(p => {
-    const name = p.firstName.default + ' ' + p.lastName.default;
-    if (p.shootsCatches==='L') roster.LD.push(name);
-    else roster.RD.push(name);
-  });
-  (data.goalies||[]).forEach(p => {
-    roster.G.push(p.firstName.default + ' ' + p.lastName.default);
-  });
-  return roster;
-}
 
 async function fetchNHLRoster(team) {
   if (ROSTER_CACHE[team]) return ROSTER_CACHE[team];
   const abbrev = TEAM_ABBREVS[team];
   if (!abbrev) return null;
 
-  // Try Vercel proxy first (no CORS issues)
+  // Try Vercel proxy — returns pre-processed {C, LW, RW, LD, RD, G} sorted by TOI
   try {
     const res = await fetch('/api/roster?team=' + abbrev);
     if (res.ok) {
       const data = await res.json();
-      if (data.forwards) {
-        const roster = parseNHLApiResponse(data);
+      // New proxy returns pre-sorted position arrays directly
+      if (data.C || data.LW || data.RW) {
+        const roster = {
+          C:  data.C  || [],
+          LW: data.LW || [],
+          RW: data.RW || [],
+          LD: data.LD || [],
+          RD: data.RD || [],
+          G:  data.G  || []
+        };
         ROSTER_CACHE[team] = roster;
         return roster;
       }
-    }
-  } catch(e) {}
-
-  // Try direct NHL API as backup
-  try {
-    const res = await fetch('https://api-web.nhle.com/v1/roster/' + abbrev + '/20252026');
-    if (res.ok) {
-      const data = await res.json();
-      const roster = parseNHLApiResponse(data);
-      ROSTER_CACHE[team] = roster;
-      return roster;
     }
   } catch(e) {}
 
