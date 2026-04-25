@@ -232,6 +232,103 @@ const PROSPECTS={
 "Axel Brongel-Larsson":{rank:122,pos:"LD",league:"U20 Nationell (Frölunda)",nation:"SWE",nhle:null,scores:{production:57,skating:66,hockey_iq:65,compete:64,ceiling:68},verdict:"Swedish defender at Frölunda's U20 program — elite organization. 12 points in 36 games. Long-term development pick.",comps:"Anton Stralman floor / Petter Granberg"}
 };
 
+// ── TEAM NEEDS DATABASE ──────────────────────────────────────────
+// status: 'rebuilding' | 'transitioning' | 'contending'
+// needs: position keys with 3=high, 2=medium, 1=low priority
+// Sources: NHL.com mock draft, Bleacher Report, Daily Faceoff, playoff standings
+const TEAM_NEEDS = {
+  "Anaheim":      { status:"rebuilding",    needs:{C:2,LW:3,RW:2,LD:2,RD:2,G:1}, note:"Leo Carlsson anchors C. Need scoring wingers and D depth." },
+  "Boston":       { status:"transitioning", needs:{C:3,LW:2,RW:2,LD:2,RD:1,G:1}, note:"Aging core. Desperately need a franchise C post-Bergeron era." },
+  "Buffalo":      { status:"transitioning", needs:{C:2,LW:2,RW:3,RD:3,LD:1,G:1}, note:"Back in playoffs. Need RW and RD depth to sustain momentum." },
+  "Calgary":      { status:"rebuilding",    needs:{C:3,LW:2,RW:2,LD:3,RD:2,G:1}, note:"Retooling around youth. C and LD are top priorities." },
+  "Carolina":     { status:"contending",    needs:{C:2,LW:3,RW:2,LD:1,RD:1,G:1}, note:"Deep defensive core. Need LW depth behind Aho." },
+  "Chicago":      { status:"rebuilding",    needs:{C:1,LW:3,RW:3,LD:2,RD:2,G:2}, note:"Bedard and Frondell cover C. Need wingers and D around them." },
+  "Colorado":     { status:"contending",    needs:{C:1,LW:2,RW:2,LD:1,RD:3,G:2}, note:"MacKinnon covers C. Aging RD corps — need young RD." },
+  "Columbus":     { status:"rebuilding",    needs:{C:3,LW:3,RW:2,LD:2,RD:2,G:1}, note:"Building around Fantilli. Need C and LW to complement him." },
+  "Dallas":       { status:"contending",    needs:{C:1,LW:2,RW:3,RD:2,LD:1,G:1}, note:"Robertson side weak on RW. Solid down the middle." },
+  "Detroit":      { status:"transitioning", needs:{C:3,LW:2,RW:2,LD:2,RD:3,G:2}, note:"Young core emerging. C and RD are biggest gaps." },
+  "Edmonton":     { status:"contending",    needs:{C:1,LW:3,RW:2,LD:3,RD:1,G:2}, note:"McDavid/Draisaitl cover C. LW and LD depth badly needed." },
+  "Florida":      { status:"rebuilding",    needs:{C:3,LW:3,RW:2,LD:2,RD:2,G:1}, note:"Barkov ACL. Lost playoffs — need C and LW to rebuild." },
+  "Los Angeles":  { status:"contending",    needs:{C:2,LW:2,RW:2,LD:1,RD:3,G:1}, note:"Doughty aging — RD is the critical need for future." },
+  "Minnesota":    { status:"contending",    needs:{C:2,LW:2,RW:3,RD:2,LD:1,G:2}, note:"Kirill Kaprizov dominant LW. Need RW and G depth." },
+  "Montreal":     { status:"rebuilding",    needs:{C:2,LW:3,RW:3,LD:2,RD:2,G:1}, note:"Building around Slafkovsky/Caufield. Need scoring wings." },
+  "Nashville":    { status:"rebuilding",    needs:{C:3,LW:2,RW:3,LD:2,RD:2,G:1}, note:"Major rebuild underway. C is top priority." },
+  "New Jersey":   { status:"contending",    needs:{C:1,LW:2,RW:3,LD:2,RD:2,G:2}, note:"Hughes covers C. Need RW alongside Bratt and Meier." },
+  "NY Islanders": { status:"transitioning", needs:{C:3,LW:3,RW:2,LD:1,RD:1,G:1}, note:"Schaefer/Aitcheson cover D. Need C and LW urgently." },
+  "NY Rangers":   { status:"contending",    needs:{C:2,LW:2,RW:3,LD:2,RD:2,G:1}, note:"Deep team. RW and pipeline depth are priorities." },
+  "Ottawa":       { status:"transitioning", needs:{C:2,LW:3,RW:2,LD:3,RD:2,G:1}, note:"Lost own 1st round pick as penalty. LW and LD needed." },
+  "Philadelphia": { status:"transitioning", needs:{C:2,LW:2,RW:2,LD:3,RD:3,G:3}, note:"Zegras fills C. D and G are glaring needs." },
+  "Pittsburgh":   { status:"rebuilding",    needs:{C:3,LW:2,RW:2,LD:2,RD:2,G:2}, note:"Post-Crosby rebuild. C is the franchise priority." },
+  "San Jose":     { status:"rebuilding",    needs:{C:1,LW:3,RW:3,LD:2,RD:2,G:1}, note:"Celebrini/Smith/Misa cover C. Desperately need wingers." },
+  "Seattle":      { status:"contending",    needs:{C:2,LW:2,RW:3,LD:2,RD:2,G:1}, note:"Need RW depth. Core is solid but thin on right side." },
+  "St. Louis":    { status:"transitioning", needs:{C:3,LW:2,RW:2,LD:2,RD:3,G:2}, note:"Three first round picks. C and RD are top priorities." },
+  "Tampa Bay":    { status:"contending",    needs:{C:2,LW:2,RW:2,LD:3,RD:2,G:1}, note:"Back in playoffs. LD pipeline is the weakest area." },
+  "Toronto":      { status:"transitioning", needs:{C:3,LW:2,RW:2,LD:2,RD:2,G:2}, note:"Fired Treliving. Need C badly — Tavares aging out." },
+  "Utah":         { status:"transitioning", needs:{C:3,LW:3,RW:2,LD:2,RD:2,G:2}, note:"New franchise still building identity. C and LW priority." },
+  "Vancouver":    { status:"rebuilding",    needs:{C:3,LW:2,RW:2,LD:3,RD:2,G:2}, note:"58 pts — worst record. McKenna and franchise C desperately needed." },
+  "Vegas":        { status:"contending",    needs:{C:2,LW:2,RW:2,LD:2,RD:3,G:1}, note:"Won Pacific. Aging RD — Pietrangelo getting older." },
+  "Washington":   { status:"transitioning", needs:{C:3,LW:2,RW:2,LD:3,RD:2,G:2}, note:"Ovechkin era ending. C and LD are franchise priorities." },
+  "Winnipeg":     { status:"contending",    needs:{C:1,LW:2,RW:3,LD:3,RD:2,G:1}, note:"Scheifele/Lowry cover C. LD and RW depth needed." },
+};
+
+// Position mapping — what positions does this prospect fill
+function getProspectPositions(pos) {
+  const map = {
+    'C':    ['C'],
+    'LW':   ['LW'],
+    'RW':   ['RW'],
+    'LW/RW':['LW','RW'],
+    'RW/LW':['RW','LW'],
+    'C/LW': ['C','LW'],
+    'C/RW': ['C','RW'],
+    'C/LW/RW':['C','LW','RW'],
+    'LD':   ['LD'],
+    'RD':   ['RD'],
+    'LD/RD':['LD','RD'],
+    'RD/LD':['RD','LD'],
+    'F':    ['C','LW','RW'],
+    'G':    ['G'],
+  };
+  return map[pos] || ['C'];
+}
+
+// Team fit bonus calculation
+function getTeamFitBonus(prospectPos, team) {
+  const tn = TEAM_NEEDS[team];
+  if (!tn) return { bonus: 0, label: '', note: '' };
+
+  const positions = getProspectPositions(prospectPos);
+  let maxNeed = 0;
+  let bestPos = '';
+  positions.forEach(p => {
+    const need = tn.needs[p] || 1;
+    if (need > maxNeed) { maxNeed = need; bestPos = p; }
+  });
+
+  // Status modifier — rebuilding teams value ceiling, contenders value floor/readiness
+  let statusBonus = 0;
+  if (tn.status === 'rebuilding') statusBonus = 2;
+  else if (tn.status === 'transitioning') statusBonus = 1;
+  else statusBonus = 0;
+
+  let bonus = 0, label = '', note = '';
+  if (maxNeed === 3) {
+    bonus = 10 + statusBonus;
+    label = '🔥 High Need';
+    note = `${team} desperately needs a ${bestPos}. This is a priority position.`;
+  } else if (maxNeed === 2) {
+    bonus = 4 + statusBonus;
+    label = '✓ Good Fit';
+    note = `${team} has moderate need at ${bestPos}. Solid positional fit.`;
+  } else {
+    bonus = -3;
+    label = '⚠ Low Need';
+    note = `${team} has depth at ${bestPos} already. Better value elsewhere.`;
+  }
+
+  return { bonus, label, note, status: tn.status, teamNote: tn.note };
+}
+
 let selectedTeam=null,pickCount=0;
 function init(){buildTeamGrid();addPickRow();addPickRow();addPickRow();}
 function buildTeamGrid(){const g=document.getElementById('teamGrid');NHL_TEAMS.forEach(t=>{const b=document.createElement('button');b.className='team-btn';b.textContent=t;b.onclick=()=>selectTeam(t,b);g.appendChild(b);});}
@@ -239,9 +336,78 @@ function selectTeam(t,b){selectedTeam=t;document.querySelectorAll('.team-btn').f
 function addPickRow(){pickCount++;const id=pickCount;const r=document.createElement('div');r.className='pick-row';r.id='pick-'+id;const opts=Object.keys(PROSPECTS).map(n=>`<option value="${n}">${PROSPECTS[n].rank}. ${n}</option>`).join('');r.innerHTML=`<select class="round-select">${[1,2,3,4,5,6,7].map(x=>`<option value="${x}">Round ${x}</option>`).join('')}</select><select class="player-input"><option value="">— Select Prospect —</option>${opts}</select><select class="position-select"><option value="">Position</option><option>C</option><option>LW</option><option>RW</option><option>D</option><option>G</option></select><button class="remove-btn" onclick="removePick(${id})">✕</button>`;document.getElementById('pickRows').appendChild(r);}
 function removePick(id){const e=document.getElementById('pick-'+id);if(e)e.remove();}
 function getBarColor(v){if(v>=85)return'#16A34A';if(v>=70)return'#15803D';if(v>=55)return'#CA8A04';if(v>=40)return'#EA580C';return'#DC2626';}
-function getPickGrade(name,round){const p=PROSPECTS[name];if(!p)return null;let score=p.scores.production*0.30+p.scores.skating*0.20+p.scores.hockey_iq*0.25+p.scores.compete*0.15+p.scores.ceiling*0.10;const er=p.rank<=32?1:p.rank<=64?2:3;const diff=round-er;let bonus=0,rv='';if(diff>=2){bonus=12;rv=`Exceptional value — available ${diff} round(s) later than expected.`;}else if(diff===1){bonus=6;rv='Good value — slightly later than their consensus ranking.';}else if(diff===0){bonus=0;rv='Picked right on consensus — exactly where most boards have them.';}else if(diff===-1){bonus=-8;rv='Slight reach — one round earlier than most boards projected.';}else{bonus=-18;rv=`Significant reach — ${Math.abs(diff)} rounds earlier than projected.`;}score=Math.min(100,Math.max(0,score+bonus));let grade,gc;if(score>=90){grade='A+';gc='grade-A';}else if(score>=82){grade='A';gc='grade-A';}else if(score>=75){grade='A-';gc='grade-A';}else if(score>=68){grade='B+';gc='grade-B';}else if(score>=62){grade='B';gc='grade-B';}else if(score>=55){grade='B-';gc='grade-B';}else if(score>=48){grade='C+';gc='grade-C';}else if(score>=40){grade='C';gc='grade-C';}else if(score>=32){grade='D';gc='grade-D';}else{grade='F';gc='grade-F';}return{score:Math.round(score),grade,gc,roundVerdict:rv,prospect:p};}
+function getPickGrade(name,round){const p=PROSPECTS[name];if(!p)return null;let score=p.scores.production*0.30+p.scores.skating*0.20+p.scores.hockey_iq*0.25+p.scores.compete*0.15+p.scores.ceiling*0.10;const er=p.rank<=32?1:p.rank<=64?2:3;const diff=round-er;let bonus=0,rv='';if(diff>=2){bonus=12;rv=`Exceptional value — available ${diff} round(s) later than expected.`;}else if(diff===1){bonus=6;rv='Good value — slightly later than their consensus ranking.';}else if(diff===0){bonus=0;rv='Picked right on consensus — exactly where most boards have them.';}else if(diff===-1){bonus=-8;rv='Slight reach — one round earlier than most boards projected.';}else{bonus=-18;rv=`Significant reach — ${Math.abs(diff)} rounds earlier than projected.`;}
+
+// Team fit
+const fit = selectedTeam ? getTeamFitBonus(p.pos, selectedTeam) : {bonus:0,label:'',note:'',status:'',teamNote:''};
+score = Math.min(100,Math.max(0,score+bonus+fit.bonus));
+
+let grade,gc;if(score>=90){grade='A+';gc='grade-A';}else if(score>=82){grade='A';gc='grade-A';}else if(score>=75){grade='A-';gc='grade-A';}else if(score>=68){grade='B+';gc='grade-B';}else if(score>=62){grade='B';gc='grade-B';}else if(score>=55){grade='B-';gc='grade-B';}else if(score>=48){grade='C+';gc='grade-C';}else if(score>=40){grade='C';gc='grade-C';}else if(score>=32){grade='D';gc='grade-D';}else{grade='F';gc='grade-F';}return{score:Math.round(score),grade,gc,roundVerdict:rv,fit,prospect:p};}
 function gradeDraft(){if(!selectedTeam){alert('Please select your team first.');return;}const picks=[];document.querySelectorAll('.pick-row').forEach(row=>{const round=parseInt(row.querySelector('.round-select').value);const player=row.querySelector('.player-input').value;if(player)picks.push({round,player});});if(!picks.length){alert('Please add at least one pick.');return;}const results=picks.map(p=>({...p,result:getPickGrade(p.player,p.round)})).filter(p=>p.result);if(!results.length)return;const avg=Math.round(results.reduce((s,r)=>s+r.result.score,0)/results.length);let og,oc;if(avg>=88){og='A+';oc='grade-A';}else if(avg>=80){og='A';oc='grade-A';}else if(avg>=73){og='A-';oc='grade-A';}else if(avg>=66){og='B+';oc='grade-B';}else if(avg>=60){og='B';oc='grade-B';}else if(avg>=53){og='B-';oc='grade-B';}else if(avg>=45){og='C';oc='grade-C';}else if(avg>=35){og='D';oc='grade-D';}else{og='F';oc='grade-F';}const s={'A+':'Outstanding draft. Elite value at every pick — scouts were locked in.','A':'Excellent draft. Strong selections throughout with smart value picks.','A-':'Very good draft with minor quibbles. A strong class that should develop well.','B+':'Solid draft with good picks. A couple choices raise minor eyebrows.','B':'Decent draft. More hits than misses but a few picks left value on the board.','B-':'Above average. Some bright spots but also a notable reach or two.','C':"Middling draft. Value wasn't maximized and some picks feel like fits over best available.",'D':'Tough draft. Several reaches that will be hard to justify come opening night.','F':'Difficult to defend. Significant reaches throughout suggest scouts were off.'};renderResults(selectedTeam,og,oc,avg,s[og]||'',results);}
-function renderResults(team,grade,gc,score,summary,results){const c=document.getElementById('results');c.className='results visible';let html=`<div class="section-label">Draft Results — ${team}</div><div class="overall-card"><div class="grade-circle ${gc}">${grade}</div><div class="overall-info"><div class="overall-team">${team.toUpperCase()} DRAFT CLASS</div><div class="overall-summary">${summary}</div></div><div class="overall-score"><div class="score-num">${score}</div><div class="score-label">Draft Score</div></div></div>`;results.forEach((pick,i)=>{const{result,player,round}=pick;const p=result.prospect;html+=`<div class="pick-result" style="animation-delay:${i*0.1}s"><div class="pick-result-header"><div><div class="pick-meta"><span class="round-badge">Round ${round}</span><span class="rank-badge">#${p.rank} Consensus</span>${p.nhle?`<span class="rank-badge">NHLe ${p.nhle}</span>`:''}</div><div class="pick-name">${player}</div><div class="pick-details">${p.pos} · ${p.league} · ${p.nation}</div></div><div class="pick-grade-badge ${result.gc}">${result.grade}</div></div><div class="stat-bars">${Object.entries(p.scores).map(([k,v])=>`<div class="stat-bar-item"><div class="stat-bar-label"><span class="stat-bar-name">${k.replace('_',' ')}</span><span class="stat-bar-value" style="color:${getBarColor(v)}">${v}</span></div><div class="bar-track"><div class="bar-fill" style="background:${getBarColor(v)}" data-target="${v}"></div></div></div>`).join('')}</div><div class="pick-verdict"><strong style="color:var(--text-dim)">Scouting Report:</strong> ${p.verdict}<br><br><strong style="color:var(--text-dim)">Value Assessment:</strong> ${result.roundVerdict}<br><span class="comp-tag">Comp: <span>${p.comps}</span></span></div></div>`;});c.innerHTML=html;setTimeout(()=>{document.querySelectorAll('.bar-fill').forEach(b=>{b.style.width=b.dataset.target+'%';});},100);// Share buttons
+function renderResults(team,grade,gc,score,summary,results){
+const c=document.getElementById('results');c.className='results visible';
+const tn=TEAM_NEEDS[team]||{};
+const statusColors={rebuilding:'#EF4444',transitioning:'#EAB308',contending:'#16A34A'};
+const statusLabels={rebuilding:'REBUILDING',transitioning:'TRANSITIONING',contending:'CONTENDING'};
+const sc=statusColors[tn.status]||'#6B6B6B';
+const sl=statusLabels[tn.status]||'';
+let html=`
+<div class="section-label">Draft Results — ${team}</div>
+<div style="background:var(--surface);border:1px solid var(--border2);border-radius:12px;padding:20px 24px;margin-bottom:16px;display:flex;align-items:center;gap:16px;box-shadow:0 1px 8px rgba(0,0,0,0.04);">
+  <div style="flex:1;">
+    <div style="font-size:0.65rem;letter-spacing:0.15em;color:var(--text-muted);text-transform:uppercase;margin-bottom:4px;">Team Context</div>
+    <div style="font-size:0.88rem;color:var(--text-dim);line-height:1.5;">${tn.note||''}</div>
+  </div>
+  <div style="flex-shrink:0;">
+    <div style="background:${sc}22;border:1px solid ${sc}55;color:${sc};padding:6px 14px;border-radius:6px;font-size:0.7rem;font-weight:700;letter-spacing:0.15em;">${sl}</div>
+  </div>
+</div>
+<div class="overall-card">
+  <div class="grade-circle ${gc}">${grade}</div>
+  <div class="overall-info">
+    <div class="overall-team">${team.toUpperCase()} DRAFT CLASS</div>
+    <div class="overall-summary">${summary}</div>
+  </div>
+  <div class="overall-score">
+    <div class="score-num">${score}</div>
+    <div class="score-label">Draft Score</div>
+  </div>
+</div>`;
+results.forEach((pick,i)=>{
+  const{result,player,round}=pick;
+  const p=result.prospect;
+  const fit=result.fit||{};
+  const fitColor=fit.label&&fit.label.includes('High')?'#16A34A':fit.label&&fit.label.includes('Good')?'#B8860B':'#EA580C';
+  html+=`<div class="pick-result" style="animation-delay:${i*0.1}s">
+    <div class="pick-result-header">
+      <div>
+        <div class="pick-meta">
+          <span class="round-badge">Round ${round}</span>
+          <span class="rank-badge">#${p.rank} Consensus</span>
+          ${p.nhle?`<span class="rank-badge">NHLe ${p.nhle}</span>`:''}
+          ${fit.label?`<span style="background:${fitColor}22;border:1px solid ${fitColor}55;color:${fitColor};padding:3px 10px;border-radius:4px;font-size:0.68rem;font-weight:600;letter-spacing:0.1em;">${fit.label}</span>`:''}
+        </div>
+        <div class="pick-name">${player}</div>
+        <div class="pick-details">${p.pos} · ${p.league} · ${p.nation}</div>
+      </div>
+      <div class="pick-grade-badge ${result.gc}">${result.grade}</div>
+    </div>
+    <div class="stat-bars">${Object.entries(p.scores).map(([k,v])=>`<div class="stat-bar-item"><div class="stat-bar-label"><span class="stat-bar-name">${k.replace('_',' ')}</span><span class="stat-bar-value" style="color:${getBarColor(v)}">${v}</span></div><div class="bar-track"><div class="bar-fill" style="background:${getBarColor(v)}" data-target="${v}"></div></div></div>`).join('')}</div>
+    <div class="pick-verdict">
+      <strong style="color:var(--text-dim)">Scouting Report:</strong> ${p.verdict}<br><br>
+      <strong style="color:var(--text-dim)">Value Assessment:</strong> ${result.roundVerdict}<br>
+      ${fit.note?`<strong style="color:var(--text-dim)">Team Fit:</strong> ${fit.note}<br>`:''}
+      <span class="comp-tag">Comp: <span>${p.comps}</span></span>
+    </div>
+  </div>`;
+});
+html+=`<div style="display:flex;gap:12px;justify-content:center;margin-top:24px;flex-wrap:wrap;">
+  <button onclick="shareGrade('download')" style="background:#0C0C0C;color:#FAF8F3;border:none;padding:14px 28px;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:600;cursor:pointer;letter-spacing:0.05em;">&#11015; Download Draft Card</button>
+  <button onclick="shareGrade('twitter')" style="background:#000;color:#fff;border:none;padding:14px 28px;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:600;cursor:pointer;letter-spacing:0.05em;">&#120143; Share on X</button>
+</div>`;
+c.innerHTML=html;
+window._shareData={team,grade,score,summary,results};
+setTimeout(()=>{document.querySelectorAll('.bar-fill').forEach(b=>{b.style.width=b.dataset.target+'%';});},100);// Share buttons
 html += `
 <div style="display:flex;gap:12px;justify-content:center;margin-top:24px;flex-wrap:wrap;">
   <button onclick="shareGrade('download')" style="background:#0C0C0C;color:#FAF8F3;border:none;padding:14px 28px;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:600;cursor:pointer;letter-spacing:0.05em;transition:all 0.2s;">⬇ Download Draft Card</button>
