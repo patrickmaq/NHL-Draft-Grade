@@ -10,6 +10,9 @@ export default async function handler(req, res) {
   };
 
   try {
+    // Use two endpoints in parallel:
+    // 1. Roster — for position, handedness, and roster order
+    // 2. Stats — for goals+assists to sort within position groups
     const [rosterRes, statsRes] = await Promise.all([
       fetch(`https://api-web.nhle.com/v1/roster/${team}/${SEASON}`, { headers }),
       fetch(`https://api-web.nhle.com/v1/club-stats/${team}/${SEASON}/2`, { headers })
@@ -29,103 +32,108 @@ export default async function handler(req, res) {
       return `${first} ${last}`.trim();
     };
 
-    // Build name-based position and handedness maps from roster
-    const shootsByName = {};
-    const posByName = {};
+    // Build points lookup from stats endpoint by player ID
+    const pointsById = {};
+    const gpById = {};
+    const goalsById = {};
+    (statsData.skaters || []).forEach(p => {
+      const id = p.playerId || p.id;
+      pointsById[id] = (p.goals || 0) + (p.assists || 0);
+      goalsById[id] = p.goals || 0;
+      gpById[id] = p.gamesPlayed || 0;
+    });
 
-    (rosterData.forwards || []).forEach(p => {
+    // Also build by name as fallback
+    const pointsByName = {};
+    const gpByName = {};
+    (statsData.skaters || []).forEach(p => {
       const name = getName(p);
-      shootsByName[name] = p.shootsCatches || 'L';
-      posByName[name] = p.positionCode; // C, L, or R
-    });
-    (rosterData.defensemen || []).forEach(p => {
-      const name = getName(p);
-      shootsByName[name] = p.shootsCatches || 'L';
-      posByName[name] = 'D';
-    });
-    (rosterData.goalies || []).forEach(p => {
-      posByName[getName(p)] = 'G';
+      pointsByName[name] = (p.goals || 0) + (p.assists || 0);
+      gpByName[name] = p.gamesPlayed || 0;
     });
 
-    // Process all skaters — sort by points + games played (no TOI, it returns 0)
-    const allSkaters = (statsData.skaters || []).map(p => {
-      const name = getName(p);
-      let pos = posByName[name] || p.positionCode || '';
-      if (pos === 'LW') pos = 'L';
-      if (pos === 'RW') pos = 'R';
+    // Process roster — use ROSTER as source of truth for position/hand
+    // Sort each group by points (from stats), falling back to roster order
+    const processGroup = (players, posCode) => {
+      return players.map(p => {
+        const name = getName(p);
+        const id = p.id;
+        const pts = pointsById[id] ?? pointsByName[name] ?? 0;
+        const gp = gpById[id] ?? gpByName[name] ?? 0;
+        return {
+          name,
+          id,
+          pos: posCode || p.positionCode,
+          shoots: p.shootsCatches || 'L',
+          pts,
+          gp,
+          rosterIdx: players.indexOf(p) // preserve roster order as tiebreaker
+        };
+      }).sort((a, b) =>
+        // Sort by pts desc, then gp desc, then roster order
+        b.pts !== a.pts ? b.pts - a.pts :
+        b.gp !== a.gp ? b.gp - a.gp :
+        a.rosterIdx - b.rosterIdx
+      );
+    };
 
-      return {
-        name,
-        pos,
-        shoots: shootsByName[name] || 'L',
-        points: (p.goals || 0) + (p.assists || 0),
-        goals: p.goals || 0,
-        gamesPlayed: p.gamesPlayed || 0
-      };
-    });
+    const forwards  = processGroup(rosterData.forwards || [], null);
+    const defencemen = processGroup(rosterData.defensemen || [], 'D');
+    const goalieList = (rosterData.goalies || [])
+      .map(p => {
+        const name = getName(p);
+        const id = p.id;
+        // Sort goalies by games started from stats
+        const gs = (statsData.goalies || []).find(g => (g.playerId || g.id) === id || getName(g) === name);
+        return { name, gamesStarted: gs?.gamesStarted || 0 };
+      })
+      .sort((a, b) => b.gamesStarted - a.gamesStarted)
+      .slice(0, 2)
+      .map(p => p.name);
 
-    // Sort by points desc, then goals, then games played
-    const sortByProduction = (arr) => arr.sort((a, b) =>
-      b.points !== a.points ? b.points - a.points :
-      b.goals !== a.goals ? b.goals - a.goals :
-      b.gamesPlayed - a.gamesPlayed
-    );
-
-    // Sort defence by games played (most games = most important player)
-    const sortDefence = (arr) => arr.sort((a, b) =>
-      b.gamesPlayed !== a.gamesPlayed ? b.gamesPlayed - a.gamesPlayed :
-      b.points - a.points
-    );
-
-    // Fill forward lines
-    const forwards = sortByProduction(allSkaters.filter(p => ['C','L','R'].includes(p.pos)));
-    const centres = [], lw = [], rw = [], overflow = [];
+    // Fill forward lines by position — C, LW (L), RW (R)
+    const centres   = [];
+    const lw        = [];
+    const rw        = [];
+    const overflow  = [];
 
     for (const p of forwards) {
-      if      (p.pos === 'C' && centres.length < 4) centres.push(p.name);
-      else if (p.pos === 'L' && lw.length < 4)      lw.push(p.name);
-      else if (p.pos === 'R' && rw.length < 4)      rw.push(p.name);
+      const pos = p.pos;
+      if      (pos === 'C' && centres.length < 4) centres.push(p.name);
+      else if (pos === 'L' && lw.length < 4)      lw.push(p.name);
+      else if (pos === 'R' && rw.length < 4)      rw.push(p.name);
       else overflow.push(p);
     }
-    // Fill open slots with overflow
+    // Fill open spots with overflow (sorted by pts)
     for (const p of overflow) {
       if      (lw.length < 4)      lw.push(p.name);
       else if (rw.length < 4)      rw.push(p.name);
       else if (centres.length < 4) centres.push(p.name);
     }
 
-    // Fill defence — sort by games played
-    const dmen = sortDefence(allSkaters.filter(p => p.pos === 'D'));
-    const leftDef  = dmen.filter(p => p.shoots === 'L').slice(0, 3).map(p => p.name);
-    const rightDef = dmen.filter(p => p.shoots === 'R').slice(0, 3).map(p => p.name);
+    // Defence — split by shoot hand, sorted by pts/gp
+    const leftDef  = defencemen.filter(p => p.shoots === 'L').slice(0, 3).map(p => p.name);
+    const rightDef = defencemen.filter(p => p.shoots === 'R').slice(0, 3).map(p => p.name);
 
-    // Fill gaps from overflow D
+    // Fill gaps
     const usedD = new Set([...leftDef, ...rightDef]);
-    const dOver = dmen.filter(p => !usedD.has(p.name));
+    const dOver = defencemen.filter(p => !usedD.has(p.name));
     while (leftDef.length < 3 && dOver.length)  leftDef.push(dOver.shift().name);
     while (rightDef.length < 3 && dOver.length) rightDef.push(dOver.shift().name);
 
-    const goalies = (statsData.goalies || [])
-      .sort((a, b) => (b.gamesStarted || 0) - (a.gamesStarted || 0))
-      .slice(0, 2).map(getName);
-
-    // Re-enable caching now that it's working
     res.setHeader('Cache-Control', 's-maxage=21600, stale-while-revalidate=3600');
     res.setHeader('Access-Control-Allow-Origin', '*');
 
     return res.status(200).json({
       C: centres, LW: lw, RW: rw,
-      LD: leftDef, RD: rightDef, G: goalies,
+      LD: leftDef, RD: rightDef, G: goalieList,
       _meta: {
         team, season: SEASON,
-        totalForwards: forwards.length,
-        totalDmen: dmen.length,
-        topForwards: allSkaters
-          .filter(p => ['C','L','R'].includes(p.pos))
-          .sort((a,b) => b.points - a.points)
-          .slice(0, 5)
-          .map(p => ({ name: p.name, pos: p.pos, pts: p.points, gp: p.gamesPlayed })),
-        topDmen: dmen.slice(0, 6).map(p => ({ name: p.name, shoots: p.shoots, gp: p.gamesPlayed, pts: p.points }))
+        rosterForwards: (rosterData.forwards||[]).length,
+        rosterDmen: (rosterData.defensemen||[]).length,
+        statsSkaters: (statsData.skaters||[]).length,
+        topForwards: forwards.slice(0,5).map(p=>({name:p.name,pos:p.pos,pts:p.pts,gp:p.gp})),
+        topDmen: defencemen.slice(0,6).map(p=>({name:p.name,shoots:p.shoots,pts:p.pts,gp:p.gp}))
       }
     });
 
