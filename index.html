@@ -452,6 +452,11 @@ async function fetchNHLRoster(team) {
 
 function getDevTimeline(prospect) {
   const p = prospect;
+  // Manual overrides — NHL-ready prospects
+  const nhlReadyNames = ['Gavin McKenna', 'Ivar Stenberg'];
+  if (nhlReadyNames.includes(p.name || '')) {
+    return { years: 0, label: 'NHL-Ready (0-1 yrs)', color: '#16A34A' };
+  }
   const readiness = (p.scores.production + p.scores.compete + p.scores.hockey_iq) / 3;
   const league = p.league || '';
   let baseYears = 2;
@@ -684,6 +689,11 @@ const TEAM_ROSTERS = {
 
 function getDevTimeline(prospect) {
   const p = prospect;
+  // Manual overrides — NHL-ready prospects
+  const nhlReadyNames = ['Gavin McKenna', 'Ivar Stenberg'];
+  if (nhlReadyNames.includes(p.name || '')) {
+    return { years: 0, label: 'NHL-Ready (0-1 yrs)', color: '#16A34A' };
+  }
   const readiness = (p.scores.production + p.scores.compete + p.scores.hockey_iq) / 3;
   const league = p.league || '';
   let baseYears = 2;
