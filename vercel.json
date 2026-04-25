@@ -1,0 +1,7 @@
+{
+  "functions": {
+    "api/roster.js": {
+      "runtime": "edge"
+    }
+  }
+}
