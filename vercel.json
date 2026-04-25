@@ -1,5 +1,0 @@
-{
-  "rewrites": [
-    { "source": "/api/roster", "destination": "/api/roster.js" }
-  ]
-}
