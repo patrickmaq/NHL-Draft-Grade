@@ -97,6 +97,9 @@ header { padding:48px 0 40px; display:flex; align-items:flex-end; justify-conten
   </header>
   <div class="section-label">Select Your Team</div>
   <div class="team-grid" id="teamGrid"></div>
+
+  <div id="teamContextBanner" style="display:none;background:var(--surface);border:1px solid var(--border2);border-radius:12px;padding:20px 24px;margin-bottom:24px;box-shadow:0 1px 8px rgba(0,0,0,0.04);"></div>
+
   <div class="pick-builder">
     <h2>YOUR PICKS</h2>
     <div id="pickRows"></div>
@@ -583,7 +586,68 @@ function getTeamFitBonus(prospectPos, team) {
 let selectedTeam=null,pickCount=0;
 function init(){buildTeamGrid();addPickRow();addPickRow();addPickRow();}
 function buildTeamGrid(){const g=document.getElementById('teamGrid');NHL_TEAMS.forEach(t=>{const b=document.createElement('button');b.className='team-btn';b.textContent=t;b.onclick=()=>selectTeam(t,b);g.appendChild(b);});}
-function selectTeam(t,b){selectedTeam=t;document.querySelectorAll('.team-btn').forEach(x=>x.classList.remove('active'));b.classList.add('active');}
+function selectTeam(t,b){
+  selectedTeam=t;
+  document.querySelectorAll('.team-btn').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active');
+  showTeamContext(t);
+}
+
+function showTeamContext(team) {
+  const banner = document.getElementById('teamContextBanner');
+  if (!banner) return;
+  const tn = TEAM_NEEDS[team];
+  if (!tn) { banner.style.display='none'; return; }
+
+  const statusColors = {rebuilding:'#DC2626', transitioning:'#D97706', contending:'#16A34A'};
+  const statusLabels = {rebuilding:'REBUILDING', transitioning:'TRANSITIONING', contending:'CONTENDING'};
+  const statusDesc = {
+    rebuilding:'Prioritize ceiling — draft for upside, not immediate NHL readiness.',
+    transitioning:'Balance need and value — mix of ready players and high upside picks.',
+    contending:'Draft for fit and floor — NHL-ready players who fill a specific hole.'
+  };
+  const sc = statusColors[tn.status] || '#6B6B6B';
+  const sl = statusLabels[tn.status] || '';
+
+  const needConfig = {
+    3: { label:'High Need',   color:'#DC2626', bg:'rgba(220,38,38,0.08)',   border:'rgba(220,38,38,0.3)',   dot:'#DC2626' },
+    2: { label:'Medium Need', color:'#D97706', bg:'rgba(217,119,6,0.08)',   border:'rgba(217,119,6,0.3)',   dot:'#D97706' },
+    1: { label:'Low Need',    color:'#16A34A', bg:'rgba(22,163,74,0.08)',   border:'rgba(22,163,74,0.3)',   dot:'#16A34A' },
+  };
+
+  const posFullNames = {C:'Centre',LW:'Left Wing',RW:'Right Wing',LD:'Left D',RD:'Right D',G:'Goalie'};
+  const positions = ['C','LW','RW','LD','RD','G'];
+
+  const needsHtml = positions.map(pos => {
+    const level = tn.needs[pos] || 1;
+    const cfg = needConfig[level];
+    return `<div style="background:${cfg.bg};border:1px solid ${cfg.border};border-radius:8px;padding:10px 14px;display:flex;align-items:center;gap:10px;">
+      <div style="width:10px;height:10px;border-radius:50%;background:${cfg.dot};flex-shrink:0;"></div>
+      <div>
+        <div style="font-size:0.72rem;font-weight:700;color:var(--text);">${posFullNames[pos]}</div>
+        <div style="font-size:0.65rem;color:${cfg.color};font-weight:600;letter-spacing:0.05em;">${cfg.label}</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  banner.style.display = 'block';
+  banner.style.animation = 'fadeUp 0.3s ease both';
+  banner.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px;">
+      <div>
+        <div style="font-size:0.65rem;letter-spacing:0.2em;color:var(--text-muted);text-transform:uppercase;font-weight:600;margin-bottom:2px;">Team Context — ${team}</div>
+        <div style="font-size:0.85rem;color:var(--text-dim);line-height:1.5;">${tn.note}</div>
+      </div>
+      <div style="flex-shrink:0;text-align:center;">
+        <div style="background:${sc}18;border:1px solid ${sc}44;color:${sc};padding:5px 12px;border-radius:6px;font-size:0.68rem;font-weight:700;letter-spacing:0.15em;margin-bottom:4px;">${sl}</div>
+        <div style="font-size:0.65rem;color:var(--text-muted);max-width:140px;line-height:1.4;">${statusDesc[tn.status]||''}</div>
+      </div>
+    </div>
+    <div style="font-size:0.62rem;letter-spacing:0.15em;color:var(--text-muted);text-transform:uppercase;font-weight:600;margin-bottom:8px;">Positional Needs</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;">
+      ${needsHtml}
+    </div>`;
+}
 function addPickRow(){pickCount++;const id=pickCount;const r=document.createElement('div');r.className='pick-row';r.id='pick-'+id;const opts=Object.keys(PROSPECTS).map(n=>`<option value="${n}">${PROSPECTS[n].rank}. ${n}</option>`).join('');r.innerHTML=`<select class="round-select">${[1,2,3,4,5,6,7].map(x=>`<option value="${x}">Round ${x}</option>`).join('')}</select><select class="player-input"><option value="">— Select Prospect —</option>${opts}</select><select class="position-select"><option value="">Position</option><option>C</option><option>LW</option><option>RW</option><option>D</option><option>G</option></select><button class="remove-btn" onclick="removePick(${id})">✕</button>`;document.getElementById('pickRows').appendChild(r);}
 function removePick(id){const e=document.getElementById('pick-'+id);if(e)e.remove();}
 function getBarColor(v){if(v>=85)return'#16A34A';if(v>=70)return'#15803D';if(v>=55)return'#CA8A04';if(v>=40)return'#EA580C';return'#DC2626';}
@@ -597,22 +661,9 @@ let grade,gc;if(score>=90){grade='A+';gc='grade-A';}else if(score>=82){grade='A'
 function gradeDraft(){if(!selectedTeam){alert('Please select your team first.');return;}const picks=[];document.querySelectorAll('.pick-row').forEach(row=>{const round=parseInt(row.querySelector('.round-select').value);const player=row.querySelector('.player-input').value;if(player)picks.push({round,player});});if(!picks.length){alert('Please add at least one pick.');return;}const results=picks.map(p=>({...p,result:getPickGrade(p.player,p.round)})).filter(p=>p.result);if(!results.length)return;const avg=Math.round(results.reduce((s,r)=>s+r.result.score,0)/results.length);let og,oc;if(avg>=88){og='A+';oc='grade-A';}else if(avg>=80){og='A';oc='grade-A';}else if(avg>=73){og='A-';oc='grade-A';}else if(avg>=66){og='B+';oc='grade-B';}else if(avg>=60){og='B';oc='grade-B';}else if(avg>=53){og='B-';oc='grade-B';}else if(avg>=45){og='C';oc='grade-C';}else if(avg>=35){og='D';oc='grade-D';}else{og='F';oc='grade-F';}const s={'A+':'Outstanding draft. Elite value at every pick — scouts were locked in.','A':'Excellent draft. Strong selections throughout with smart value picks.','A-':'Very good draft with minor quibbles. A strong class that should develop well.','B+':'Solid draft with good picks. A couple choices raise minor eyebrows.','B':'Decent draft. More hits than misses but a few picks left value on the board.','B-':'Above average. Some bright spots but also a notable reach or two.','C':"Middling draft. Value wasn't maximized and some picks feel like fits over best available.",'D':'Tough draft. Several reaches that will be hard to justify come opening night.','F':'Difficult to defend. Significant reaches throughout suggest scouts were off.'};renderResults(selectedTeam,og,oc,avg,s[og]||'',results);}
 function renderResults(team,grade,gc,score,summary,results){
 const c=document.getElementById('results');c.className='results visible';
-const tn=TEAM_NEEDS[team]||{};
-const statusColors={rebuilding:'#EF4444',transitioning:'#EAB308',contending:'#16A34A'};
-const statusLabels={rebuilding:'REBUILDING',transitioning:'TRANSITIONING',contending:'CONTENDING'};
-const sc=statusColors[tn.status]||'#6B6B6B';
-const sl=statusLabels[tn.status]||'';
+
 let html=`
 <div class="section-label">Draft Results — ${team}</div>
-<div style="background:var(--surface);border:1px solid var(--border2);border-radius:12px;padding:20px 24px;margin-bottom:16px;display:flex;align-items:center;gap:16px;box-shadow:0 1px 8px rgba(0,0,0,0.04);">
-  <div style="flex:1;">
-    <div style="font-size:0.65rem;letter-spacing:0.15em;color:var(--text-muted);text-transform:uppercase;margin-bottom:4px;">Team Context</div>
-    <div style="font-size:0.88rem;color:var(--text-dim);line-height:1.5;">${tn.note||''}</div>
-  </div>
-  <div style="flex-shrink:0;">
-    <div style="background:${sc}22;border:1px solid ${sc}55;color:${sc};padding:6px 14px;border-radius:6px;font-size:0.7rem;font-weight:700;letter-spacing:0.15em;">${sl}</div>
-  </div>
-</div>
 <div class="overall-card">
   <div class="grade-circle ${gc}">${grade}</div>
   <div class="overall-info">
