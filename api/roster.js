@@ -24,62 +24,97 @@ export default async function handler(req, res) {
       statsRes.json()
     ]);
 
-    // Build lookup: player ID -> shoot hand + registered position from roster endpoint
+    // Debug: capture first player from each endpoint to see field names
+    const firstRosterF = (rosterData.forwards || [])[0] || {};
+    const firstStatsS = (statsData.skaters || [])[0] || {};
+
+    // Build lookup using ALL possible ID field names from roster endpoint
     const handMap = {};
     const posMap = {};
 
-    (rosterData.forwards || []).forEach(p => {
-      handMap[p.id] = p.shootsCatches;
-      posMap[p.id] = p.positionCode; // C, L, R
-    });
-    (rosterData.defensemen || []).forEach(p => {
-      handMap[p.id] = p.shootsCatches;
-      posMap[p.id] = 'D';
-    });
-    (rosterData.goalies || []).forEach(p => {
-      posMap[p.id] = 'G';
-    });
-
-    // Convert MM:SS avgToi to seconds
-    const toiToSeconds = (toi) => {
-      if (!toi) return 0;
-      const [m, s] = toi.split(':').map(Number);
-      return (m || 0) * 60 + (s || 0);
+    const addToMaps = (players, pos) => {
+      players.forEach(p => {
+        // Try all possible ID fields
+        const ids = [p.id, p.playerId, p.player_id, p.personId].filter(Boolean);
+        ids.forEach(id => {
+          handMap[id] = p.shootsCatches;
+          posMap[id] = pos;
+        });
+        // Also index by name as fallback
+        const name = `${p.firstName?.default || p.firstName} ${p.lastName?.default || p.lastName}`;
+        handMap[`name_${name}`] = p.shootsCatches;
+        posMap[`name_${name}`] = pos;
+      });
     };
 
-    const getName = (p) => `${p.firstName.default} ${p.lastName.default}`;
+    addToMaps(rosterData.forwards || [], null); // pos set per player below
+    (rosterData.forwards || []).forEach(p => {
+      const ids = [p.id, p.playerId, p.player_id, p.personId].filter(Boolean);
+      ids.forEach(id => { posMap[id] = p.positionCode; }); // C, L, R
+      const name = `${p.firstName?.default || p.firstName} ${p.lastName?.default || p.lastName}`;
+      posMap[`name_${name}`] = p.positionCode;
+    });
+    (rosterData.defensemen || []).forEach(p => {
+      const ids = [p.id, p.playerId, p.player_id, p.personId].filter(Boolean);
+      ids.forEach(id => { handMap[id] = p.shootsCatches; posMap[id] = 'D'; });
+      const name = `${p.firstName?.default || p.firstName} ${p.lastName?.default || p.lastName}`;
+      handMap[`name_${name}`] = p.shootsCatches;
+      posMap[`name_${name}`] = 'D';
+    });
+    (rosterData.goalies || []).forEach(p => {
+      const ids = [p.id, p.playerId, p.player_id, p.personId].filter(Boolean);
+      ids.forEach(id => { posMap[id] = 'G'; });
+    });
 
-    // NO minimum games filter — use TOI as the truth
-    // High TOI = real roster player, low TOI = callup/depth
-    // Minimum TOI threshold: 2 minutes average (filters out emergency callups only)
-    const MIN_TOI_SECONDS = 120; // 2 minutes average TOI
+    const toiToSeconds = (toi) => {
+      if (!toi) return 0;
+      const parts = String(toi).split(':');
+      return (parseInt(parts[0]) || 0) * 60 + (parseInt(parts[1]) || 0);
+    };
 
+    const getName = (p) => {
+      const first = p.firstName?.default || p.firstName || '';
+      const last = p.lastName?.default || p.lastName || '';
+      return `${first} ${last}`.trim();
+    };
+
+    // Process skaters — try multiple ID fields + name fallback
     const skaters = (statsData.skaters || [])
-      .map(p => ({
-        ...p,
-        name: getName(p),
-        toiSeconds: toiToSeconds(p.avgToi),
-        posCode: posMap[p.playerId] || p.positionCode,
-        shoots: handMap[p.playerId] || 'L',
-        points: (p.goals || 0) + (p.assists || 0)
-      }))
-      .filter(p => p.toiSeconds >= MIN_TOI_SECONDS); // only filter obvious non-contributors
+      .map(p => {
+        const name = getName(p);
+        const nameKey = `name_${name}`;
+        // Try all ID fields
+        const id = p.playerId || p.id || p.player_id || p.personId;
+        
+        // Get position and handedness — try ID first, name as fallback
+        let posCode = posMap[id] || posMap[nameKey] || p.positionCode;
+        let shoots = handMap[id] || handMap[nameKey] || 'L';
+        
+        // Normalize position codes (some APIs use 'L'/'R' others 'LW'/'RW')
+        if (posCode === 'LW') posCode = 'L';
+        if (posCode === 'RW') posCode = 'R';
 
-    // Sort forwards by points desc, TOI as tiebreaker
-    const sortForwards = (arr) => arr.sort((a, b) =>
+        return {
+          ...p,
+          name,
+          toiSeconds: toiToSeconds(p.avgToi),
+          posCode,
+          shoots,
+          points: (p.goals || 0) + (p.assists || 0)
+        };
+      })
+      .filter(p => p.toiSeconds >= 60); // at least 1 min avg TOI
+
+    // Sort forwards by points, then TOI
+    const sortF = (arr) => arr.sort((a, b) =>
       b.points !== a.points ? b.points - a.points : b.toiSeconds - a.toiSeconds
     );
 
-    // Sort defence purely by TOI desc — most reliable metric
-    const sortDefence = (arr) => arr.sort((a, b) => b.toiSeconds - a.toiSeconds);
+    // Sort D by TOI
+    const sortD = (arr) => arr.sort((a, b) => b.toiSeconds - a.toiSeconds);
 
-    // Fill forward lines — primary position first, overflow fills open spots
-    const allForwards = sortForwards([...skaters.filter(p => ['C','L','R'].includes(p.posCode))]);
-
-    const centres    = [];
-    const leftWings  = [];
-    const rightWings = [];
-    const overflow   = [];
+    const allForwards = sortF(skaters.filter(p => ['C','L','R'].includes(p.posCode)));
+    const centres = [], leftWings = [], rightWings = [], overflow = [];
 
     for (const p of allForwards) {
       if      (p.posCode === 'C' && centres.length < 4)    centres.push(p.name);
@@ -87,58 +122,46 @@ export default async function handler(req, res) {
       else if (p.posCode === 'R' && rightWings.length < 4) rightWings.push(p.name);
       else overflow.push(p);
     }
-
-    // Fill empty slots with overflow (by points)
     for (const p of overflow) {
       if      (leftWings.length < 4)  leftWings.push(p.name);
       else if (rightWings.length < 4) rightWings.push(p.name);
       else if (centres.length < 4)    centres.push(p.name);
     }
 
-    // Defence — split by shoot hand, sort by TOI
-    const dmen = sortDefence(skaters.filter(p => p.posCode === 'D'));
+    const dmen = sortD(skaters.filter(p => p.posCode === 'D'));
     const leftDef  = dmen.filter(p => p.shoots === 'L').slice(0, 3).map(p => p.name);
     const rightDef = dmen.filter(p => p.shoots === 'R').slice(0, 3).map(p => p.name);
 
-    // If one side short, pull from overall TOI sorted dmen overflow
-    const usedNames = new Set([...leftDef, ...rightDef]);
-    const dOverflow = dmen.filter(p => !usedNames.has(p.name)).map(p => p.name);
+    const usedD = new Set([...leftDef, ...rightDef]);
+    const dOverflow = dmen.filter(p => !usedD.has(p.name)).map(p => p.name);
     while (leftDef.length < 3 && dOverflow.length)  leftDef.push(dOverflow.shift());
     while (rightDef.length < 3 && dOverflow.length) rightDef.push(dOverflow.shift());
 
-    // Goalies by games started — no minimum
     const goalieList = (statsData.goalies || [])
       .sort((a, b) => b.gamesStarted - a.gamesStarted)
       .slice(0, 2)
       .map(getName);
 
     const roster = {
-      C:  centres,
-      LW: leftWings,
-      RW: rightWings,
-      LD: leftDef,
-      RD: rightDef,
-      G:  goalieList,
+      C: centres, LW: leftWings, RW: rightWings,
+      LD: leftDef, RD: rightDef, G: goalieList,
       _meta: {
-        team,
-        season: SEASON,
-        minToi: MIN_TOI_SECONDS,
-        totalSkaters: (statsData.skaters || []).length,
-        filtered: skaters.length,
-        centres: centres.length,
-        leftWings: leftWings.length,
-        rightWings: rightWings.length,
-        leftDef: leftDef.length,
-        rightDef: rightDef.length,
-        overflow: overflow.length
+        team, season: SEASON,
+        rosterForwardCount: (rosterData.forwards||[]).length,
+        statsSkaterCount: (statsData.skaters||[]).length,
+        filteredSkaters: skaters.length,
+        rosterFirstPlayerIdFields: Object.keys(firstRosterF).filter(k => k.toLowerCase().includes('id')),
+        statsFirstPlayerIdFields: Object.keys(firstStatsS).filter(k => k.toLowerCase().includes('id')),
+        centres: centres.length, leftWings: leftWings.length,
+        rightWings: rightWings.length, leftDef: leftDef.length, rightDef: rightDef.length
       }
     };
 
-    res.setHeader('Cache-Control', 's-maxage=21600, stale-while-revalidate=3600');
+    res.setHeader('Cache-Control', 'no-store'); // no cache while debugging
     res.setHeader('Access-Control-Allow-Origin', '*');
     return res.status(200).json(roster);
 
   } catch (e) {
-    return res.status(500).json({ error: e.message });
+    return res.status(500).json({ error: e.message, stack: e.stack });
   }
 }
