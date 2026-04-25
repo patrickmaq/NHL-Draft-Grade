@@ -291,7 +291,7 @@ async function fetchNHLRoster(team) {
   const abbrev = TEAM_ABBREVS[team];
   if (!abbrev) return FALLBACK_ROSTERS[team] || null;
   try {
-    const res = await fetch(`https://api-web.nhle.com/v1/roster/${abbrev}/20252026`);
+ const res = await fetch(`/api/roster?team=${abbrev}`);
     if (!res.ok) throw new Error('API failed');
     const data = await res.json();
     const roster = { C:[], LW:[], RW:[], LD:[], RD:[], G:[] };
