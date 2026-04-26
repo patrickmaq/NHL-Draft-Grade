@@ -910,7 +910,6 @@ function getTeamFitBonus(prospectPos, team) {
 }
 
 let selectedTeam=null,pickCount=0;
-function init(){buildTeamGrid();addPickRow();addPickRow();addPickRow();}
 function buildTeamGrid(){const g=document.getElementById('teamGrid');NHL_TEAMS.forEach(t=>{const b=document.createElement('button');b.className='team-btn';b.textContent=t;b.onclick=()=>selectTeam(t,b);g.appendChild(b);});}
 function selectTeam(t,b){
   selectedTeam=t;
@@ -1163,39 +1162,32 @@ function shareGrade(action){
 
   const picks=d.results.slice(0,3);
   const SCALE=2;
-  // Height grows with picks: header card + pick rows
   const W=1200;
   const HEADER_H=220;
   const PICK_H=72;
   const PICK_GAP=10;
-  const FOOTER_PAD=52;
-  const H=FOOTER_PAD+HEADER_H+(picks.length*(PICK_H+PICK_GAP))-PICK_GAP+FOOTER_PAD;
+  const PAD=44;
+  const H=PAD+HEADER_H+(picks.length*(PICK_H+PICK_GAP))-PICK_GAP+PAD;
 
   const canvas=document.createElement('canvas');
   canvas.width=W*SCALE; canvas.height=H*SCALE;
   const ctx=canvas.getContext('2d');
   ctx.scale(SCALE,SCALE);
 
-  const BG='#FAF8F3';
-  const SURFACE='#FFFFFF';
-  const SURFACE2='#F3F0E8';
-  const BORDER='rgba(0,0,0,0.07)';
-  const BORDER2='rgba(0,0,0,0.13)';
-  const GOLD='#B8860B';
-  const TEXT='#0C0C0C';
-  const TEXT_DIM='#4A4A4A';
-  const TEXT_MUTED='#8A8A8A';
+  const BG='#FAF8F3',SURFACE='#FFFFFF',SURFACE2='#F3F0E8';
+  const BORDER='rgba(0,0,0,0.07)',BORDER2='rgba(0,0,0,0.13)';
+  const GOLD='#B8860B',TEXT='#0C0C0C',TEXT_DIM='#4A4A4A',TEXT_MUTED='#8A8A8A';
   const gc=gradeCol(d.grade);
 
-  // Background
+  // BG + grid
   ctx.fillStyle=BG; ctx.fillRect(0,0,W,H);
   ctx.strokeStyle='rgba(0,0,0,0.016)'; ctx.lineWidth=1;
   for(let x=0;x<W;x+=40){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
   for(let gy=0;gy<H;gy+=40){ctx.beginPath();ctx.moveTo(0,gy);ctx.lineTo(W,gy);ctx.stroke();}
 
-  const PAD=44,CR=12;
+  const CR=12;
 
-  // ── HEADER CARD ──
+  // Header card
   const HCX=PAD,HCY=PAD,HCW=W-PAD*2,HCH=HEADER_H;
   ctx.fillStyle=SURFACE; rr(ctx,HCX,HCY,HCW,HCH,CR); ctx.fill();
   ctx.strokeStyle=BORDER2; ctx.lineWidth=1; rr(ctx,HCX,HCY,HCW,HCH,CR); ctx.stroke();
@@ -1205,8 +1197,10 @@ function shareGrade(action){
   ctx.fillText('DRAFT RESULTS  —  '+d.team.toUpperCase(), HCX+36, HCY+38);
   ctx.fillStyle=BORDER; ctx.fillRect(HCX+36,HCY+48,HCW-72,1);
 
-  // Grade circle
+  // Content vertically centred
   const MID=HCY+48+(HCH-48)/2;
+
+  // Grade circle
   const CR2=58, circX=HCX+36+CR2, circY=MID;
   ctx.beginPath(); ctx.arc(circX,circY,CR2,0,Math.PI*2);
   ctx.fillStyle=gc+'15'; ctx.fill();
@@ -1215,8 +1209,8 @@ function shareGrade(action){
   ctx.textAlign='center'; ctx.fillText(d.grade,circX,circY+20); ctx.textAlign='left';
 
   // Score
-  const scoreStr=String(d.score);
   ctx.font='bold 72px Arial,sans-serif';
+  const scoreStr=String(d.score);
   const scoreW=ctx.measureText(scoreStr).width;
   const scoreRX=HCX+HCW-36;
   ctx.fillStyle=GOLD; ctx.textAlign='right';
@@ -1225,7 +1219,7 @@ function shareGrade(action){
   ctx.fillText('DRAFT SCORE',scoreRX,MID+44);
   ctx.textAlign='left';
 
-  // Team + summary
+  // Team name + summary
   const textX=HCX+36+CR2*2+28;
   ctx.font='bold 36px Arial,sans-serif';
   const textMaxW=scoreRX-textX-scoreW-32;
@@ -1238,57 +1232,52 @@ function shareGrade(action){
   while(ctx.measureText(sum).width>textMaxW&&sum.length>10) sum=sum.slice(0,-4)+'…';
   ctx.fillText(sum,textX,MID+22);
 
-  // ── PICK ROWS ──
+  // Pick rows
   let py=HCY+HCH+PICK_GAP;
-  picks.forEach((pick,i)=>{
+  picks.forEach((pick)=>{
     const p=pick.result.prospect;
     const pg=pick.result.grade;
     const pgc=gradeCol(pg);
 
-    // Card
     ctx.fillStyle=SURFACE; rr(ctx,PAD,py,W-PAD*2,PICK_H,CR); ctx.fill();
     ctx.strokeStyle=BORDER2; ctx.lineWidth=1; rr(ctx,PAD,py,W-PAD*2,PICK_H,CR); ctx.stroke();
 
-    // Left accent bar (grade colour)
-    ctx.fillStyle=pgc;
-    ctx.fillRect(PAD,py,4,PICK_H);
-    // round the left corners of accent bar
-    ctx.beginPath();
-    ctx.arc(PAD+4,py+CR,4,Math.PI,1.5*Math.PI); ctx.fill();
-    ctx.beginPath();
-    ctx.arc(PAD+4,py+PICK_H-CR,4,0.5*Math.PI,Math.PI); ctx.fill();
-    ctx.fillRect(PAD,py+CR,4,PICK_H-CR*2);
+    // Left accent bar
+    ctx.fillStyle=pgc; ctx.fillRect(PAD,py+CR,4,PICK_H-CR*2);
+    ctx.beginPath(); ctx.arc(PAD+CR,py+CR,CR,Math.PI,1.5*Math.PI); ctx.fillStyle=pgc; ctx.fill();
+    ctx.beginPath(); ctx.arc(PAD+CR,py+PICK_H-CR,CR,0.5*Math.PI,Math.PI); ctx.fill();
+    ctx.fillRect(PAD,py+CR,CR,PICK_H-CR*2);
 
-    const pickMid=py+PICK_H/2;
+    const pm=py+PICK_H/2;
 
     // Round badge
     ctx.fillStyle='rgba(184,134,11,0.10)';
-    rr(ctx,PAD+20,pickMid-13,80,24,5); ctx.fill();
+    rr(ctx,PAD+20,pm-13,80,24,5); ctx.fill();
     ctx.fillStyle=GOLD; ctx.font='600 12px Arial,sans-serif';
-    ctx.fillText('ROUND '+pick.round,PAD+28,pickMid+4);
+    ctx.fillText('ROUND '+pick.round,PAD+28,pm+4);
 
-    // Player name
+    // Name
     ctx.fillStyle=TEXT; ctx.font='bold 22px Arial,sans-serif';
-    ctx.fillText(pick.player,PAD+116,pickMid-2);
+    ctx.fillText(pick.player,PAD+116,pm-2);
 
-    // Position · League
+    // Pos · League
     ctx.fillStyle=TEXT_MUTED; ctx.font='400 14px Arial,sans-serif';
-    ctx.fillText(p.pos+' · '+p.league.split('(')[0].trim(),PAD+116,pickMid+18);
+    ctx.fillText(p.pos+' · '+p.league.split('(')[0].trim(),PAD+116,pm+18);
 
     // Rank tag
-    ctx.fillStyle=SURFACE2;
-    const rankStr='#'+p.rank+' consensus';
     ctx.font='500 13px Arial,sans-serif';
+    const rankStr='#'+p.rank+' consensus';
     const rankW=ctx.measureText(rankStr).width+20;
-    rr(ctx,W-PAD-36-rankW-90,pickMid-13,rankW,24,5); ctx.fill();
+    ctx.fillStyle=SURFACE2;
+    rr(ctx,W-PAD-36-rankW-90,pm-13,rankW,24,5); ctx.fill();
     ctx.strokeStyle=BORDER2; ctx.lineWidth=0.5;
-    rr(ctx,W-PAD-36-rankW-90,pickMid-13,rankW,24,5); ctx.stroke();
+    rr(ctx,W-PAD-36-rankW-90,pm-13,rankW,24,5); ctx.stroke();
     ctx.fillStyle=TEXT_MUTED;
-    ctx.fillText(rankStr,W-PAD-36-rankW-90+10,pickMid+4);
+    ctx.fillText(rankStr,W-PAD-36-rankW-90+10,pm+4);
 
     // Pick grade
     ctx.fillStyle=pgc; ctx.font='bold 28px Arial,sans-serif';
-    ctx.textAlign='right'; ctx.fillText(pg,W-PAD-20,pickMid+10); ctx.textAlign='left';
+    ctx.textAlign='right'; ctx.fillText(pg,W-PAD-20,pm+10); ctx.textAlign='left';
 
     py+=PICK_H+PICK_GAP;
   });
