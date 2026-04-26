@@ -106,6 +106,115 @@ header { padding:48px 0 40px; display:flex; align-items:flex-end; justify-conten
     <button class="add-pick-btn" onclick="addPickRow()">+ Add Pick</button>
     <button class="grade-btn" onclick="gradeDraft()">GRADE MY DRAFT</button>
   </div>
+  <div id="gradingMethodology" style="margin-bottom:32px;">
+    <div style="background:var(--surface);border:1px solid var(--border2);border-radius:12px;overflow:hidden;">
+      <div id="methTrigger" onclick="toggleMethodology()" style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px;cursor:pointer;transition:background 0.15s ease;" onmouseover="this.style.background='var(--gold-glow)'" onmouseout="this.style.background='transparent'">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div style="width:7px;height:7px;border-radius:50%;background:var(--gold);flex-shrink:0;"></div>
+          <div>
+            <div style="font-size:0.65rem;letter-spacing:0.2em;text-transform:uppercase;font-weight:600;color:var(--text-muted);">Grading Methodology</div>
+            <div style="font-size:0.82rem;font-weight:500;color:var(--text-dim);margin-top:1px;">How picks are scored &amp; graded</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span id="methHint" style="font-size:0.68rem;color:var(--text-muted);letter-spacing:0.05em;">See how it works</span>
+          <svg id="methChev" style="width:16px;height:16px;color:var(--text-muted);transition:transform 0.25s ease;flex-shrink:0;" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="4,6 8,10 12,6"/></svg>
+        </div>
+      </div>
+      <div id="methBody" style="display:none;border-top:1px solid var(--border);padding:20px 20px 24px;animation:fadeUp 0.22s ease both;">
+
+        <!-- Formula row -->
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:16px 18px;margin-bottom:18px;">
+          <div style="font-size:0.65rem;letter-spacing:0.2em;text-transform:uppercase;font-weight:600;color:var(--text-muted);margin-bottom:10px;">Base Score Formula — weighted across 5 scouting attributes</div>
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+            <div style="display:flex;align-items:center;gap:5px;background:var(--surface);border:1px solid var(--border2);border-radius:6px;padding:6px 10px;"><span style="font-family:'DM Mono',monospace;font-size:0.82rem;font-weight:500;color:var(--gold);">30%</span><span style="font-size:0.75rem;color:var(--text-dim);">Production</span></div>
+            <span style="font-size:0.8rem;color:var(--text-muted);padding:0 2px;">+</span>
+            <div style="display:flex;align-items:center;gap:5px;background:var(--surface);border:1px solid var(--border2);border-radius:6px;padding:6px 10px;"><span style="font-family:'DM Mono',monospace;font-size:0.82rem;font-weight:500;color:var(--gold);">25%</span><span style="font-size:0.75rem;color:var(--text-dim);">Hockey IQ</span></div>
+            <span style="font-size:0.8rem;color:var(--text-muted);padding:0 2px;">+</span>
+            <div style="display:flex;align-items:center;gap:5px;background:var(--surface);border:1px solid var(--border2);border-radius:6px;padding:6px 10px;"><span style="font-family:'DM Mono',monospace;font-size:0.82rem;font-weight:500;color:var(--gold);">20%</span><span style="font-size:0.75rem;color:var(--text-dim);">Skating</span></div>
+            <span style="font-size:0.8rem;color:var(--text-muted);padding:0 2px;">+</span>
+            <div style="display:flex;align-items:center;gap:5px;background:var(--surface);border:1px solid var(--border2);border-radius:6px;padding:6px 10px;"><span style="font-family:'DM Mono',monospace;font-size:0.82rem;font-weight:500;color:var(--gold);">15%</span><span style="font-size:0.75rem;color:var(--text-dim);">Compete</span></div>
+            <span style="font-size:0.8rem;color:var(--text-muted);padding:0 2px;">+</span>
+            <div style="display:flex;align-items:center;gap:5px;background:var(--surface);border:1px solid var(--border2);border-radius:6px;padding:6px 10px;"><span style="font-family:'DM Mono',monospace;font-size:0.82rem;font-weight:500;color:var(--gold);">10%</span><span style="font-size:0.75rem;color:var(--text-dim);">Ceiling</span></div>
+          </div>
+        </div>
+
+        <!-- Adjustments -->
+        <div style="font-size:0.65rem;letter-spacing:0.18em;text-transform:uppercase;font-weight:600;color:var(--text-muted);margin-bottom:10px;">Adjustments applied on top of base score</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;margin-bottom:18px;">
+          <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px 14px;">
+            <div style="font-size:0.7rem;letter-spacing:0.12em;text-transform:uppercase;font-weight:600;color:var(--text-muted);margin-bottom:4px;">+12 pts</div>
+            <div style="font-size:0.82rem;font-weight:500;color:var(--green);margin-bottom:4px;">Exceptional Value</div>
+            <div style="font-size:0.75rem;color:var(--text-muted);line-height:1.5;">Picked 2+ rounds later than consensus rank.</div>
+          </div>
+          <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px 14px;">
+            <div style="font-size:0.7rem;letter-spacing:0.12em;text-transform:uppercase;font-weight:600;color:var(--text-muted);margin-bottom:4px;">+6 pts</div>
+            <div style="font-size:0.82rem;font-weight:500;color:#15803D;margin-bottom:4px;">Good Value</div>
+            <div style="font-size:0.75rem;color:var(--text-muted);line-height:1.5;">Picked 1 round later than expected.</div>
+          </div>
+          <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px 14px;">
+            <div style="font-size:0.7rem;letter-spacing:0.12em;text-transform:uppercase;font-weight:600;color:var(--text-muted);margin-bottom:4px;">0 pts</div>
+            <div style="font-size:0.82rem;font-weight:500;color:var(--text-muted);margin-bottom:4px;">On Consensus</div>
+            <div style="font-size:0.75rem;color:var(--text-muted);line-height:1.5;">Picked exactly where boards have them.</div>
+          </div>
+          <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px 14px;">
+            <div style="font-size:0.7rem;letter-spacing:0.12em;text-transform:uppercase;font-weight:600;color:var(--text-muted);margin-bottom:4px;">−8 pts</div>
+            <div style="font-size:0.82rem;font-weight:500;color:var(--orange);margin-bottom:4px;">Slight Reach</div>
+            <div style="font-size:0.75rem;color:var(--text-muted);line-height:1.5;">One round earlier than most boards.</div>
+          </div>
+          <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px 14px;">
+            <div style="font-size:0.7rem;letter-spacing:0.12em;text-transform:uppercase;font-weight:600;color:var(--text-muted);margin-bottom:4px;">−18 pts</div>
+            <div style="font-size:0.82rem;font-weight:500;color:var(--red);margin-bottom:4px;">Significant Reach</div>
+            <div style="font-size:0.75rem;color:var(--text-muted);line-height:1.5;">Two or more rounds earlier than consensus.</div>
+          </div>
+          <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px 14px;">
+            <div style="font-size:0.7rem;letter-spacing:0.12em;text-transform:uppercase;font-weight:600;color:var(--text-muted);margin-bottom:4px;">Team Fit</div>
+            <div style="font-size:0.82rem;font-weight:500;color:var(--gold);margin-bottom:4px;">−3 to +12 pts</div>
+            <div style="font-size:0.75rem;color:var(--text-muted);line-height:1.5;">High need at position = bonus. Redundant = penalty.</div>
+          </div>
+        </div>
+
+        <!-- Grade thresholds -->
+        <div style="border-top:1px solid var(--border);margin-bottom:16px;"></div>
+        <div style="font-size:0.65rem;letter-spacing:0.18em;text-transform:uppercase;font-weight:600;color:var(--text-muted);margin-bottom:10px;">Grade thresholds</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:18px;">
+          <div style="display:flex;align-items:center;gap:6px;border-radius:6px;padding:6px 10px;border:1px solid rgba(22,163,74,0.4);background:rgba(22,163,74,0.07);"><span style="font-family:'Bebas Neue',sans-serif;font-size:1rem;color:var(--green);">A+</span><span style="font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--green);">90–100</span></div>
+          <div style="display:flex;align-items:center;gap:6px;border-radius:6px;padding:6px 10px;border:1px solid rgba(22,163,74,0.3);background:rgba(22,163,74,0.05);"><span style="font-family:'Bebas Neue',sans-serif;font-size:1rem;color:var(--green);">A</span><span style="font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--green);">82–89</span></div>
+          <div style="display:flex;align-items:center;gap:6px;border-radius:6px;padding:6px 10px;border:1px solid rgba(22,163,74,0.25);background:rgba(22,163,74,0.04);"><span style="font-family:'Bebas Neue',sans-serif;font-size:1rem;color:var(--green);">A−</span><span style="font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--green);">75–81</span></div>
+          <div style="display:flex;align-items:center;gap:6px;border-radius:6px;padding:6px 10px;border:1px solid rgba(21,128,61,0.3);background:rgba(21,128,61,0.06);"><span style="font-family:'Bebas Neue',sans-serif;font-size:1rem;color:#15803D;">B+</span><span style="font-family:'DM Mono',monospace;font-size:0.68rem;color:#15803D;">68–74</span></div>
+          <div style="display:flex;align-items:center;gap:6px;border-radius:6px;padding:6px 10px;border:1px solid rgba(21,128,61,0.25);background:rgba(21,128,61,0.05);"><span style="font-family:'Bebas Neue',sans-serif;font-size:1rem;color:#15803D;">B</span><span style="font-family:'DM Mono',monospace;font-size:0.68rem;color:#15803D;">62–67</span></div>
+          <div style="display:flex;align-items:center;gap:6px;border-radius:6px;padding:6px 10px;border:1px solid rgba(21,128,61,0.2);background:rgba(21,128,61,0.04);"><span style="font-family:'Bebas Neue',sans-serif;font-size:1rem;color:#15803D;">B−</span><span style="font-family:'DM Mono',monospace;font-size:0.68rem;color:#15803D;">55–61</span></div>
+          <div style="display:flex;align-items:center;gap:6px;border-radius:6px;padding:6px 10px;border:1px solid rgba(202,138,4,0.3);background:rgba(202,138,4,0.07);"><span style="font-family:'Bebas Neue',sans-serif;font-size:1rem;color:var(--yellow);">C+</span><span style="font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--yellow);">48–54</span></div>
+          <div style="display:flex;align-items:center;gap:6px;border-radius:6px;padding:6px 10px;border:1px solid rgba(202,138,4,0.25);background:rgba(202,138,4,0.05);"><span style="font-family:'Bebas Neue',sans-serif;font-size:1rem;color:var(--yellow);">C</span><span style="font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--yellow);">40–47</span></div>
+          <div style="display:flex;align-items:center;gap:6px;border-radius:6px;padding:6px 10px;border:1px solid rgba(234,88,12,0.3);background:rgba(234,88,12,0.07);"><span style="font-family:'Bebas Neue',sans-serif;font-size:1rem;color:var(--orange);">D</span><span style="font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--orange);">32–39</span></div>
+          <div style="display:flex;align-items:center;gap:6px;border-radius:6px;padding:6px 10px;border:1px solid rgba(220,38,38,0.35);background:rgba(220,38,38,0.07);"><span style="font-family:'Bebas Neue',sans-serif;font-size:1rem;color:var(--red);">F</span><span style="font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--red);">&lt;32</span></div>
+        </div>
+
+        <!-- Context factors -->
+        <div style="font-size:0.65rem;letter-spacing:0.18em;text-transform:uppercase;font-weight:600;color:var(--text-muted);margin-bottom:10px;">Context factors</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;">
+          <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px 14px;">
+            <div style="font-size:0.7rem;letter-spacing:0.12em;text-transform:uppercase;font-weight:600;color:var(--text-muted);margin-bottom:4px;">NHLe Translation</div>
+            <div style="font-size:0.82rem;font-weight:500;color:var(--text);margin-bottom:4px;">League difficulty</div>
+            <div style="font-size:0.75rem;color:var(--text-muted);line-height:1.5;">SHL, Liiga, and NCAA skaters score higher on raw attribute grades. MHL and NTDP prospects carry more development uncertainty.</div>
+          </div>
+          <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px 14px;">
+            <div style="font-size:0.7rem;letter-spacing:0.12em;text-transform:uppercase;font-weight:600;color:var(--text-muted);margin-bottom:4px;">Team Status</div>
+            <div style="font-size:0.82rem;font-weight:500;color:var(--text);margin-bottom:4px;">Rebuilding vs. contending</div>
+            <div style="font-size:0.75rem;color:var(--text-muted);line-height:1.5;">Rebuilding teams get +2 on high-need picks — ceiling matters more. Contending teams are graded on floor and readiness.</div>
+          </div>
+        </div>
+
+        <!-- Footer note -->
+        <div style="display:flex;gap:8px;padding:10px 14px;background:var(--gold-dim);border:1px solid rgba(184,134,11,0.18);border-radius:8px;align-items:flex-start;">
+          <div style="width:5px;height:5px;border-radius:50%;background:var(--gold);flex-shrink:0;margin-top:6px;"></div>
+          <div style="font-size:0.75rem;color:var(--text-dim);line-height:1.55;">Overall draft grade is the simple average of all pick scores. The final score is capped at 100 and floored at 0 — value and fit adjustments can push either direction.</div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
   <div class="results" id="results"></div>
 </div>
 <script>
@@ -1115,6 +1224,15 @@ function shareGrade(action){
     a.href=canvas.toDataURL('image/png');
     a.click();
   }
+}
+function toggleMethodology(){
+  var b=document.getElementById('methBody');
+  var c=document.getElementById('methChev');
+  var h=document.getElementById('methHint');
+  var open=b.style.display!=='none';
+  b.style.display=open?'none':'block';
+  c.style.transform=open?'':'rotate(180deg)';
+  h.textContent=open?'See how it works':'Collapse';
 }
 init();
 </script>
