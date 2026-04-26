@@ -1100,6 +1100,7 @@ results.forEach((pick,i)=>{
 html+=`<div id="rosterDiagram"></div>
 <div style="display:flex;gap:12px;justify-content:center;margin-top:24px;flex-wrap:wrap;align-items:center;">
   <button onclick="shareGrade('twitter')" style="background:#0C0C0C;color:#FAF8F3;border:none;padding:14px 28px;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:600;cursor:pointer;letter-spacing:0.05em;">&#120143; Share on X</button>
+  <button onclick="showGraphicModal()" style="background:none;border:1px solid var(--border2);color:var(--text-dim);padding:14px 28px;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:600;cursor:pointer;letter-spacing:0.05em;transition:all 0.2s;">&#128247; Save Graphic</button>
   <button onclick="copyShareLink()" id="copyLinkBtn" style="background:none;border:1px solid var(--border2);color:var(--text-dim);padding:14px 28px;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:600;cursor:pointer;letter-spacing:0.05em;transition:all 0.2s;">&#128279; Copy Link</button>
   <button onclick="resetDraft()" style="background:none;border:1px solid var(--border2);color:var(--text-muted);padding:14px 28px;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:500;cursor:pointer;letter-spacing:0.05em;">&#8635; Grade Another Team</button>
 </div>`;
@@ -1172,10 +1173,9 @@ function rr(ctx,x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y)
 
 function gradeCol(g){return{'A+':'#22C55E','A':'#22C55E','A-':'#22C55E','B+':'#86EFAC','B':'#86EFAC','B-':'#86EFAC','C+':'#EAB308','C':'#EAB308','D':'#F97316','F':'#EF4444'}[g]||'#22C55E';}
 
-function shareGrade(action){
+function buildShareCanvas(){
   const d=window._shareData;
-  if(!d)return;
-
+  if(!d)return null;
   const picks=d.results.slice(0,3);
   const SCALE=2;
   const W=1200;
@@ -1298,16 +1298,17 @@ function shareGrade(action){
     py+=PICK_H+PICK_GAP;
   });
 
+  return canvas;
+}
+
+function shareGrade(action){
+  const d=window._shareData;
+  if(!d)return;
+  const canvas=buildShareCanvas();
+  if(!canvas)return;
   if(action==='twitter'){
-    const tweetText=encodeURIComponent('Just graded the '+d.team+' 2026 NHL Draft class \u2014 they got an '+d.grade+' ('+d.score+'/100). Grade your team\'s picks at grademydraft.com #NHLDraft #NHL2026');
-    const a=document.createElement('a');
-    a.download=d.team.replace(/\s+/g,'-')+'-2026-draft-grade.png';
-    a.href=canvas.toDataURL('image/png'); a.click();
-    setTimeout(()=>window.open('https://twitter.com/intent/tweet?text='+tweetText,'_blank'),400);
-  } else {
-    const a=document.createElement('a');
-    a.download=d.team.replace(/\s+/g,'-')+'-2026-draft-grade.png';
-    a.href=canvas.toDataURL('image/png'); a.click();
+    const tweetText=encodeURIComponent('Just graded the '+d.team+' 2026 NHL Draft class — they got an '+d.grade+' ('+d.score+'/100). Grade your team\'s picks at grademydraft.com #NHLDraft #NHL2026');
+    window.open('https://twitter.com/intent/tweet?text='+tweetText,'_blank');
   }
 }
 
@@ -1320,8 +1321,45 @@ function toggleMethodology(){
   c.style.transform=open?'':'rotate(180deg)';
   h.textContent=open?'See how it works':'Collapse';
 }
+function showGraphicModal(){
+  const d=window._shareData;
+  if(!d)return;
+  const canvas=buildShareCanvas();
+  if(!canvas)return;
+  const img=document.getElementById('graphicModalImg');
+  img.src=canvas.toDataURL('image/png');
+  const modal=document.getElementById('graphicModal');
+  modal.style.display='flex';
+  document.body.style.overflow='hidden';
+}
+function closeGraphicModal(e){
+  if(e&&e.currentTarget!==e.target)return;
+  document.getElementById('graphicModal').style.display='none';
+  document.body.style.overflow='';
+}
 function init(){buildTeamGrid();addPickRow();addPickRow();addPickRow();loadFromURL();}
 init();
 </script>
+
+<!-- Graphic save modal -->
+<div id="graphicModal" style="display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,0.7);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:20px;" onclick="closeGraphicModal(event)">
+  <div style="background:var(--surface);border-radius:16px;max-width:520px;width:100%;padding:24px;box-shadow:0 24px 64px rgba(0,0,0,0.3);" onclick="event.stopPropagation()">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+      <div>
+        <div style="font-size:0.65rem;letter-spacing:0.18em;text-transform:uppercase;font-weight:600;color:var(--text-muted);">Save Your Graphic</div>
+        <div style="font-size:0.9rem;font-weight:600;color:var(--text);margin-top:2px;">Long-press the image to save</div>
+      </div>
+      <button onclick="closeGraphicModal()" style="background:var(--surface2);border:1px solid var(--border2);border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:0.9rem;color:var(--text-muted);display:flex;align-items:center;justify-content:center;">✕</button>
+    </div>
+    <div style="background:var(--surface2);border-radius:10px;overflow:hidden;margin-bottom:16px;">
+      <img id="graphicModalImg" src="" alt="Draft grade card" style="width:100%;display:block;border-radius:10px;">
+    </div>
+    <div style="display:flex;align-items:flex-start;gap:10px;padding:12px 14px;background:rgba(184,134,11,0.07);border:1px solid rgba(184,134,11,0.18);border-radius:8px;margin-bottom:16px;">
+      <div style="width:5px;height:5px;border-radius:50%;background:#B8860B;flex-shrink:0;margin-top:5px;"></div>
+      <div style="font-size:0.75rem;color:var(--text-dim);line-height:1.6;"><strong>On mobile:</strong> Long-press the image above and tap "Save to Photos". Then open X and attach it from your camera roll.<br><br><strong>On desktop:</strong> Right-click the image and select "Save Image As".</div>
+    </div>
+    <button onclick="shareGrade('twitter')" style="width:100%;background:#0C0C0C;color:#FAF8F3;border:none;padding:13px;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:600;cursor:pointer;letter-spacing:0.05em;">&#120143; Open X to Post</button>
+  </div>
+</div>
 </body>
 </html>
