@@ -706,12 +706,15 @@ async function buildRosterDiagram(team, picks) {
   }
 
   // 3 D pairs
+  const dPairsHtml = [0,1,2].map(function(i){
+    return '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px;">'
+      + playerCard(displayRoster.LD[i],'LD-'+i)
+      + playerCard(displayRoster.RD[i],'RD-'+i)
+      + '</div>';
+  }).join('');
   html += `<div style="margin-top:12px;margin-bottom:8px;">
     <div style="font-size:0.58rem;color:var(--text-muted);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:4px;font-weight:600;">Defence</div>
-    ${[0,1,2].map(i=>`<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px;">
-      ${playerCard(displayRoster.LD[i],'LD-'+i)}
-      ${playerCard(displayRoster.RD[i],'RD-'+i)}
-    </div>`).join('')}
+    ${dPairsHtml}
   </div>`;
 
   // Goalies
@@ -811,27 +814,6 @@ const TEAM_ROSTERS = {
   "Winnipeg":    { f:["Mark Scheifele","Kyle Connor","?","?","Nikolaj Ehlers","?","Adam Lowry","?","?","?","?","?"], d:["Josh Morrissey","?","Dylan DeMelo","?","?","?"], g:["Connor Hellebuyck","?"] },
 };
 
-function getDevTimeline(prospect) {
-  const p = prospect;
-  // Manual overrides — NHL-ready prospects
-  const nhlReadyNames = ['Gavin McKenna', 'Ivar Stenberg'];
-  if (nhlReadyNames.includes(p.name || '')) {
-    return { years: 0, label: 'NHL-Ready (0-1 yrs)', color: '#16A34A' };
-  }
-  const readiness = (p.scores.production + p.scores.compete + p.scores.hockey_iq) / 3;
-  const league = p.league || '';
-  let baseYears = 2;
-  if (league.includes('SHL') || league.includes('Liiga') || league.includes('SM-sarja') || league.includes('Extraliga') || league.includes('NCAA')) baseYears = 1;
-  else if (league.includes('OHL') || league.includes('WHL') || league.includes('QMJHL')) baseYears = 2;
-  else if (league.includes('MHL') || league.includes('U20') || league.includes('NTDP') || league.includes('USHL') || league.includes('Division')) baseYears = 3;
-  if (readiness >= 88) baseYears = Math.max(0, baseYears - 1);
-  else if (readiness < 70) baseYears += 1;
-  if (p.rank <= 5) baseYears = Math.max(1, baseYears);
-  baseYears = Math.min(4, Math.max(0, baseYears));
-  const labels = ['NHL-Ready (0-1 yrs)','1-2 Years','2-3 Years','3-4 Years','4+ Years'];
-  const colors = ['#16A34A','#86EFAC','#EAB308','#F97316','#EF4444'];
-  return { years: baseYears, label: labels[baseYears], color: colors[baseYears] };
-}
 
 
 
@@ -1283,7 +1265,7 @@ function shareGrade(action){
   });
 
   if(action==='twitter'){
-    const tweetText=encodeURIComponent('Just graded the '+d.team+' 2026 NHL Draft class — they got an '+d.grade+' ('+d.score+'/100). Grade your team's picks at grademydraft.com #NHLDraft #NHL2026');
+    const tweetText=encodeURIComponent('Just graded the '+d.team+' 2026 NHL Draft class \u2014 they got an '+d.grade+' ('+d.score+'/100). Grade your team\'s picks at grademydraft.com #NHLDraft #NHL2026');
     const a=document.createElement('a');
     a.download=d.team.replace(/\s+/g,'-')+'-2026-draft-grade.png';
     a.href=canvas.toDataURL('image/png'); a.click();
