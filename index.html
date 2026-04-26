@@ -638,15 +638,39 @@ async function buildRosterDiagram(team, picks) {
   const draftedSlots = {};
   const incomingProspects = []; // {name, pos, dev, posLabel}
 
+  // Build projected slot for each drafted pick
+  // Slot = which line/pair they project to long-term based on rank + scores
+  const projectedSlots = {}; // key = "LW-0", "C-1" etc -> {name, dev, slotLabel}
+
   picks.forEach(pick => {
     const p = pick.result.prospect;
     const positions = getProspectPositions(p.pos);
     const dev = getDevTimeline({...p, name: pick.player});
-    // Find best position slot to show prospect under
+    const overall = (p.scores.production*0.3 + p.scores.hockey_iq*0.25 + p.scores.skating*0.2 + p.scores.compete*0.15 + p.scores.ceiling*0.1);
+
+    // Project which line/pair slot they'll occupy at NHL peak
+    // Based on overall weighted score + rank
+    let slotIdx;
+    if (overall >= 88 || p.rank <= 5)        slotIdx = 0; // Line 1 / Pair 1
+    else if (overall >= 76 || p.rank <= 15)  slotIdx = 1; // Line 2 / Pair 2
+    else if (overall >= 64 || p.rank <= 35)  slotIdx = 2; // Line 3 / Pair 3
+    else                                      slotIdx = 3; // Line 4 (forwards only)
+
+    const lineLabelsShort = ['1st Line','2nd Line','3rd Line','4th Line'];
+    const pairLabelsShort = ['1st Pair','2nd Pair','3rd Pair'];
+
     for (const pos of positions) {
-      const arr = displayRoster[pos];
-      if (!arr) continue;
-      incomingProspects.push({ name: pick.player, pos, dev });
+      if (!displayRoster[pos]) continue;
+      const isD = pos === 'LD' || pos === 'RD';
+      const maxSlot = isD ? 2 : 3;
+      const cappedSlot = Math.min(slotIdx, maxSlot);
+      const slotLabel = isD ? pairLabelsShort[cappedSlot] : lineLabelsShort[cappedSlot];
+      const key = pos + '-' + cappedSlot;
+      // Only place one prospect per slot
+      if (!projectedSlots[key]) {
+        projectedSlots[key] = { name: pick.player, dev, slotLabel };
+      }
+      incomingProspects.push({ name: pick.player, pos, dev, slotLabel });
       break;
     }
   });
@@ -654,8 +678,13 @@ async function buildRosterDiagram(team, picks) {
   const playerCard = (name, key) => {
     const isEmpty = name === '?';
     const pos = key.split('-')[0];
+    const proj = projectedSlots[key];
     let bg, border, textColor;
-    if (isEmpty) {
+    if (proj) {
+      bg = proj.dev.color + '10';
+      border = '2px solid ' + proj.dev.color;
+      textColor = 'var(--text-dim)';
+    } else if (isEmpty) {
       bg = 'rgba(0,0,0,0.02)';
       border = '1.5px dashed rgba(0,0,0,0.12)';
       textColor = 'var(--text-muted)';
@@ -664,18 +693,23 @@ async function buildRosterDiagram(team, picks) {
       border = '1px solid var(--border2)';
       textColor = 'var(--text-dim)';
     }
-    return `<div style="background:${bg};border:${border};border-radius:8px;padding:8px 10px;min-width:0;flex:1;">
+    return `<div style="background:${bg};border:${border};border-radius:8px;padding:8px 10px;min-width:0;flex:1;position:relative;">
       <div style="font-size:0.58rem;color:var(--text-muted);letter-spacing:0.12em;text-transform:uppercase;font-weight:600;">${pos}</div>
       <div style="font-size:0.76rem;font-weight:600;color:${textColor};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px;">${isEmpty?'Open':name}</div>
+      ${proj ? `<div style="margin-top:6px;padding-top:6px;border-top:1px solid ${proj.dev.color}30;display:flex;align-items:center;gap:5px;">
+        <div style="width:5px;height:5px;border-radius:50%;background:${proj.dev.color};flex-shrink:0;"></div>
+        <div style="font-size:0.6rem;font-weight:700;color:${proj.dev.color};letter-spacing:0.04em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${proj.name}</div>
+        <div style="font-size:0.58rem;color:var(--text-muted);margin-left:auto;flex-shrink:0;">${proj.slotLabel}</div>
+      </div>` : ''}
     </div>`;
   };
 
   const prospectCard = (prospect) => {
-    const { name, pos, dev } = prospect;
+    const { name, pos, dev, slotLabel } = prospect;
     return `<div style="background:${dev.color}12;border:2px solid ${dev.color};border-radius:8px;padding:8px 12px;display:flex;align-items:center;justify-content:space-between;gap:8px;">
-      <div>
-        <div style="font-size:0.58rem;color:var(--text-muted);letter-spacing:0.12em;text-transform:uppercase;font-weight:600;">${pos} PROSPECT</div>
-        <div style="font-size:0.82rem;font-weight:700;color:var(--text);margin-top:2px;">${name}</div>
+      <div style="min-width:0;">
+        <div style="font-size:0.58rem;color:var(--text-muted);letter-spacing:0.12em;text-transform:uppercase;font-weight:600;">${pos} &middot; <span style="color:${dev.color};">${slotLabel||''}</span></div>
+        <div style="font-size:0.82rem;font-weight:700;color:var(--text);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${name}</div>
       </div>
       <div style="text-align:right;flex-shrink:0;">
         <div style="font-size:0.62rem;color:${dev.color};font-weight:700;letter-spacing:0.06em;">${dev.label}</div>
@@ -692,7 +726,7 @@ async function buildRosterDiagram(team, picks) {
       <div style="font-size:0.65rem;letter-spacing:0.2em;color:var(--text-muted);text-transform:uppercase;font-weight:600;">Projected Roster — ${team}</div>
       <div style="font-size:0.65rem;color:var(--text-muted);">via NHL API</div>
     </div>
-    <div style="font-size:0.78rem;color:var(--text-muted);margin-bottom:16px;">Coloured borders = draft picks placed into projected spot</div>`;
+    <div style="font-size:0.78rem;color:var(--text-muted);margin-bottom:16px;">Coloured borders show where drafted prospects project to slot at peak</div>`;
 
   // 4 forward lines
   for (let i=0;i<4;i++) {
