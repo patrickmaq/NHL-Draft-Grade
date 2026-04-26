@@ -38,6 +38,19 @@ header { padding:48px 0 40px; display:flex; align-items:flex-end; justify-conten
 .remove-btn:hover { border-color:var(--red); color:var(--red); background:rgba(220,38,38,0.06); }
 .add-pick-btn { background:none; border:1px dashed var(--border2); color:var(--text-muted); padding:10px 20px; border-radius:8px; font-family:'DM Sans',sans-serif; font-size:0.82rem; cursor:pointer; transition:all 0.2s; margin-top:4px; }
 .add-pick-btn:hover { border-color:var(--gold); color:var(--gold); }
+.prospect-search-wrap { position:relative; flex:1; min-width:0; }
+.prospect-search-input { background:var(--bg); border:1px solid var(--border2); color:var(--text); padding:10px 14px; border-radius:8px; font-family:'DM Sans',sans-serif; font-size:0.85rem; outline:none; transition:border-color 0.2s; width:100%; }
+.prospect-search-input:focus { border-color:var(--gold); }
+.prospect-search-input::placeholder { color:var(--text-muted); }
+.prospect-dropdown { position:absolute; top:calc(100% + 4px); left:0; right:0; background:var(--surface); border:1px solid var(--border2); border-radius:8px; z-index:100; max-height:220px; overflow-y:auto; box-shadow:0 8px 24px rgba(0,0,0,0.1); display:none; }
+.prospect-dropdown.open { display:block; }
+.prospect-option { padding:9px 14px; font-size:0.82rem; cursor:pointer; color:var(--text-dim); transition:background 0.12s; display:flex; align-items:center; gap:8px; }
+.prospect-option:hover, .prospect-option.highlighted { background:var(--gold-glow); color:var(--text); }
+.prospect-option .opt-rank { font-family:'DM Mono',monospace; font-size:0.72rem; color:var(--text-muted); min-width:28px; }
+.prospect-option .opt-pos { font-size:0.68rem; font-weight:600; letter-spacing:0.08em; color:var(--gold); background:var(--gold-dim); padding:2px 6px; border-radius:3px; }
+.prospect-option .opt-league { font-size:0.72rem; color:var(--text-muted); margin-left:auto; }
+.prospect-option.no-results { color:var(--text-muted); cursor:default; font-style:italic; }
+.prospect-option.no-results:hover { background:none; }
 .grade-btn { display:block; width:100%; background:var(--text); color:var(--bg); border:none; padding:16px; border-radius:8px; font-family:'Bebas Neue',sans-serif; font-size:1.1rem; letter-spacing:0.15em; cursor:pointer; transition:all 0.2s; margin-top:20px; }
 .grade-btn:hover { background:#2A2A2A; transform:translateY(-1px); }
 .results { display:none; }
@@ -959,7 +972,60 @@ function showTeamContext(team) {
       ${needsHtml}
     </div>`;
 }
-function addPickRow(){pickCount++;const id=pickCount;const r=document.createElement('div');r.className='pick-row';r.id='pick-'+id;const opts=Object.keys(PROSPECTS).map(n=>`<option value="${n}">${PROSPECTS[n].rank}. ${n}</option>`).join('');r.innerHTML=`<select class="round-select">${[1,2,3,4,5,6,7].map(x=>`<option value="${x}">Round ${x}</option>`).join('')}</select><select class="player-input"><option value="">— Select Prospect —</option>${opts}</select><select class="position-select"><option value="">Position</option><option>C</option><option>LW</option><option>RW</option><option>D</option><option>G</option></select><button class="remove-btn" onclick="removePick(${id})">✕</button>`;document.getElementById('pickRows').appendChild(r);}
+function addPickRow(){
+  pickCount++;const id=pickCount;
+  const r=document.createElement('div');r.className='pick-row';r.id='pick-'+id;
+  r.innerHTML=`
+    <select class="round-select">${[1,2,3,4,5,6,7].map(x=>`<option value="${x}">Round ${x}</option>`).join('')}</select>
+    <div class="prospect-search-wrap" id="psw-${id}">
+      <input type="text" class="prospect-search-input player-input" placeholder="Search prospect..." autocomplete="off" data-selected="" id="psi-${id}">
+      <div class="prospect-dropdown" id="psd-${id}"></div>
+    </div>
+    <select class="position-select"><option value="">Position</option><option>C</option><option>LW</option><option>RW</option><option>D</option><option>G</option></select>
+    <button class="remove-btn" onclick="removePick(${id})">✕</button>`;
+  document.getElementById('pickRows').appendChild(r);
+  initProspectSearch(id);
+}
+
+function initProspectSearch(id){
+  const input=document.getElementById('psi-'+id);
+  const dropdown=document.getElementById('psd-'+id);
+  const allNames=Object.keys(PROSPECTS);
+
+  function renderOptions(query){
+    const q=query.toLowerCase().trim();
+    const filtered=q
+      ? allNames.filter(n=>n.toLowerCase().includes(q)||String(PROSPECTS[n].rank).includes(q)||PROSPECTS[n].pos.toLowerCase().includes(q)||(PROSPECTS[n].league||'').toLowerCase().includes(q))
+      : allNames;
+    if(!filtered.length){
+      dropdown.innerHTML=`<div class="prospect-option no-results">No prospects found</div>`;
+    } else {
+      dropdown.innerHTML=filtered.slice(0,40).map(n=>{
+        const p=PROSPECTS[n];
+        return `<div class="prospect-option" data-name="${n}" onmousedown="selectProspect(${id},'${n.replace(/'/g,"\\'")}')">
+          <span class="opt-rank">#${p.rank}</span>
+          <span>${n}</span>
+          <span class="opt-pos">${p.pos}</span>
+          <span class="opt-league">${(p.league||'').split('(')[0].trim()}</span>
+        </div>`;
+      }).join('');
+    }
+    dropdown.classList.add('open');
+  }
+
+  input.addEventListener('focus',()=>renderOptions(input.value));
+  input.addEventListener('input',()=>{ input.dataset.selected=''; renderOptions(input.value); });
+  input.addEventListener('blur',()=>{ setTimeout(()=>dropdown.classList.remove('open'),150); });
+  document.addEventListener('click',e=>{ if(!document.getElementById('psw-'+id)?.contains(e.target)) dropdown.classList.remove('open'); });
+}
+
+function selectProspect(id,name){
+  const input=document.getElementById('psi-'+id);
+  const dropdown=document.getElementById('psd-'+id);
+  input.value=name;
+  input.dataset.selected=name;
+  dropdown.classList.remove('open');
+}
 function removePick(id){const e=document.getElementById('pick-'+id);if(e)e.remove();}
 function getBarColor(v){if(v>=85)return'#16A34A';if(v>=70)return'#15803D';if(v>=55)return'#CA8A04';if(v>=40)return'#EA580C';return'#DC2626';}
 function getPickGrade(name,round){const p=PROSPECTS[name];if(!p)return null;let score=p.scores.production*0.30+p.scores.skating*0.20+p.scores.hockey_iq*0.25+p.scores.compete*0.15+p.scores.ceiling*0.10;const er=p.rank<=32?1:p.rank<=64?2:3;const diff=round-er;let bonus=0,rv='';if(diff>=2){bonus=12;rv=`Exceptional value — available ${diff} round(s) later than expected.`;}else if(diff===1){bonus=6;rv='Good value — slightly later than their consensus ranking.';}else if(diff===0){bonus=0;rv='Picked right on consensus — exactly where most boards have them.';}else if(diff===-1){bonus=-8;rv='Slight reach — one round earlier than most boards projected.';}else{bonus=-18;rv=`Significant reach — ${Math.abs(diff)} rounds earlier than projected.`;}
@@ -969,7 +1035,7 @@ const fit = selectedTeam ? getTeamFitBonus(p.pos, selectedTeam) : {bonus:0,label
 score = Math.min(100,Math.max(0,score+bonus+fit.bonus));
 
 let grade,gc;if(score>=90){grade='A+';gc='grade-A';}else if(score>=82){grade='A';gc='grade-A';}else if(score>=75){grade='A-';gc='grade-A';}else if(score>=68){grade='B+';gc='grade-B';}else if(score>=62){grade='B';gc='grade-B';}else if(score>=55){grade='B-';gc='grade-B';}else if(score>=48){grade='C+';gc='grade-C';}else if(score>=40){grade='C';gc='grade-C';}else if(score>=32){grade='D';gc='grade-D';}else{grade='F';gc='grade-F';}return{score:Math.round(score),grade,gc,roundVerdict:rv,fit,prospect:p};}
-function gradeDraft(){if(!selectedTeam){alert('Please select your team first.');return;}const picks=[];document.querySelectorAll('.pick-row').forEach(row=>{const round=parseInt(row.querySelector('.round-select').value);const player=row.querySelector('.player-input').value;if(player)picks.push({round,player});});if(!picks.length){alert('Please add at least one pick.');return;}const results=picks.map(p=>({...p,result:getPickGrade(p.player,p.round)})).filter(p=>p.result);if(!results.length)return;const avg=Math.round(results.reduce((s,r)=>s+r.result.score,0)/results.length);let og,oc;if(avg>=88){og='A+';oc='grade-A';}else if(avg>=80){og='A';oc='grade-A';}else if(avg>=73){og='A-';oc='grade-A';}else if(avg>=66){og='B+';oc='grade-B';}else if(avg>=60){og='B';oc='grade-B';}else if(avg>=53){og='B-';oc='grade-B';}else if(avg>=45){og='C';oc='grade-C';}else if(avg>=35){og='D';oc='grade-D';}else{og='F';oc='grade-F';}const s={'A+':'Outstanding draft. Elite value at every pick — scouts were locked in.','A':'Excellent draft. Strong selections throughout with smart value picks.','A-':'Very good draft with minor quibbles. A strong class that should develop well.','B+':'Solid draft with good picks. A couple choices raise minor eyebrows.','B':'Decent draft. More hits than misses but a few picks left value on the board.','B-':'Above average. Some bright spots but also a notable reach or two.','C':"Middling draft. Value wasn't maximized and some picks feel like fits over best available.",'D':'Tough draft. Several reaches that will be hard to justify come opening night.','F':'Difficult to defend. Significant reaches throughout suggest scouts were off.'};renderResults(selectedTeam,og,oc,avg,s[og]||'',results);}
+function gradeDraft(){if(!selectedTeam){alert('Please select your team first.');return;}const picks=[];document.querySelectorAll('.pick-row').forEach(row=>{const round=parseInt(row.querySelector('.round-select').value);const playerInput=row.querySelector('.player-input');const player=playerInput?.dataset?.selected||playerInput?.value||'';if(player&&PROSPECTS[player])picks.push({round,player});});if(!picks.length){alert('Please add at least one pick.');return;}const results=picks.map(p=>({...p,result:getPickGrade(p.player,p.round)})).filter(p=>p.result);if(!results.length)return;const avg=Math.round(results.reduce((s,r)=>s+r.result.score,0)/results.length);let og,oc;if(avg>=88){og='A+';oc='grade-A';}else if(avg>=80){og='A';oc='grade-A';}else if(avg>=73){og='A-';oc='grade-A';}else if(avg>=66){og='B+';oc='grade-B';}else if(avg>=60){og='B';oc='grade-B';}else if(avg>=53){og='B-';oc='grade-B';}else if(avg>=45){og='C';oc='grade-C';}else if(avg>=35){og='D';oc='grade-D';}else{og='F';oc='grade-F';}const s={'A+':'Outstanding draft. Elite value at every pick — scouts were locked in.','A':'Excellent draft. Strong selections throughout with smart value picks.','A-':'Very good draft with minor quibbles. A strong class that should develop well.','B+':'Solid draft with good picks. A couple choices raise minor eyebrows.','B':'Decent draft. More hits than misses but a few picks left value on the board.','B-':'Above average. Some bright spots but also a notable reach or two.','C':"Middling draft. Value wasn't maximized and some picks feel like fits over best available.",'D':'Tough draft. Several reaches that will be hard to justify come opening night.','F':'Difficult to defend. Significant reaches throughout suggest scouts were off.'};renderResults(selectedTeam,og,oc,avg,s[og]||'',results);}
 function renderResults(team,grade,gc,score,summary,results){
 const c=document.getElementById('results');c.className='results visible';
 
@@ -1210,14 +1276,8 @@ function shareGrade(action){
   ctx.fillRect(0,H-3,W,3);
 
   if(action==='twitter'){
-    canvas.toBlob(blob=>{
-      const url=URL.createObjectURL(blob);
-      const tweetText=encodeURIComponent(`Just graded the ${d.team} 2026 NHL Draft class — they got an ${d.grade} (${d.score}/100). Grade your team's picks at grademydraft.com #NHLDraft #NHL2026`);
-      // Download image first then open Twitter
-      const a=document.createElement('a');
-      a.href=url;a.download=d.team.replace(/\s+/g,'-')+'-draft-grade.png';a.click();
-      setTimeout(()=>{ window.open('https://twitter.com/intent/tweet?text='+tweetText,'_blank'); },800);
-    });
+    const tweetText=encodeURIComponent(`Just graded the ${d.team} 2026 NHL Draft class — they got an ${d.grade} (${d.score}/100). Grade your team's picks at grademydraft.com #NHLDraft #NHL2026`);
+    window.open('https://twitter.com/intent/tweet?text='+tweetText,'_blank');
   } else {
     const a=document.createElement('a');
     a.download=d.team.replace(/\s+/g,'-')+'-2026-draft-grade.png';
