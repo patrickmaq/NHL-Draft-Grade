@@ -1179,7 +1179,7 @@ function buildShareCanvas(){
   const SCALE=2;
   const W=1200;
   const HEADER_H=220;
-  const PICK_H=72;
+  const PICK_H=82;
   const PICK_GAP=10;
   const PAD=44;
   const H=PAD+HEADER_H+(picks.length*(PICK_H+PICK_GAP))-PICK_GAP+PAD;
@@ -1247,52 +1247,48 @@ function buildShareCanvas(){
   while(ctx.measureText(sum).width>textMaxW&&sum.length>10) sum=sum.slice(0,-4)+'…';
   ctx.fillText(sum,textX,MID+22);
 
-  // Pick rows
+  // Pick rows — styled like roster cards: full colour border, pos top-left, dev top-right, name below
+  const PICK_INNER = 20; // inner padding
   let py=HCY+HCH+PICK_GAP;
   picks.forEach((pick)=>{
     const p=pick.result.prospect;
     const pg=pick.result.grade;
     const pgc=gradeCol(pg);
+    const dev=getDevTimeline({...p, name:pick.player});
 
+    // Card background
     ctx.fillStyle=SURFACE; rr(ctx,PAD,py,W-PAD*2,PICK_H,CR); ctx.fill();
-    ctx.strokeStyle=BORDER2; ctx.lineWidth=1; rr(ctx,PAD,py,W-PAD*2,PICK_H,CR); ctx.stroke();
+    // Full coloured border (dev timeline colour)
+    ctx.strokeStyle=dev.color; ctx.lineWidth=2; rr(ctx,PAD,py,W-PAD*2,PICK_H,CR); ctx.stroke();
+    // Subtle colour tint background
+    ctx.fillStyle=dev.color+'0D'; rr(ctx,PAD,py,W-PAD*2,PICK_H,CR); ctx.fill();
 
-    // Left accent bar
-    ctx.fillStyle=pgc; ctx.fillRect(PAD,py+CR,4,PICK_H-CR*2);
-    ctx.beginPath(); ctx.arc(PAD+CR,py+CR,CR,Math.PI,1.5*Math.PI); ctx.fillStyle=pgc; ctx.fill();
-    ctx.beginPath(); ctx.arc(PAD+CR,py+PICK_H-CR,CR,0.5*Math.PI,Math.PI); ctx.fill();
-    ctx.fillRect(PAD,py+CR,CR,PICK_H-CR*2);
+    const IX=PAD+PICK_INNER; // inner x start
+    const RX=PAD+W-PAD*2-PICK_INNER; // inner x end (right)
 
-    const pm=py+PICK_H/2;
+    // TOP ROW: Pos · Round (left) | Dev timeline (right)
+    const topY=py+22;
+    // Position + Round label
+    ctx.fillStyle=dev.color; ctx.font='700 13px Arial,sans-serif';
+    const posRoundStr=p.pos+' · RD '+pick.round;
+    ctx.fillText(posRoundStr, IX, topY);
+    // Dev timeline (right aligned)
+    ctx.textAlign='right';
+    ctx.fillStyle=dev.color; ctx.font='700 13px Arial,sans-serif';
+    ctx.fillText(dev.label, RX, topY);
+    ctx.textAlign='left';
 
-    // Round badge
-    ctx.fillStyle='rgba(184,134,11,0.10)';
-    rr(ctx,PAD+20,pm-13,80,24,5); ctx.fill();
-    ctx.fillStyle=GOLD; ctx.font='600 12px Arial,sans-serif';
-    ctx.fillText('ROUND '+pick.round,PAD+28,pm+4);
-
-    // Name
-    ctx.fillStyle=TEXT; ctx.font='bold 22px Arial,sans-serif';
-    ctx.fillText(pick.player,PAD+116,pm-2);
-
-    // Pos · League
-    ctx.fillStyle=TEXT_MUTED; ctx.font='400 14px Arial,sans-serif';
-    ctx.fillText(p.pos+' · '+p.league.split('(')[0].trim(),PAD+116,pm+18);
-
-    // Rank tag
-    ctx.font='500 13px Arial,sans-serif';
-    const rankStr='#'+p.rank+' consensus';
-    const rankW=ctx.measureText(rankStr).width+20;
-    ctx.fillStyle=SURFACE2;
-    rr(ctx,W-PAD-36-rankW-90,pm-13,rankW,24,5); ctx.fill();
-    ctx.strokeStyle=BORDER2; ctx.lineWidth=0.5;
-    rr(ctx,W-PAD-36-rankW-90,pm-13,rankW,24,5); ctx.stroke();
-    ctx.fillStyle=TEXT_MUTED;
-    ctx.fillText(rankStr,W-PAD-36-rankW-90+10,pm+4);
-
-    // Pick grade
-    ctx.fillStyle=pgc; ctx.font='bold 28px Arial,sans-serif';
-    ctx.textAlign='right'; ctx.fillText(pg,W-PAD-20,pm+10); ctx.textAlign='left';
+    // BOTTOM ROW: Player name (left) | Grade (right)
+    const botY=py+PICK_H-18;
+    ctx.fillStyle=TEXT; ctx.font='bold 26px Arial,sans-serif';
+    // Truncate name if too long
+    let pname=pick.player;
+    const maxNameW=(W-PAD*2)-PICK_INNER*2-80;
+    while(ctx.measureText(pname).width>maxNameW && pname.length>4) pname=pname.slice(0,-3)+'…';
+    ctx.fillText(pname, IX, botY);
+    // Grade right
+    ctx.fillStyle=pgc; ctx.font='bold 26px Arial,sans-serif';
+    ctx.textAlign='right'; ctx.fillText(pg, RX, botY); ctx.textAlign='left';
 
     py+=PICK_H+PICK_GAP;
   });
