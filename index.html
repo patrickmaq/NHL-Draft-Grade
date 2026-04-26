@@ -1000,7 +1000,7 @@ function initProspectSearch(id){
     if(!filtered.length){
       dropdown.innerHTML=`<div class="prospect-option no-results">No prospects found</div>`;
     } else {
-      dropdown.innerHTML=filtered.slice(0,40).map(n=>{
+      dropdown.innerHTML=filtered.map(n=>{
         const p=PROSPECTS[n];
         return `<div class="prospect-option" data-name="${n}" onmousedown="selectProspect(${id},'${n.replace(/'/g,"\\'")}')">
           <span class="opt-rank">#${p.rank}</span>
