@@ -1098,11 +1098,10 @@ results.forEach((pick,i)=>{
   </div>`;
 });
 html+=`<div id="rosterDiagram"></div>
-<div style="display:flex;gap:12px;justify-content:center;margin-top:24px;flex-wrap:wrap;align-items:center;">
-  <button onclick="shareGrade('twitter')" style="background:#0C0C0C;color:#FAF8F3;border:none;padding:14px 28px;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:600;cursor:pointer;letter-spacing:0.05em;">&#120143; Share on X</button>
-  <button onclick="showGraphicModal()" style="background:none;border:1px solid var(--border2);color:var(--text-dim);padding:14px 28px;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:600;cursor:pointer;letter-spacing:0.05em;transition:all 0.2s;">&#128247; Save Graphic</button>
-  <button onclick="copyShareLink()" id="copyLinkBtn" style="background:none;border:1px solid var(--border2);color:var(--text-dim);padding:14px 28px;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:600;cursor:pointer;letter-spacing:0.05em;transition:all 0.2s;">&#128279; Copy Link</button>
-  <button onclick="resetDraft()" style="background:none;border:1px solid var(--border2);color:var(--text-muted);padding:14px 28px;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:500;cursor:pointer;letter-spacing:0.05em;">&#8635; Grade Another Team</button>
+<div style="display:flex;flex-direction:column;gap:10px;margin-top:24px;max-width:400px;margin-left:auto;margin-right:auto;">
+  <button onclick="resetDraft()" style="width:100%;background:none;border:1px solid var(--border2);color:var(--text-muted);padding:14px 28px;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:500;cursor:pointer;letter-spacing:0.05em;">&#8635; Grade Another Team</button>
+  <button onclick="showGraphicModal()" style="width:100%;background:#0C0C0C;color:#FAF8F3;border:none;padding:14px 28px;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:600;cursor:pointer;letter-spacing:0.05em;">&#120143; Share on X</button>
+  <button onclick="copyShareLink()" id="copyLinkBtn" style="width:100%;background:none;border:1px solid var(--border2);color:var(--text-dim);padding:14px 28px;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:600;cursor:pointer;letter-spacing:0.05em;transition:all 0.2s;">&#128279; Copy Link</button>
 </div>`;
 c.innerHTML=html;
 window._shareData={team,grade,score,summary,results};
@@ -1356,7 +1355,7 @@ init();
     </div>
     <div style="display:flex;align-items:flex-start;gap:10px;padding:12px 14px;background:rgba(184,134,11,0.07);border:1px solid rgba(184,134,11,0.18);border-radius:8px;margin-bottom:16px;">
       <div style="width:5px;height:5px;border-radius:50%;background:#B8860B;flex-shrink:0;margin-top:5px;"></div>
-      <div style="font-size:0.75rem;color:var(--text-dim);line-height:1.6;"><strong>On mobile:</strong> Long-press the image above and tap "Save to Photos". Then open X and attach it from your camera roll.<br><br><strong>On desktop:</strong> Right-click the image and select "Save Image As".</div>
+      <div style="font-size:0.75rem;color:var(--text-dim);line-height:1.6;"><strong>Step 1:</strong> Long-press the image (mobile) or right-click (desktop) to save it.<br><br><strong>Step 2:</strong> Tap "Open X to Post" below — then attach the saved image to your tweet.</div>
     </div>
     <button onclick="shareGrade('twitter')" style="width:100%;background:#0C0C0C;color:#FAF8F3;border:none;padding:13px;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:600;cursor:pointer;letter-spacing:0.05em;">&#120143; Open X to Post</button>
   </div>
