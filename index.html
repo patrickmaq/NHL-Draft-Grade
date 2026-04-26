@@ -517,7 +517,7 @@ async function buildRosterDiagram(team, picks) {
   picks.forEach(pick => {
     const p = pick.result.prospect;
     const positions = getProspectPositions(p.pos);
-    const dev = getDevTimeline(p);
+    const dev = getDevTimeline({...p, name: pick.player});
     // Find best position slot to show prospect under
     for (const pos of positions) {
       const arr = displayRoster[pos];
