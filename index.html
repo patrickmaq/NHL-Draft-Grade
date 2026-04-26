@@ -1081,22 +1081,75 @@ results.forEach((pick,i)=>{
   </div>`;
 });
 html+=`<div id="rosterDiagram"></div>
-<div style="display:flex;gap:12px;justify-content:center;margin-top:24px;flex-wrap:wrap;">
+<div style="display:flex;gap:12px;justify-content:center;margin-top:24px;flex-wrap:wrap;align-items:center;">
   <button onclick="shareGrade('twitter')" style="background:#0C0C0C;color:#FAF8F3;border:none;padding:14px 28px;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:600;cursor:pointer;letter-spacing:0.05em;">&#120143; Share on X</button>
+  <button onclick="copyShareLink()" id="copyLinkBtn" style="background:none;border:1px solid var(--border2);color:var(--text-dim);padding:14px 28px;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:600;cursor:pointer;letter-spacing:0.05em;transition:all 0.2s;">&#128279; Copy Link</button>
+  <button onclick="resetDraft()" style="background:none;border:1px solid var(--border2);color:var(--text-muted);padding:14px 28px;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:500;cursor:pointer;letter-spacing:0.05em;">&#8635; Grade Another Team</button>
 </div>`;
 c.innerHTML=html;
 window._shareData={team,grade,score,summary,results};
-setTimeout(()=>{document.querySelectorAll('.bar-fill').forEach(b=>{b.style.width=b.dataset.target+'%';});},100);// Share buttons
-html += `
-<div style="display:flex;gap:12px;justify-content:center;margin-top:24px;flex-wrap:wrap;">
-
-</div>`;
-c.innerHTML=html;
-window._shareData={team,grade,score,summary,results};
+updateShareURL(team,results);
 setTimeout(()=>{document.querySelectorAll('.bar-fill').forEach(b=>{b.style.width=b.dataset.target+'%';});},100);
-// Async roster diagram
-buildRosterDiagram(team, results);
+buildRosterDiagram(team,results);
 c.scrollIntoView({behavior:'smooth',block:'start'});}
+
+function updateShareURL(team,results){
+  const params=new URLSearchParams();
+  params.set('team',team);
+  results.forEach((r,i)=>params.set('p'+i,r.round+'-'+r.player));
+  window.history.replaceState({},'',window.location.pathname+'?'+params.toString());
+}
+
+function copyShareLink(){
+  navigator.clipboard.writeText(window.location.href).then(()=>{
+    const btn=document.getElementById('copyLinkBtn');
+    if(!btn)return;
+    btn.textContent='✓ Copied!';
+    btn.style.borderColor='var(--green)';
+    btn.style.color='var(--green)';
+    setTimeout(()=>{btn.innerHTML='&#128279; Copy Link';btn.style.borderColor='';btn.style.color='';},2000);
+  });
+}
+
+function resetDraft(){
+  window.history.replaceState({},'',window.location.pathname);
+  selectedTeam=null;
+  document.querySelectorAll('.team-btn').forEach(x=>x.classList.remove('active'));
+  document.getElementById('teamContextBanner').style.display='none';
+  document.getElementById('pickRows').innerHTML='';
+  pickCount=0;
+  document.getElementById('results').className='results';
+  document.getElementById('results').innerHTML='';
+  addPickRow();addPickRow();addPickRow();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function loadFromURL(){
+  const params=new URLSearchParams(window.location.search);
+  const team=params.get('team');
+  if(!team||!TEAM_NEEDS[team])return;
+  const btn=Array.from(document.querySelectorAll('.team-btn')).find(b=>b.textContent===team);
+  if(btn)selectTeam(team,btn);
+  document.getElementById('pickRows').innerHTML='';
+  pickCount=0;
+  let i=0;
+  while(params.has('p'+i)){
+    const val=params.get('p'+i);
+    const dash=val.indexOf('-');
+    const round=parseInt(val.substring(0,dash));
+    const player=val.substring(dash+1);
+    if(PROSPECTS[player]){
+      addPickRow();
+      const row=document.getElementById('pick-'+pickCount);
+      row.querySelector('.round-select').value=round;
+      const input=row.querySelector('.player-input');
+      input.value=player;
+      input.dataset.selected=player;
+    }
+    i++;
+  }
+  if(i>0)gradeDraft();
+}
 
 function rr(ctx,x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.quadraticCurveTo(x+w,y,x+w,y+r);ctx.lineTo(x+w,y+h-r);ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);ctx.lineTo(x+r,y+h);ctx.quadraticCurveTo(x,y+h,x,y+h-r);ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y);ctx.closePath();}
 
@@ -1294,6 +1347,7 @@ function toggleMethodology(){
   c.style.transform=open?'':'rotate(180deg)';
   h.textContent=open?'See how it works':'Collapse';
 }
+function init(){buildTeamGrid();addPickRow();addPickRow();addPickRow();loadFromURL();}
 init();
 </script>
 </body>
