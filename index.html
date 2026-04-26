@@ -1159,178 +1159,139 @@ function shareGrade(action){
   const d=window._shareData;
   if(!d)return;
 
+  // ── DIMENSIONS — Twitter card format 1200×630 ──
   const SCALE=2;
-  const W=1200,HEADER=180,PICK_H=88,GAP=12,FOOTER=64;
-  const H=HEADER+(d.results.length*(PICK_H+GAP))-GAP+FOOTER+40;
-
+  const W=1200,H=630;
   const canvas=document.createElement('canvas');
   canvas.width=W*SCALE; canvas.height=H*SCALE;
   const ctx=canvas.getContext('2d');
   ctx.scale(SCALE,SCALE);
 
-  // ── BACKGROUND ──
-  ctx.fillStyle='#0D0F12';
+  // ── COLOURS matching site light theme ──
+  const BG='#FAF8F3';         // --bg
+  const SURFACE='#FFFFFF';    // --surface
+  const SURFACE2='#F3F0E8';   // --surface2
+  const BORDER='rgba(0,0,0,0.1)';
+  const GOLD='#B8860B';
+  const GOLD_DIM='rgba(184,134,11,0.10)';
+  const TEXT='#0C0C0C';
+  const TEXT_DIM='#4A4A4A';
+  const TEXT_MUTED='#6B6B6B';
+  const gc=gradeCol(d.grade);
+
+  // ── PAGE BACKGROUND ──
+  ctx.fillStyle=BG;
   ctx.fillRect(0,0,W,H);
 
-  // Subtle grid
-  ctx.strokeStyle='rgba(255,255,255,0.03)';
+  // Subtle grid lines
+  ctx.strokeStyle='rgba(0,0,0,0.018)';
   ctx.lineWidth=1;
   for(let x=0;x<W;x+=40){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
   for(let y=0;y<H;y+=40){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
 
-  // Gold top accent line
-  const grad=ctx.createLinearGradient(0,0,W,0);
-  grad.addColorStop(0,'transparent');
-  grad.addColorStop(0.3,'#B8860B');
-  grad.addColorStop(0.7,'#D4AF37');
-  grad.addColorStop(1,'transparent');
-  ctx.fillStyle=grad;
-  ctx.fillRect(0,0,W,3);
+  // ── CARD ──
+  const CX=60,CY=60,CW=W-120,CH=H-120,CR=16;
+  ctx.fillStyle=SURFACE;
+  rr(ctx,CX,CY,CW,CH,CR); ctx.fill();
+  ctx.strokeStyle=BORDER; ctx.lineWidth=1.5;
+  rr(ctx,CX,CY,CW,CH,CR); ctx.stroke();
 
-  // ── HEADER ──
-  // Brand
-  ctx.fillStyle='#FFFFFF';
-  ctx.font='bold 38px Arial,sans-serif';
-  ctx.fillText('GRADE',40,62);
-  ctx.fillStyle='#B8860B';
-  ctx.fillText(' MY DRAFT',155,62);
+  // Card top gold accent bar
+  ctx.fillStyle=GOLD;
+  ctx.fillRect(CX,CY,CW,4);
+  // round top corners of accent bar
+  ctx.fillStyle=GOLD;
+  rr(ctx,CX,CY,CW,4,CR); ctx.fill();
 
-  ctx.fillStyle='rgba(255,255,255,0.35)';
-  ctx.font='500 13px Arial,sans-serif';
-  ctx.fillText('2026 NHL DRAFT GRADE TOOL',40,84);
+  // ── SECTION LABEL ──
+  ctx.fillStyle=TEXT_MUTED;
+  ctx.font='500 22px Arial,sans-serif';
+  ctx.letterSpacing='0.2em';
+  ctx.fillText('DRAFT RESULTS — '+d.team.toUpperCase(), CX+48, CY+60);
+  ctx.letterSpacing='0';
 
-  // Divider
-  ctx.fillStyle='rgba(255,255,255,0.08)';
-  ctx.fillRect(40,100,W-80,1);
+  // Divider under label
+  ctx.fillStyle=BORDER;
+  ctx.fillRect(CX+48,CY+74,CW-96,1);
 
-  // Team name
-  ctx.fillStyle='#F0F2F5';
-  ctx.font='bold 28px Arial,sans-serif';
-  ctx.fillText(d.team.toUpperCase()+' DRAFT CLASS',40,140);
-
-  // Summary text
-  ctx.fillStyle='rgba(255,255,255,0.45)';
-  ctx.font='500 14px Arial,sans-serif';
-  ctx.fillText(d.summary.length>80?d.summary.substring(0,80)+'…':d.summary,40,164);
-
-  // Big grade + score on right
-  const gc=gradeCol(d.grade);
-  // Glow
-  const glow=ctx.createRadialGradient(W-100,110,5,W-100,110,60);
-  glow.addColorStop(0,gc.replace(')',',0.25)').replace('rgb','rgba'));
-  glow.addColorStop(1,'transparent');
-  ctx.fillStyle=glow;
-  ctx.fillRect(W-180,50,160,120);
-
-  // Circle
-  ctx.beginPath();
-  ctx.arc(W-100,108,46,0,Math.PI*2);
-  ctx.strokeStyle=gc;ctx.lineWidth=2.5;ctx.stroke();
-
+  // ── GRADE CIRCLE ──
+  const circleX=CX+120, circleY=CY+180, circleR=72;
+  // Circle fill tint
+  const gcAlpha=gc+'22';
+  ctx.beginPath(); ctx.arc(circleX,circleY,circleR,0,Math.PI*2);
+  ctx.fillStyle=gc+'18'; ctx.fill();
+  ctx.strokeStyle=gc; ctx.lineWidth=2.5; ctx.stroke();
+  // Grade letter
   ctx.fillStyle=gc;
-  ctx.font='bold 52px Arial,sans-serif';
+  ctx.font='bold 80px Arial,sans-serif';
   ctx.textAlign='center';
-  ctx.fillText(d.grade,W-100,124);
-
-  ctx.fillStyle='#B8860B';
-  ctx.font='bold 13px Arial,sans-serif';
-  ctx.fillText(d.score+' / 100',W-100,152);
+  ctx.fillText(d.grade,circleX,circleY+28);
   ctx.textAlign='left';
 
-  // ── PICKS ──
-  let y=HEADER+16;
-  d.results.forEach((pick)=>{
-    const p=pick.result.prospect;
-    const pg=pick.result.grade;
-    const pgc=gradeCol(pg);
+  // ── TEAM NAME & SUMMARY ──
+  const textX=CX+240;
+  ctx.fillStyle=TEXT;
+  ctx.font='bold 48px Arial,sans-serif';
+  ctx.fillText(d.team.toUpperCase()+' DRAFT CLASS', textX, CY+148);
 
-    // Card background
-    ctx.fillStyle='#13161A';
-    rr(ctx,40,y,W-80,PICK_H,10);
-    ctx.fill();
+  ctx.fillStyle=TEXT_DIM;
+  ctx.font='400 28px Arial,sans-serif';
+  const summary=d.summary.length>72?d.summary.substring(0,72)+'…':d.summary;
+  ctx.fillText(summary, textX, CY+196);
 
-    // Left accent bar
-    ctx.fillStyle=pgc;
-    ctx.fillRect(40,y,4,PICK_H);
-
-    // Round badge
-    ctx.fillStyle='rgba(184,134,11,0.18)';
-    rr(ctx,60,y+14,90,22,5);
-    ctx.fill();
-    ctx.fillStyle='#B8860B';
-    ctx.font='bold 10px Arial,sans-serif';
-    ctx.fillText('ROUND '+pick.round,68,y+29);
-
-    // Rank badge
-    ctx.fillStyle='rgba(255,255,255,0.07)';
-    rr(ctx,160,y+14,110,22,5);
-    ctx.fill();
-    ctx.fillStyle='rgba(255,255,255,0.4)';
-    ctx.font='bold 10px Arial,sans-serif';
-    ctx.fillText('#'+p.rank+' CONSENSUS',168,y+29);
-
-    // NHLe badge
-    if(p.nhle){
-      ctx.fillStyle='rgba(255,255,255,0.07)';
-      rr(ctx,280,y+14,90,22,5);
-      ctx.fill();
-      ctx.fillStyle='rgba(255,255,255,0.4)';
-      ctx.fillText('NHLe '+p.nhle,288,y+29);
-    }
-
-    // Player name
-    ctx.fillStyle='#F0F2F5';
-    ctx.font='bold 20px Arial,sans-serif';
-    ctx.fillText(pick.player,60,y+58);
-
-    // Position · League
-    ctx.fillStyle='rgba(255,255,255,0.35)';
-    ctx.font='500 12px Arial,sans-serif';
-    ctx.fillText(p.pos+' · '+p.league+' · '+p.nation,60,y+76);
-
-    // Grade on right
-    ctx.fillStyle=pgc;
-    ctx.font='bold 28px Arial,sans-serif';
-    ctx.textAlign='right';
-    ctx.fillText(pg,W-60,y+58);
-    ctx.textAlign='left';
-
-    // Mini stat bars
-    const bars=Object.values(p.scores);
-    const totalBarW=340;
-    const bw=(totalBarW-(bars.length-1)*6)/bars.length;
-    const bx=W-80-totalBarW;
-    const by=y+70;
-    bars.forEach((v,i)=>{
-      const x2=bx+i*(bw+6);
-      ctx.fillStyle='rgba(255,255,255,0.08)';
-      ctx.fillRect(x2,by,bw,3);
-      const bc=v>=85?'#22C55E':v>=70?'#86EFAC':v>=55?'#EAB308':v>=40?'#F97316':'#EF4444';
-      ctx.fillStyle=bc;
-      ctx.fillRect(x2,by,bw*(v/100),3);
-    });
-
-    y+=PICK_H+GAP;
-  });
-
-  // ── FOOTER ──
-  y+=8;
-  ctx.fillStyle='rgba(255,255,255,0.06)';
-  ctx.fillRect(40,y,W-80,1);
-
-  ctx.fillStyle='rgba(255,255,255,0.2)';
-  ctx.font='500 12px Arial,sans-serif';
-  ctx.textAlign='center';
-  ctx.fillText('grademydraft.com  ·  2026 NHL DRAFT GRADE TOOL',W/2,y+28);
+  // ── SCORE on right ──
+  const scoreX=W-CX-80;
+  ctx.fillStyle=GOLD;
+  ctx.font='bold 88px Arial,sans-serif';
+  ctx.textAlign='right';
+  ctx.fillText(d.score, scoreX, CY+180);
+  ctx.fillStyle=TEXT_MUTED;
+  ctx.font='500 20px Arial,sans-serif';
+  ctx.letterSpacing='0.12em';
+  ctx.fillText('DRAFT SCORE', scoreX, CY+214);
+  ctx.letterSpacing='0';
   ctx.textAlign='left';
 
-  // Gold bottom accent
-  ctx.fillStyle=grad;
-  ctx.fillRect(0,H-3,W,3);
+  // ── DIVIDER ──
+  ctx.fillStyle=BORDER;
+  ctx.fillRect(CX+48, CY+260, CW-96, 1);
+
+  // ── CTA ROW ──
+  const ctaY=CY+310;
+  // Left: branding
+  ctx.fillStyle=TEXT;
+  ctx.font='bold 32px Arial,sans-serif';
+  ctx.fillText('GRADE', CX+48, ctaY);
+  ctx.fillStyle=GOLD;
+  ctx.fillText(' MY DRAFT', CX+138, ctaY);
+  ctx.fillStyle=TEXT_MUTED;
+  ctx.font='400 20px Arial,sans-serif';
+  ctx.fillText('2026 NHL Draft Grade Tool', CX+48, ctaY+34);
+
+  // Right: URL pill
+  const pillW=320,pillH=52,pillX=W-CX-48-pillW,pillY=ctaY-36;
+  ctx.fillStyle=GOLD_DIM;
+  rr(ctx,pillX,pillY,pillW,pillH,10); ctx.fill();
+  ctx.strokeStyle='rgba(184,134,11,0.3)'; ctx.lineWidth=1;
+  rr(ctx,pillX,pillY,pillW,pillH,10); ctx.stroke();
+  ctx.fillStyle=GOLD;
+  ctx.font='600 22px Arial,sans-serif';
+  ctx.textAlign='center';
+  ctx.fillText('grademydraft.com', pillX+pillW/2, pillY+34);
+  ctx.textAlign='left';
+
+  // ── BOTTOM BORDER ──
+  ctx.fillStyle=GOLD;
+  rr(ctx,CX,CY+CH-4,CW,4,CR); ctx.fill();
 
   if(action==='twitter'){
     const tweetText=encodeURIComponent(`Just graded the ${d.team} 2026 NHL Draft class — they got an ${d.grade} (${d.score}/100). Grade your team's picks at grademydraft.com #NHLDraft #NHL2026`);
-    window.open('https://twitter.com/intent/tweet?text='+tweetText,'_blank');
+    // Download the card so they can attach it, then open tweet compose
+    const a=document.createElement('a');
+    a.download=d.team.replace(/\s+/g,'-')+'-2026-draft-grade.png';
+    a.href=canvas.toDataURL('image/png');
+    a.click();
+    setTimeout(()=>window.open('https://twitter.com/intent/tweet?text='+tweetText,'_blank'),400);
   } else {
     const a=document.createElement('a');
     a.download=d.team.replace(/\s+/g,'-')+'-2026-draft-grade.png';
