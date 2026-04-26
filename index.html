@@ -88,7 +88,9 @@ header { padding:48px 0 40px; display:flex; align-items:flex-end; justify-conten
 .comp-tag span { color:var(--gold); font-weight:600; }
 @keyframes fadeUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
 @media(max-width:600px){
-  .pick-row{grid-template-columns:1fr 1fr;grid-template-rows:auto auto}
+  .pick-row{display:flex;flex-direction:column;gap:8px;padding-bottom:12px;border-bottom:1px solid var(--border);margin-bottom:12px;}
+  .pick-row select,.prospect-search-wrap{width:100%;}
+  .remove-btn{align-self:flex-end;margin-top:-4px;}
   .stat-bars{grid-template-columns:1fr}
   .overall-card{flex-direction:column;gap:20px}
   .overall-score{text-align:left}
@@ -1159,144 +1161,97 @@ function shareGrade(action){
   const d=window._shareData;
   if(!d)return;
 
-  // ── DIMENSIONS — Twitter card format 1200×630 ──
+  // Twitter ideal ratio 1200x628
   const SCALE=2;
-  const W=1200,H=630;
+  const W=1200,H=628;
   const canvas=document.createElement('canvas');
   canvas.width=W*SCALE; canvas.height=H*SCALE;
   const ctx=canvas.getContext('2d');
   ctx.scale(SCALE,SCALE);
 
-  // ── COLOURS matching site light theme ──
-  const BG='#FAF8F3';         // --bg
-  const SURFACE='#FFFFFF';    // --surface
-  const SURFACE2='#F3F0E8';   // --surface2
-  const BORDER='rgba(0,0,0,0.1)';
-  const GOLD='#B8860B';
-  const GOLD_DIM='rgba(184,134,11,0.10)';
-  const TEXT='#0C0C0C';
-  const TEXT_DIM='#4A4A4A';
-  const TEXT_MUTED='#6B6B6B';
+  // Colours
+  const BG='#FAF8F3',SURFACE='#FFFFFF',GOLD='#B8860B';
+  const TEXT='#0C0C0C',TEXT_DIM='#4A4A4A',TEXT_MUTED='#6B6B6B';
+  const BORDER='rgba(0,0,0,0.10)',BORDER2='rgba(0,0,0,0.14)';
   const gc=gradeCol(d.grade);
 
-  // ── PAGE BACKGROUND ──
-  ctx.fillStyle=BG;
-  ctx.fillRect(0,0,W,H);
-
-  // Subtle grid lines
-  ctx.strokeStyle='rgba(0,0,0,0.018)';
-  ctx.lineWidth=1;
+  // Page bg
+  ctx.fillStyle=BG; ctx.fillRect(0,0,W,H);
+  // Grid
+  ctx.strokeStyle='rgba(0,0,0,0.018)'; ctx.lineWidth=1;
   for(let x=0;x<W;x+=40){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
-  for(let y=0;y<H;y+=40){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+  for(let gy=0;gy<H;gy+=40){ctx.beginPath();ctx.moveTo(0,gy);ctx.lineTo(W,gy);ctx.stroke();}
 
-  // ── CARD ──
-  const CX=60,CY=60,CW=W-120,CH=H-120,CR=16;
-  ctx.fillStyle=SURFACE;
-  rr(ctx,CX,CY,CW,CH,CR); ctx.fill();
-  ctx.strokeStyle=BORDER; ctx.lineWidth=1.5;
-  rr(ctx,CX,CY,CW,CH,CR); ctx.stroke();
+  // Card
+  const PAD=44,CR=14;
+  const CX=PAD,CY=PAD,CW=W-PAD*2,CH=H-PAD*2;
+  ctx.fillStyle=SURFACE; rr(ctx,CX,CY,CW,CH,CR); ctx.fill();
+  ctx.strokeStyle=BORDER2; ctx.lineWidth=1.5; rr(ctx,CX,CY,CW,CH,CR); ctx.stroke();
+  // Gold top + bottom bars
+  ctx.fillStyle=GOLD; rr(ctx,CX,CY,CW,5,CR); ctx.fill();
+  ctx.fillStyle=GOLD; rr(ctx,CX,CY+CH-5,CW,5,CR); ctx.fill();
 
-  // Card top gold accent bar
-  ctx.fillStyle=GOLD;
-  ctx.fillRect(CX,CY,CW,4);
-  // round top corners of accent bar
-  ctx.fillStyle=GOLD;
-  rr(ctx,CX,CY,CW,4,CR); ctx.fill();
+  // Section label
+  ctx.fillStyle=TEXT_MUTED; ctx.font='500 17px Arial,sans-serif';
+  ctx.fillText('DRAFT RESULTS  —  '+d.team.toUpperCase(), CX+40, CY+46);
+  // Hairline
+  ctx.fillStyle=BORDER; ctx.fillRect(CX+40,CY+56,CW-80,1);
 
-  // ── SECTION LABEL ──
-  ctx.fillStyle=TEXT_MUTED;
-  ctx.font='500 22px Arial,sans-serif';
-  ctx.letterSpacing='0.2em';
-  ctx.fillText('DRAFT RESULTS — '+d.team.toUpperCase(), CX+48, CY+60);
-  ctx.letterSpacing='0';
+  // Content — vertically centred in card below label strip
+  const MID=CY+56+(CH-56-5)/2;
 
-  // Divider under label
-  ctx.fillStyle=BORDER;
-  ctx.fillRect(CX+48,CY+74,CW-96,1);
-
-  // ── GRADE CIRCLE ──
-  const circleX=CX+120, circleY=CY+180, circleR=72;
-  // Circle fill tint
-  const gcAlpha=gc+'22';
-  ctx.beginPath(); ctx.arc(circleX,circleY,circleR,0,Math.PI*2);
+  // Grade circle
+  const CR2=76, circX=CX+40+CR2, circY=MID;
+  ctx.beginPath(); ctx.arc(circX,circY,CR2,0,Math.PI*2);
   ctx.fillStyle=gc+'18'; ctx.fill();
-  ctx.strokeStyle=gc; ctx.lineWidth=2.5; ctx.stroke();
-  // Grade letter
-  ctx.fillStyle=gc;
-  ctx.font='bold 80px Arial,sans-serif';
-  ctx.textAlign='center';
-  ctx.fillText(d.grade,circleX,circleY+28);
-  ctx.textAlign='left';
+  ctx.strokeStyle=gc; ctx.lineWidth=3; ctx.stroke();
+  ctx.fillStyle=gc; ctx.font='bold 68px Arial,sans-serif';
+  ctx.textAlign='center'; ctx.fillText(d.grade,circX,circY+24); ctx.textAlign='left';
 
-  // ── TEAM NAME & SUMMARY ──
-  const textX=CX+240;
-  ctx.fillStyle=TEXT;
-  ctx.font='bold 48px Arial,sans-serif';
-  ctx.fillText(d.team.toUpperCase()+' DRAFT CLASS', textX, CY+148);
+  // Score — right side, sized first so we know the space available
+  const scoreStr=String(d.score);
+  ctx.font='bold 90px Arial,sans-serif';
+  const scoreW=ctx.measureText(scoreStr).width;
+  const scoreX=CX+CW-40-scoreW;
+  const labelStr='DRAFT SCORE';
+  ctx.font='500 16px Arial,sans-serif';
+  const labelW=ctx.measureText(labelStr).width;
+  const labelX=scoreX+(scoreW-labelW)/2;
+  ctx.fillStyle=GOLD; ctx.font='bold 90px Arial,sans-serif';
+  ctx.fillText(scoreStr,scoreX,MID+26);
+  ctx.fillStyle=TEXT_MUTED; ctx.font='500 16px Arial,sans-serif';
+  ctx.fillText(labelStr,labelX,MID+56);
 
-  ctx.fillStyle=TEXT_DIM;
-  ctx.font='400 28px Arial,sans-serif';
-  const summary=d.summary.length>72?d.summary.substring(0,72)+'…':d.summary;
-  ctx.fillText(summary, textX, CY+196);
+  // Team name + summary — between circle and score
+  const textX=CX+40+CR2*2+36;
+  const textMaxW=scoreX-textX-32;
+  ctx.fillStyle=TEXT; ctx.font='bold 42px Arial,sans-serif';
+  let teamLabel=d.team.toUpperCase()+' DRAFT CLASS';
+  while(ctx.measureText(teamLabel).width>textMaxW&&teamLabel.length>6) teamLabel=teamLabel.slice(0,-4)+'…';
+  ctx.fillText(teamLabel,textX,MID-10);
+  ctx.fillStyle=TEXT_DIM; ctx.font='400 21px Arial,sans-serif';
+  let sum=d.summary;
+  while(ctx.measureText(sum).width>textMaxW&&sum.length>10) sum=sum.slice(0,-4)+'…';
+  ctx.fillText(sum,textX,MID+28);
 
-  // ── SCORE on right ──
-  const scoreX=W-CX-80;
-  ctx.fillStyle=GOLD;
-  ctx.font='bold 88px Arial,sans-serif';
-  ctx.textAlign='right';
-  ctx.fillText(d.score, scoreX, CY+180);
-  ctx.fillStyle=TEXT_MUTED;
-  ctx.font='500 20px Arial,sans-serif';
-  ctx.letterSpacing='0.12em';
-  ctx.fillText('DRAFT SCORE', scoreX, CY+214);
-  ctx.letterSpacing='0';
-  ctx.textAlign='left';
-
-  // ── DIVIDER ──
-  ctx.fillStyle=BORDER;
-  ctx.fillRect(CX+48, CY+260, CW-96, 1);
-
-  // ── CTA ROW ──
-  const ctaY=CY+310;
-  // Left: branding
-  ctx.fillStyle=TEXT;
-  ctx.font='bold 32px Arial,sans-serif';
-  ctx.fillText('GRADE', CX+48, ctaY);
-  ctx.fillStyle=GOLD;
-  ctx.fillText(' MY DRAFT', CX+138, ctaY);
-  ctx.fillStyle=TEXT_MUTED;
-  ctx.font='400 20px Arial,sans-serif';
-  ctx.fillText('2026 NHL Draft Grade Tool', CX+48, ctaY+34);
-
-  // Right: URL pill
-  const pillW=320,pillH=52,pillX=W-CX-48-pillW,pillY=ctaY-36;
-  ctx.fillStyle=GOLD_DIM;
-  rr(ctx,pillX,pillY,pillW,pillH,10); ctx.fill();
-  ctx.strokeStyle='rgba(184,134,11,0.3)'; ctx.lineWidth=1;
-  rr(ctx,pillX,pillY,pillW,pillH,10); ctx.stroke();
-  ctx.fillStyle=GOLD;
-  ctx.font='600 22px Arial,sans-serif';
-  ctx.textAlign='center';
-  ctx.fillText('grademydraft.com', pillX+pillW/2, pillY+34);
-  ctx.textAlign='left';
-
-  // ── BOTTOM BORDER ──
-  ctx.fillStyle=GOLD;
-  rr(ctx,CX,CY+CH-4,CW,4,CR); ctx.fill();
+  // Footer
+  const footY=CY+CH-22;
+  ctx.fillStyle=TEXT; ctx.font='bold 22px Arial,sans-serif'; ctx.fillText('GRADE',CX+40,footY);
+  const gradeW=ctx.measureText('GRADE').width;
+  ctx.fillStyle=GOLD; ctx.fillText(' MY DRAFT',CX+40+gradeW,footY);
+  ctx.fillStyle=TEXT_MUTED; ctx.font='400 16px Arial,sans-serif';
+  ctx.fillText('  ·  2026 NHL Draft Grade Tool  ·  grademydraft.com',CX+40+gradeW+ctx.measureText(' MY DRAFT').width,footY);
 
   if(action==='twitter'){
     const tweetText=encodeURIComponent(`Just graded the ${d.team} 2026 NHL Draft class — they got an ${d.grade} (${d.score}/100). Grade your team's picks at grademydraft.com #NHLDraft #NHL2026`);
-    // Download the card so they can attach it, then open tweet compose
     const a=document.createElement('a');
     a.download=d.team.replace(/\s+/g,'-')+'-2026-draft-grade.png';
-    a.href=canvas.toDataURL('image/png');
-    a.click();
+    a.href=canvas.toDataURL('image/png'); a.click();
     setTimeout(()=>window.open('https://twitter.com/intent/tweet?text='+tweetText,'_blank'),400);
   } else {
     const a=document.createElement('a');
     a.download=d.team.replace(/\s+/g,'-')+'-2026-draft-grade.png';
-    a.href=canvas.toDataURL('image/png');
-    a.click();
+    a.href=canvas.toDataURL('image/png'); a.click();
   }
 }
 function toggleMethodology(){
