@@ -368,8 +368,6 @@ const PROSPECTS={
 };
 
 // ── TEAM PROSPECT PIPELINES ─────────────────────────────────────────────────
-// Rule: <10 NHL games for their drafted team = prospect
-// Sources: ESPN (March 2026), Daily Faceoff, The Hockey Writers, Upside Hockey, NHL.com
 const TEAM_PROSPECTS = {
   "Anaheim":     [
     { name:"Roger McQueen",       pos:"C",  draftYear:2023, draftRound:1, desc:"6'5 centre with elite hands and two-way upside. Developing at Providence (NCAA). Top Ducks prospect." },
@@ -513,7 +511,6 @@ const TEAM_PROSPECTS = {
   "Vancouver":   [
     { name:"Braeden Cootes",      pos:"C",  draftYear:2025, draftRound:1, desc:"Two-way centre with elite compete. WJC representative. Signed ELC. Could push for NHL role early." },
     { name:"Jonathan Lekkerimäki",pos:"RW", draftYear:2022, draftRound:1, desc:"Elite shot release. 19 AHL goals in 36 games. Top-line sniper ceiling. Under 10 NHL games." },
-    { name:"Liam Ohgren",         pos:"LW", draftYear:2022, draftRound:1, desc:"Swedish winger acquired from Minnesota in the Quinn Hughes trade. Physical LW with scoring upside." },
     { name:"Sawyer Mynio",        pos:"LD", draftYear:2023, draftRound:3, desc:"Two-way LD with elite skating. Abbotsford standout. Projects shutdown D with 40-50pt upside." },
   ],
   "Vegas":       [
@@ -533,11 +530,6 @@ const TEAM_PROSPECTS = {
   ],
 };
 
-// ── TEAM NEEDS DATABASE ──────────────────────────────────────────
-// status: 'rebuilding' | 'transitioning' | 'contending'
-// needs: position keys with 3=high, 2=medium, 1=low priority
-// Sources: NHL.com mock draft, Bleacher Report, Daily Faceoff, playoff standings
-// ── NHL API TEAM ABBREVIATIONS ───────────────────────────────────────────────
 const TEAM_ABBREVS = {
   "Anaheim":"ANA","Boston":"BOS","Buffalo":"BUF","Calgary":"CGY","Carolina":"CAR",
   "Chicago":"CHI","Colorado":"COL","Columbus":"CBJ","Dallas":"DAL","Detroit":"DET",
@@ -548,22 +540,16 @@ const TEAM_ABBREVS = {
   "Washington":"WSH","Winnipeg":"WPG"
 };
 
-// Cache fetched rosters so we don't re-fetch on same session
 const ROSTER_CACHE = {};
-
-
 
 async function fetchNHLRoster(team) {
   if (ROSTER_CACHE[team]) return ROSTER_CACHE[team];
   const abbrev = TEAM_ABBREVS[team];
   if (!abbrev) return null;
-
-  // Try Vercel proxy — returns pre-processed {C, LW, RW, LD, RD, G} sorted by TOI
   try {
     const res = await fetch('/api/roster?team=' + abbrev);
     if (res.ok) {
       const data = await res.json();
-      // New proxy returns pre-sorted position arrays directly
       if (data.C || data.LW || data.RW) {
         const roster = {
           C:  data.C  || [],
@@ -578,13 +564,11 @@ async function fetchNHLRoster(team) {
       }
     }
   } catch(e) {}
-
   return null;
 }
 
 function getDevTimeline(prospect) {
   const p = prospect;
-  // Manual overrides — NHL-ready prospects
   const nhlReadyNames = ['Gavin McKenna', 'Ivar Stenberg'];
   if (nhlReadyNames.includes(p.name || '')) {
     return { years: 0, label: 'NHL-Ready (0-1 yrs)', color: '#16A34A' };
@@ -604,7 +588,6 @@ function getDevTimeline(prospect) {
   return { years: baseYears, label: labels[baseYears], color: colors[baseYears] };
 }
 
-// Map prospect pos string to canonical positions, priority ordered
 function getProspectPositions(pos) {
   const map = {
     'C':['C'],'LW':['LW'],'RW':['RW'],
@@ -625,8 +608,6 @@ async function buildRosterDiagram(team, picks) {
 
   const apiRoster = await fetchNHLRoster(team);
 
-  // Build display roster: 4 lines of C/LW/RW, 3 D pairs LD/RD, 2 G
-  // Fill from API data, pad with '?'
   if (!apiRoster) {
     container.innerHTML = '<div style="text-align:center;padding:32px;color:var(--text-muted);font-size:0.85rem;background:var(--surface);border:1px solid var(--border2);border-radius:12px;margin-bottom:24px;">Roster data unavailable — add <code style="background:var(--surface2);padding:2px 6px;border-radius:4px;font-size:0.8rem;">api/roster.js</code> to your GitHub repo to enable live NHL roster data.</div>';
     return;
@@ -641,14 +622,9 @@ async function buildRosterDiagram(team, picks) {
     G:  pad(apiRoster.G,  2),
   };
 
-  // Draft picks shown as incoming prospects — NOT displacing current players
-  // Track which picks go where for highlighting
   const draftedSlots = {};
-  const incomingProspects = []; // {name, pos, dev, posLabel}
-
-  // Build projected slot for each drafted pick
-  // Slot = which line/pair they project to long-term based on rank + scores
-  const projectedSlots = {}; // key = "LW-0", "C-1" etc -> {name, dev, slotLabel}
+  const incomingProspects = [];
+  const projectedSlots = {};
 
   picks.forEach(pick => {
     const p = pick.result.prospect;
@@ -656,13 +632,11 @@ async function buildRosterDiagram(team, picks) {
     const dev = getDevTimeline({...p, name: pick.player});
     const overall = (p.scores.production*0.3 + p.scores.hockey_iq*0.25 + p.scores.skating*0.2 + p.scores.compete*0.15 + p.scores.ceiling*0.1);
 
-    // Project which line/pair slot they'll occupy at NHL peak
-    // Based on overall weighted score + rank
     let slotIdx;
-    if (overall >= 88 || p.rank <= 5)        slotIdx = 0; // Line 1 / Pair 1
-    else if (overall >= 76 || p.rank <= 15)  slotIdx = 1; // Line 2 / Pair 2
-    else if (overall >= 64 || p.rank <= 35)  slotIdx = 2; // Line 3 / Pair 3
-    else                                      slotIdx = 3; // Line 4 (forwards only)
+    if (overall >= 88 || p.rank <= 5)        slotIdx = 0;
+    else if (overall >= 76 || p.rank <= 15)  slotIdx = 1;
+    else if (overall >= 64 || p.rank <= 35)  slotIdx = 2;
+    else                                      slotIdx = 3;
 
     const lineLabelsShort = ['1st Line','2nd Line','3rd Line','4th Line'];
     const pairLabelsShort = ['1st Pair','2nd Pair','3rd Pair'];
@@ -674,7 +648,6 @@ async function buildRosterDiagram(team, picks) {
       const cappedSlot = Math.min(slotIdx, maxSlot);
       const slotLabel = isD ? pairLabelsShort[cappedSlot] : lineLabelsShort[cappedSlot];
       const key = pos + '-' + cappedSlot;
-      // Only place one prospect per slot
       if (!projectedSlots[key]) {
         projectedSlots[key] = { name: pick.player, dev, slotLabel };
       }
@@ -736,7 +709,6 @@ async function buildRosterDiagram(team, picks) {
     </div>
     <div style="font-size:0.78rem;color:var(--text-muted);margin-bottom:16px;">Coloured borders show where drafted prospects project to slot at peak</div>`;
 
-  // 4 forward lines
   for (let i=0;i<4;i++) {
     html += `<div style="margin-bottom:8px;">
       <div style="font-size:0.58rem;color:var(--text-muted);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:4px;font-weight:600;">${lineLabels[i]}</div>
@@ -747,7 +719,6 @@ async function buildRosterDiagram(team, picks) {
       </div></div>`;
   }
 
-  // 3 D pairs
   const dPairsHtml = [0,1,2].map(function(i){
     return '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px;">'
       + playerCard(displayRoster.LD[i],'LD-'+i)
@@ -759,7 +730,6 @@ async function buildRosterDiagram(team, picks) {
     ${dPairsHtml}
   </div>`;
 
-  // Goalies
   html += `<div>
     <div style="font-size:0.58rem;color:var(--text-muted);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:4px;font-weight:600;">Goalies</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
@@ -768,7 +738,6 @@ async function buildRosterDiagram(team, picks) {
     </div>
   </div>`;
 
-  // Section 1 — This year's draft picks
   if (incomingProspects.length > 0) {
     html += `<div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);">
       <div style="font-size:0.62rem;color:var(--text-muted);letter-spacing:0.15em;text-transform:uppercase;font-weight:600;margin-bottom:10px;">2026 Draft Picks — Incoming</div>
@@ -778,7 +747,6 @@ async function buildRosterDiagram(team, picks) {
     </div>`;
   }
 
-  // Section 2 — Existing prospect pipeline
   const pipeline = TEAM_PROSPECTS[team] || [];
   if (pipeline.length > 0) {
     const pipelineCards = pipeline.map(p => {
@@ -804,7 +772,6 @@ async function buildRosterDiagram(team, picks) {
     </div>`;
   }
 
-  // Legend
   html += `<div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border);display:flex;gap:16px;flex-wrap:wrap;align-items:center;">
     <div style="font-size:0.62rem;color:var(--text-muted);letter-spacing:0.1em;text-transform:uppercase;font-weight:600;">Dev Timeline:</div>
     ${['#16A34A','#86EFAC','#EAB308','#F97316','#EF4444'].map((col,i)=>{
@@ -816,89 +783,6 @@ async function buildRosterDiagram(team, picks) {
   container.innerHTML = html;
 }
 
-// ── TEAM NEEDS DATABASE ──────────────────────────────────────────
-// status: 'rebuilding' | 'transitioning' | 'contending'
-// needs: position keys with 3=high, 2=medium, 1=low priority
-// Sources: NHL.com mock draft, Bleacher Report, Daily Faceoff, playoff standings
-// ── TEAM ROSTERS (Current NHL starters + key prospects, 2025-26) ─────────────
-const TEAM_ROSTERS = {
-  "Anaheim":     { f:["Leo Carlsson","Mason McTavish","Trevor Zegras","?","?","Frank Vatrano","?","?","?","?","?","?"], d:["Jackson LaCombe","Cam Fowler","?","?","Olen Zellweger","?"], g:["Lukas Dostal","?"] },
-  "Boston":      { f:["Brad Marchand","?","David Pastrnak","?","?","Pavel Zacha","?","Charlie Coyle","?","?","?","?"], d:["Charlie McAvoy","Matt Grzelcyk","Brandon Carlo","?","?","?"], g:["Jeremy Swayman","?"] },
-  "Buffalo":     { f:["Tage Thompson","JJ Peterka","Alex Tuch","?","Jason Zucker","?","Casey Mittelstadt","?","?","?","?","?"], d:["Rasmus Dahlin","Owen Power","?","?","Henri Jokiharju","?"], g:["Ukko-Pekka Luukkonen","?"] },
-  "Calgary":     { f:["Nazem Kadri","?","Jonathan Huberdeau","?","?","?","Mikael Backlund","?","?","?","?","?"], d:["Rasmus Andersson","?","MacKenzie Weegar","?","?","?"], g:["Dan Vladar","?"] },
-  "Carolina":    { f:["Sebastian Aho","Seth Jarvis","?","Andrei Svechnikov","?","?","Jordan Staal","?","?","?","?","?"], d:["Jaccob Slavin","Brent Burns","Brady Skjei","?","?","?"], g:["Pyotr Kochetkov","?"] },
-  "Chicago":     { f:["Connor Bedard","?","?","Anton Frondell","?","?","?","?","?","?","?","?"], d:["Alex Vlasic","?","?","?","?","?"], g:["Spencer Knight","?"] },
-  "Colorado":    { f:["Nathan MacKinnon","Mikko Rantanen","?","Valeri Nichushkin","?","?","Ross Colton","?","?","?","?","?"], d:["Cale Makar","Devon Toews","?","?","?","?"], g:["Alexandar Georgiev","?"] },
-  "Columbus":    { f:["Adam Fantilli","Kirill Marchenko","?","?","?","?","?","Boone Jenner","?","?","?","?"], d:["Zach Werenski","Ivan Provorov","?","?","?","?"], g:["Elvis Merzlikins","?"] },
-  "Dallas":      { f:["Roope Hintz","Jason Robertson","?","Tyler Seguin","?","?","Joe Pavelski","?","?","?","?","?"], d:["Miro Heiskanen","?","?","?","?","?"], g:["Jake Oettinger","?"] },
-  "Detroit":     { f:["Dylan Larkin","?","?","Lucas Raymond","?","?","?","?","?","?","?","?"], d:["Moritz Seider","?","?","?","?","?"], g:["Alex Lyon","?"] },
-  "Edmonton":    { f:["Connor McDavid","Leon Draisaitl","?","?","?","Zach Hyman","?","?","?","?","?","?"], d:["Evan Bouchard","?","?","Darnell Nurse","?","?"], g:["Stuart Skinner","?"] },
-  "Florida":     { f:["?","?","?","?","Matthew Tkachuk","?","?","?","?","?","?","?"], d:["Aaron Ekblad","?","?","?","?","?"], g:["Sergei Bobrovsky","?"] },
-  "Los Angeles": { f:["Anze Kopitar","Adrian Kempe","?","Kevin Fiala","?","?","?","?","?","?","?","?"], d:["Drew Doughty","?","Mikey Anderson","?","?","?"], g:["David Rittich","?"] },
-  "Minnesota":   { f:["Kirill Kaprizov","?","?","Joel Eriksson Ek","?","?","Matt Boldy","?","?","?","?","?"], d:["Jared Spurgeon","?","Jonas Brodin","?","?","?"], g:["Marc-Andre Fleury","?"] },
-  "Montreal":    { f:["Nick Suzuki","Cole Caufield","Juraj Slafkovsky","?","?","?","?","?","?","?","?","?"], d:["Kaiden Guhle","?","David Savard","?","?","?"], g:["Sam Montembeault","?"] },
-  "Nashville":   { f:["?","?","?","?","?","?","?","?","?","?","?","?"], d:["Roman Josi","?","?","?","?","?"], g:["Juuse Saros","?"] },
-  "New Jersey":  { f:["Jack Hughes","Timo Meier","?","Jesper Bratt","?","?","Dawson Mercer","?","?","?","?","?"], d:["Dougie Hamilton","?","Luke Hughes","?","?","?"], g:["Jacob Markstrom","?"] },
-  "NY Islanders":{ f:["?","?","?","?","?","?","?","?","?","?","?","?"], d:["Matthew Schaefer","Noah Dobson","Kashawn Aitcheson","?","?","?"], g:["Semyon Varlamov","?"] },
-  "NY Rangers":  { f:["Mika Zibanejad","?","Artemi Panarin","?","?","?","?","Vincent Trocheck","?","?","?","?"], d:["Adam Fox","?","?","?","?","?"], g:["Igor Shesterkin","?"] },
-  "Ottawa":      { f:["Tim Stutzle","?","Brady Tkachuk","?","?","?","?","?","?","?","?","?"], d:["Thomas Chabot","?","?","?","?","?"], g:["Linus Ullmark","?"] },
-  "Philadelphia":{ f:["Sean Couturier","Travis Konecny","?","?","?","?","?","?","?","?","?","?"], d:["Jamie Drysdale","?","?","?","?","?"], g:["Samuel Ersson","?"] },
-  "Pittsburgh":  { f:["Sidney Crosby","?","?","Evgeni Malkin","?","?","?","?","?","?","?","?"], d:["Erik Karlsson","?","?","?","?","?"], g:["Tristan Jarry","?"] },
-  "San Jose":    { f:["Macklin Celebrini","Will Smith","?","Michael Misa","?","?","?","?","?","?","?","?"], d:["Jake Walman","?","?","?","?","?"], g:["Yaroslav Askarov","?"] },
-  "Seattle":     { f:["Matty Beniers","?","?","Jared McCann","?","?","?","?","?","?","?","?"], d:["Vince Dunn","?","Adam Larsson","?","?","?"], g:["Philipp Grubauer","?"] },
-  "St. Louis":   { f:["?","?","?","?","?","?","?","?","?","?","?","?"], d:["Torey Krug","?","Colton Parayko","?","?","?"], g:["Jordan Binnington","?"] },
-  "Tampa Bay":   { f:["Brayden Point","Nikita Kucherov","?","Steven Stamkos","?","?","?","?","?","?","?","?"], d:["Victor Hedman","?","Mikhail Sergachev","?","?","?"], g:["Andrei Vasilevskiy","?"] },
-  "Toronto":     { f:["Auston Matthews","Mitch Marner","?","William Nylander","?","?","?","?","?","?","?","?"], d:["Morgan Rielly","?","TJ Brodie","?","?","?"], g:["Joseph Woll","?"] },
-  "Utah":        { f:["Clayton Keller","?","?","?","?","?","?","?","?","?","?","?"], d:["Mikhail Sergachev","?","?","?","?","?"], g:["Connor Ingram","?"] },
-  "Vancouver":   { f:["?","?","?","Elias Pettersson","?","Brock Boeser","?","?","?","?","?","?"], d:["Quinn Hughes","?","?","?","?","?"], g:["Thatcher Demko","?"] },
-  "Vegas":       { f:["Jack Eichel","?","?","?","Mark Stone","?","?","?","?","?","?","?"], d:["Alex Pietrangelo","?","Shea Theodore","?","?","?"], g:["Adin Hill","?"] },
-  "Washington":  { f:["Alex Ovechkin","?","?","Dylan Strome","?","?","?","?","?","?","?","?"], d:["John Carlson","?","?","?","?","?"], g:["Charlie Lindgren","?"] },
-  "Winnipeg":    { f:["Mark Scheifele","Kyle Connor","?","?","Nikolaj Ehlers","?","Adam Lowry","?","?","?","?","?"], d:["Josh Morrissey","?","Dylan DeMelo","?","?","?"], g:["Connor Hellebuyck","?"] },
-};
-
-
-
-
-const TEAM_NEEDS = {
-  "Anaheim":      { status:"rebuilding",    needs:{C:2,LW:3,RW:2,LD:2,RD:2,G:1}, note:"Leo Carlsson anchors C. Need scoring wingers and D depth." },
-  "Boston":       { status:"transitioning", needs:{C:3,LW:2,RW:2,LD:2,RD:1,G:1}, note:"Aging core. Desperately need a franchise C post-Bergeron era." },
-  "Buffalo":      { status:"transitioning", needs:{C:2,LW:2,RW:3,RD:3,LD:1,G:1}, note:"Back in playoffs. Need RW and RD depth to sustain momentum." },
-  "Calgary":      { status:"rebuilding",    needs:{C:3,LW:2,RW:2,LD:3,RD:2,G:1}, note:"Retooling around youth. C and LD are top priorities." },
-  "Carolina":     { status:"contending",    needs:{C:2,LW:3,RW:2,LD:1,RD:1,G:1}, note:"Deep defensive core. Need LW depth behind Aho." },
-  "Chicago":      { status:"rebuilding",    needs:{C:1,LW:3,RW:3,LD:2,RD:2,G:2}, note:"Bedard and Frondell cover C. Need wingers and D around them." },
-  "Colorado":     { status:"contending",    needs:{C:1,LW:2,RW:2,LD:1,RD:3,G:2}, note:"MacKinnon covers C. Aging RD corps — need young RD." },
-  "Columbus":     { status:"rebuilding",    needs:{C:3,LW:3,RW:2,LD:2,RD:2,G:1}, note:"Building around Fantilli. Need C and LW to complement him." },
-  "Dallas":       { status:"contending",    needs:{C:1,LW:2,RW:3,RD:2,LD:1,G:1}, note:"Robertson side weak on RW. Solid down the middle." },
-  "Detroit":      { status:"transitioning", needs:{C:3,LW:2,RW:2,LD:2,RD:3,G:2}, note:"Young core emerging. C and RD are biggest gaps." },
-  "Edmonton":     { status:"contending",    needs:{C:1,LW:3,RW:2,LD:3,RD:1,G:2}, note:"McDavid/Draisaitl cover C. LW and LD depth badly needed." },
-  "Florida":      { status:"rebuilding",    needs:{C:3,LW:3,RW:2,LD:2,RD:2,G:1}, note:"Barkov ACL. Lost playoffs — need C and LW to rebuild." },
-  "Los Angeles":  { status:"contending",    needs:{C:2,LW:2,RW:2,LD:1,RD:3,G:1}, note:"Doughty aging — RD is the critical need for future." },
-  "Minnesota":    { status:"contending",    needs:{C:2,LW:2,RW:3,RD:2,LD:1,G:2}, note:"Kirill Kaprizov dominant LW. Need RW and G depth." },
-  "Montreal":     { status:"rebuilding",    needs:{C:2,LW:3,RW:3,LD:2,RD:2,G:1}, note:"Building around Slafkovsky/Caufield. Need scoring wings." },
-  "Nashville":    { status:"rebuilding",    needs:{C:3,LW:2,RW:3,LD:2,RD:2,G:1}, note:"Major rebuild underway. C is top priority." },
-  "New Jersey":   { status:"contending",    needs:{C:1,LW:2,RW:3,LD:2,RD:2,G:2}, note:"Hughes covers C. Need RW alongside Bratt and Meier." },
-  "NY Islanders": { status:"transitioning", needs:{C:3,LW:3,RW:2,LD:1,RD:1,G:1}, note:"Schaefer/Aitcheson cover D. Need C and LW urgently." },
-  "NY Rangers":   { status:"contending",    needs:{C:2,LW:2,RW:3,LD:2,RD:2,G:1}, note:"Deep team. RW and pipeline depth are priorities." },
-  "Ottawa":       { status:"transitioning", needs:{C:2,LW:3,RW:2,LD:3,RD:2,G:1}, note:"Lost own 1st round pick as penalty. LW and LD needed." },
-  "Philadelphia": { status:"transitioning", needs:{C:2,LW:2,RW:2,LD:3,RD:3,G:3}, note:"Zegras fills C. D and G are glaring needs." },
-  "Pittsburgh":   { status:"rebuilding",    needs:{C:3,LW:2,RW:2,LD:2,RD:2,G:2}, note:"Post-Crosby rebuild. C is the franchise priority." },
-  "San Jose":     { status:"rebuilding",    needs:{C:1,LW:3,RW:3,LD:2,RD:2,G:1}, note:"Celebrini/Smith/Misa cover C. Desperately need wingers." },
-  "Seattle":      { status:"contending",    needs:{C:2,LW:2,RW:3,LD:2,RD:2,G:1}, note:"Need RW depth. Core is solid but thin on right side." },
-  "St. Louis":    { status:"transitioning", needs:{C:3,LW:2,RW:2,LD:2,RD:3,G:2}, note:"Three first round picks. C and RD are top priorities." },
-  "Tampa Bay":    { status:"contending",    needs:{C:2,LW:2,RW:2,LD:3,RD:2,G:1}, note:"Back in playoffs. LD pipeline is the weakest area." },
-  "Toronto":      { status:"transitioning", needs:{C:3,LW:2,RW:2,LD:2,RD:2,G:2}, note:"Fired Treliving. Need C badly — Tavares aging out." },
-  "Utah":         { status:"transitioning", needs:{C:3,LW:3,RW:2,LD:2,RD:2,G:2}, note:"New franchise still building identity. C and LW priority." },
-  "Vancouver":    { status:"rebuilding",    needs:{C:3,LW:2,RW:2,LD:3,RD:2,G:2}, note:"58 pts — worst record. McKenna and franchise C desperately needed." },
-  "Vegas":        { status:"contending",    needs:{C:2,LW:2,RW:2,LD:2,RD:3,G:1}, note:"Won Pacific. Aging RD — Pietrangelo getting older." },
-  "Washington":   { status:"transitioning", needs:{C:3,LW:2,RW:2,LD:3,RD:2,G:2}, note:"Ovechkin era ending. C and LD are franchise priorities." },
-  "Winnipeg":     { status:"contending",    needs:{C:1,LW:2,RW:3,LD:3,RD:2,G:1}, note:"Scheifele/Lowry cover C. LD and RW depth needed." },
-};
-
-
-
-// Team fit bonus calculation
-
-// ── TEAM ABBREVIATIONS FOR LOGOS ─────────────────────────────────────────
 const TEAM_ABBREVS_LOGO = {
   "Anaheim":"ANA","Boston":"BOS","Buffalo":"BUF","Calgary":"CGY","Carolina":"CAR",
   "Chicago":"CHI","Colorado":"COL","Columbus":"CBJ","Dallas":"DAL","Detroit":"DET",
@@ -908,7 +792,6 @@ const TEAM_ABBREVS_LOGO = {
   "St. Louis":"STL","Tampa Bay":"TBL","Toronto":"TOR","Utah":"UTA","Vancouver":"VAN",
   "Vegas":"VGK","Washington":"WSH","Winnipeg":"WPG"
 };
-// Direct abbrev set for quick lookup
 const NHL_ABBREVS = new Set(["ANA","BOS","BUF","CGY","CAR","CHI","COL","CBJ","DAL","DET","EDM","FLA","LAK","MIN","MTL","NSH","NJD","NYI","NYR","OTT","PHI","PIT","SJS","SEA","STL","TBL","TOR","UTA","VAN","VGK","WSH","WPG"]);
 
 const logoUrl = (team) => {
@@ -916,8 +799,6 @@ const logoUrl = (team) => {
   return abbr ? 'https://assets.nhle.com/logos/nhl/svg/' + abbr + '_light.svg' : null;
 };
 
-// ── 2026 DRAFT PICKS PER TEAM ─────────────────────────────────────────────
-// Source: PuckPedia verified April 26 2026 — rounds 1-3 only
 const DRAFT_PICKS_2026 = {
   "Anaheim":     { R1:["-"],                        R2:["own"],                    R3:["own"] },
   "Boston":      { R1:["from:TOR","own"],            R2:["own"],                    R3:["own"] },
@@ -953,7 +834,6 @@ const DRAFT_PICKS_2026 = {
   "Winnipeg":    { R1:["own"],                       R2:["-"],                      R3:["own"] },
 };
 
-
 function getTeamFitBonus(prospectPos, team) {
   const tn = TEAM_NEEDS[team];
   if (!tn) return { bonus: 0, label: '', note: '' };
@@ -966,7 +846,6 @@ function getTeamFitBonus(prospectPos, team) {
     if (need > maxNeed) { maxNeed = need; bestPos = p; }
   });
 
-  // Status modifier — rebuilding teams value ceiling, contenders value floor/readiness
   let statusBonus = 0;
   if (tn.status === 'rebuilding') statusBonus = 2;
   else if (tn.status === 'transitioning') statusBonus = 1;
@@ -989,6 +868,77 @@ function getTeamFitBonus(prospectPos, team) {
 
   return { bonus, label, note, status: tn.status, teamNote: tn.note };
 }
+
+// ── TEAM NEEDS — UPDATED APRIL 2026 ─────────────────────────────────────────
+const TEAM_NEEDS = {
+  "Anaheim":      { status:"transitioning", needs:{C:2,LW:3,RW:2,LD:2,RD:2,G:1}, note:"Carlsson and McTavish anchoring the core. Need scoring wingers — showing signs of life." },
+  "Boston":       { status:"transitioning", needs:{C:3,LW:2,RW:2,LD:2,RD:1,G:1}, note:"Aging core. Desperately need a franchise C post-Bergeron era." },
+  "Buffalo":      { status:"contending",    needs:{C:2,LW:2,RW:3,RD:3,LD:1,G:1}, note:"Playoff team. Need RW and RD depth to push deeper in the postseason." },
+  "Calgary":      { status:"rebuilding",    needs:{C:3,LW:2,RW:2,LD:3,RD:2,G:1}, note:"Retooling around youth. C and LD are top priorities." },
+  "Carolina":     { status:"contending",    needs:{C:2,LW:3,RW:2,LD:1,RD:1,G:1}, note:"Deep defensive core. Need LW depth behind Aho." },
+  "Chicago":      { status:"rebuilding",    needs:{C:1,LW:3,RW:3,LD:2,RD:2,G:2}, note:"Bedard and Frondell cover C. Need wingers and D around them." },
+  "Colorado":     { status:"contending",    needs:{C:1,LW:2,RW:2,LD:1,RD:3,G:2}, note:"MacKinnon covers C. Aging RD corps — need young RD." },
+  "Columbus":     { status:"rebuilding",    needs:{C:3,LW:3,RW:2,LD:2,RD:2,G:1}, note:"Building around Fantilli. Need C and LW to complement him." },
+  "Dallas":       { status:"contending",    needs:{C:1,LW:2,RW:3,RD:2,LD:1,G:1}, note:"Robertson side weak on RW. Solid down the middle." },
+  "Detroit":      { status:"transitioning", needs:{C:3,LW:2,RW:2,LD:2,RD:3,G:2}, note:"Young core emerging. C and RD are biggest gaps." },
+  "Edmonton":     { status:"contending",    needs:{C:1,LW:3,RW:2,LD:3,RD:1,G:2}, note:"McDavid/Draisaitl cover C. LW and LD depth badly needed." },
+  "Florida":      { status:"contending",    needs:{C:3,LW:3,RW:2,LD:2,RD:2,G:1}, note:"Still in contending window despite injuries. Barkov ACL was the outlier — elite core remains." },
+  "Los Angeles":  { status:"contending",    needs:{C:2,LW:2,RW:2,LD:1,RD:3,G:1}, note:"Doughty aging — RD is the critical need for future." },
+  "Minnesota":    { status:"contending",    needs:{C:2,LW:2,RW:3,RD:2,LD:1,G:2}, note:"Kirill Kaprizov dominant LW. Need RW and G depth." },
+  "Montreal":     { status:"transitioning", needs:{C:2,LW:3,RW:3,LD:2,RD:2,G:1}, note:"Made the playoffs — no longer rebuilding. Building around Caufield/Slafkovsky/Suzuki. Need scoring wings." },
+  "Nashville":    { status:"rebuilding",    needs:{C:3,LW:2,RW:3,LD:2,RD:2,G:1}, note:"Major rebuild underway. C is top priority." },
+  "New Jersey":   { status:"contending",    needs:{C:1,LW:2,RW:3,LD:2,RD:2,G:2}, note:"Hughes covers C. Need RW alongside Bratt and Meier." },
+  "NY Islanders": { status:"transitioning", needs:{C:3,LW:3,RW:2,LD:1,RD:1,G:1}, note:"Schaefer/Aitcheson cover D. Need C and LW urgently." },
+  "NY Rangers":   { status:"contending",    needs:{C:2,LW:2,RW:3,LD:2,RD:2,G:1}, note:"Deep team. RW and pipeline depth are priorities." },
+  "Ottawa":       { status:"transitioning", needs:{C:2,LW:3,RW:2,LD:3,RD:2,G:1}, note:"Lost own 1st round pick as penalty. LW and LD needed." },
+  "Philadelphia": { status:"transitioning", needs:{C:2,LW:2,RW:2,LD:3,RD:3,G:3}, note:"Zegras fills C. D and G are glaring needs." },
+  "Pittsburgh":   { status:"transitioning", needs:{C:3,LW:2,RW:2,LD:2,RD:2,G:2}, note:"Crosby still producing. Transitioning around him — need C and G for the next era." },
+  "San Jose":     { status:"rebuilding",    needs:{C:1,LW:3,RW:3,LD:2,RD:2,G:1}, note:"Celebrini/Smith/Misa cover C. Desperately need wingers." },
+  "Seattle":      { status:"contending",    needs:{C:2,LW:2,RW:3,LD:2,RD:2,G:1}, note:"Need RW depth. Core is solid but thin on right side." },
+  "St. Louis":    { status:"transitioning", needs:{C:3,LW:2,RW:2,LD:2,RD:3,G:2}, note:"Three first round picks. C and RD are top priorities." },
+  "Tampa Bay":    { status:"contending",    needs:{C:2,LW:2,RW:2,LD:3,RD:2,G:1}, note:"Back in playoffs. LD pipeline is the weakest area." },
+  "Toronto":      { status:"transitioning", needs:{C:3,LW:2,RW:2,LD:2,RD:2,G:2}, note:"Fired Treliving. Need C badly — Tavares aging out." },
+  "Utah":         { status:"transitioning", needs:{C:3,LW:3,RW:2,LD:2,RD:2,G:2}, note:"New franchise still building identity. C and LW priority." },
+  "Vancouver":    { status:"rebuilding",    needs:{C:3,LW:2,RW:2,LD:3,RD:2,G:2}, note:"58 pts — worst record. McKenna and franchise C desperately needed." },
+  "Vegas":        { status:"contending",    needs:{C:2,LW:2,RW:2,LD:2,RD:3,G:1}, note:"Won Pacific. Aging RD — Pietrangelo getting older." },
+  "Washington":   { status:"transitioning", needs:{C:3,LW:2,RW:2,LD:3,RD:2,G:2}, note:"Ovechkin era ending. C and LD are franchise priorities." },
+  "Winnipeg":     { status:"contending",    needs:{C:1,LW:2,RW:3,LD:3,RD:2,G:1}, note:"Scheifele/Lowry cover C. LD and RW depth needed." },
+};
+
+const TEAM_ROSTERS = {
+  "Anaheim":     { f:["Leo Carlsson","Mason McTavish","Trevor Zegras","?","?","Frank Vatrano","?","?","?","?","?","?"], d:["Jackson LaCombe","Cam Fowler","?","?","Olen Zellweger","?"], g:["Lukas Dostal","?"] },
+  "Boston":      { f:["Brad Marchand","?","David Pastrnak","?","?","Pavel Zacha","?","Charlie Coyle","?","?","?","?"], d:["Charlie McAvoy","Matt Grzelcyk","Brandon Carlo","?","?","?"], g:["Jeremy Swayman","?"] },
+  "Buffalo":     { f:["Tage Thompson","JJ Peterka","Alex Tuch","?","Jason Zucker","?","Casey Mittelstadt","?","?","?","?","?"], d:["Rasmus Dahlin","Owen Power","?","?","Henri Jokiharju","?"], g:["Ukko-Pekka Luukkonen","?"] },
+  "Calgary":     { f:["Nazem Kadri","?","Jonathan Huberdeau","?","?","?","Mikael Backlund","?","?","?","?","?"], d:["Rasmus Andersson","?","MacKenzie Weegar","?","?","?"], g:["Dan Vladar","?"] },
+  "Carolina":    { f:["Sebastian Aho","Seth Jarvis","?","Andrei Svechnikov","?","?","Jordan Staal","?","?","?","?","?"], d:["Jaccob Slavin","Brent Burns","Brady Skjei","?","?","?"], g:["Pyotr Kochetkov","?"] },
+  "Chicago":     { f:["Connor Bedard","?","?","Anton Frondell","?","?","?","?","?","?","?","?"], d:["Alex Vlasic","?","?","?","?","?"], g:["Spencer Knight","?"] },
+  "Colorado":    { f:["Nathan MacKinnon","Mikko Rantanen","?","Valeri Nichushkin","?","?","Ross Colton","?","?","?","?","?"], d:["Cale Makar","Devon Toews","?","?","?","?"], g:["Alexandar Georgiev","?"] },
+  "Columbus":    { f:["Adam Fantilli","Kirill Marchenko","?","?","?","?","?","Boone Jenner","?","?","?","?"], d:["Zach Werenski","Ivan Provorov","?","?","?","?"], g:["Elvis Merzlikins","?"] },
+  "Dallas":      { f:["Roope Hintz","Jason Robertson","?","Tyler Seguin","?","?","Joe Pavelski","?","?","?","?","?"], d:["Miro Heiskanen","?","?","?","?","?"], g:["Jake Oettinger","?"] },
+  "Detroit":     { f:["Dylan Larkin","?","?","Lucas Raymond","?","?","?","?","?","?","?","?"], d:["Moritz Seider","?","?","?","?","?"], g:["Alex Lyon","?"] },
+  "Edmonton":    { f:["Connor McDavid","Leon Draisaitl","?","?","?","Zach Hyman","?","?","?","?","?","?"], d:["Evan Bouchard","?","?","Darnell Nurse","?","?"], g:["Stuart Skinner","?"] },
+  "Florida":     { f:["?","?","?","?","Matthew Tkachuk","?","?","?","?","?","?","?"], d:["Aaron Ekblad","?","?","?","?","?"], g:["Sergei Bobrovsky","?"] },
+  "Los Angeles": { f:["Anze Kopitar","Adrian Kempe","?","Kevin Fiala","?","?","?","?","?","?","?","?"], d:["Drew Doughty","?","Mikey Anderson","?","?","?"], g:["David Rittich","?"] },
+  "Minnesota":   { f:["Kirill Kaprizov","?","?","Joel Eriksson Ek","?","?","Matt Boldy","?","?","?","?","?"], d:["Jared Spurgeon","?","Jonas Brodin","?","?","?"], g:["Marc-Andre Fleury","?"] },
+  "Montreal":    { f:["Nick Suzuki","Cole Caufield","Juraj Slafkovsky","?","?","?","?","?","?","?","?","?"], d:["Kaiden Guhle","?","David Savard","?","?","?"], g:["Sam Montembeault","?"] },
+  "Nashville":   { f:["?","?","?","?","?","?","?","?","?","?","?","?"], d:["Roman Josi","?","?","?","?","?"], g:["Juuse Saros","?"] },
+  "New Jersey":  { f:["Jack Hughes","Timo Meier","?","Jesper Bratt","?","?","Dawson Mercer","?","?","?","?","?"], d:["Dougie Hamilton","?","Luke Hughes","?","?","?"], g:["Jacob Markstrom","?"] },
+  "NY Islanders":{ f:["?","?","?","?","?","?","?","?","?","?","?","?"], d:["Matthew Schaefer","Noah Dobson","Kashawn Aitcheson","?","?","?"], g:["Semyon Varlamov","?"] },
+  "NY Rangers":  { f:["Mika Zibanejad","?","Artemi Panarin","?","?","?","?","Vincent Trocheck","?","?","?","?"], d:["Adam Fox","?","?","?","?","?"], g:["Igor Shesterkin","?"] },
+  "Ottawa":      { f:["Tim Stutzle","?","Brady Tkachuk","?","?","?","?","?","?","?","?","?"], d:["Thomas Chabot","?","?","?","?","?"], g:["Linus Ullmark","?"] },
+  "Philadelphia":{ f:["Sean Couturier","Travis Konecny","?","?","?","?","?","?","?","?","?","?"], d:["Jamie Drysdale","?","?","?","?","?"], g:["Samuel Ersson","?"] },
+  "Pittsburgh":  { f:["Sidney Crosby","?","?","Evgeni Malkin","?","?","?","?","?","?","?","?"], d:["Erik Karlsson","?","?","?","?","?"], g:["Tristan Jarry","?"] },
+  "San Jose":    { f:["Macklin Celebrini","Will Smith","?","Michael Misa","?","?","?","?","?","?","?","?"], d:["Jake Walman","?","?","?","?","?"], g:["Yaroslav Askarov","?"] },
+  "Seattle":     { f:["Matty Beniers","?","?","Jared McCann","?","?","?","?","?","?","?","?"], d:["Vince Dunn","?","Adam Larsson","?","?","?"], g:["Philipp Grubauer","?"] },
+  "St. Louis":   { f:["?","?","?","?","?","?","?","?","?","?","?","?"], d:["Torey Krug","?","Colton Parayko","?","?","?"], g:["Jordan Binnington","?"] },
+  "Tampa Bay":   { f:["Brayden Point","Nikita Kucherov","?","Steven Stamkos","?","?","?","?","?","?","?","?"], d:["Victor Hedman","?","Mikhail Sergachev","?","?","?"], g:["Andrei Vasilevskiy","?"] },
+  "Toronto":     { f:["Auston Matthews","Mitch Marner","?","William Nylander","?","?","?","?","?","?","?","?"], d:["Morgan Rielly","?","TJ Brodie","?","?","?"], g:["Joseph Woll","?"] },
+  "Utah":        { f:["Clayton Keller","?","?","?","?","?","?","?","?","?","?","?"], d:["Mikhail Sergachev","?","?","?","?","?"], g:["Connor Ingram","?"] },
+  "Vancouver":   { f:["?","?","?","Elias Pettersson","?","Brock Boeser","?","?","?","?","?","?"], d:["Quinn Hughes","?","?","?","?","?"], g:["Thatcher Demko","?"] },
+  "Vegas":       { f:["Jack Eichel","?","?","?","Mark Stone","?","?","?","?","?","?","?"], d:["Alex Pietrangelo","?","Shea Theodore","?","?","?"], g:["Adin Hill","?"] },
+  "Washington":  { f:["Alex Ovechkin","?","?","Dylan Strome","?","?","?","?","?","?","?","?"], d:["John Carlson","?","?","?","?","?"], g:["Charlie Lindgren","?"] },
+  "Winnipeg":    { f:["Mark Scheifele","Kyle Connor","?","?","Nikolaj Ehlers","?","Adam Lowry","?","?","?","?","?"], d:["Josh Morrissey","?","Dylan DeMelo","?","?","?"], g:["Connor Hellebuyck","?"] },
+};
 
 let selectedTeam=null,pickCount=0;
 function buildTeamGrid(){const g=document.getElementById('teamGrid');NHL_TEAMS.forEach(t=>{const b=document.createElement('button');b.className='team-btn';b.textContent=t;b.onclick=()=>selectTeam(t,b);g.appendChild(b);});}
@@ -1062,13 +1012,10 @@ function buildPicksGrid(team) {
   const rounds = ['R1','R2','R3'];
   const rl = {R1:'Round 1',R2:'Round 2',R3:'Round 3'};
   const ownAbbr = TEAM_ABBREVS_LOGO[team] || '';
-  // Reverse lookup: abbr -> abbr (already fine) or name -> abbr
   const resolveAbbr = (entry) => {
     if (!entry) return null;
     const up = entry.toUpperCase();
-    // Direct abbr e.g. "MIN", "VAN"
     if (NHL_ABBREVS.has(up)) return up;
-    // Full name e.g. "Minnesota"
     if (TEAM_ABBREVS_LOGO[entry]) return TEAM_ABBREVS_LOGO[entry];
     return null;
   };
@@ -1106,23 +1053,14 @@ function buildPicksGrid(team) {
       + '</div>';
   }).join('');
 
-  const extraHtml = (dp.extra || []).map(e => {
-    const abbr = TEAM_ABBREVS_LOGO[e] || '';
-    return '<div style="width:36px;height:36px;border-radius:6px;background:rgba(184,134,11,0.06);border:1px solid rgba(184,134,11,0.22);display:flex;align-items:center;justify-content:center;padding:4px;">'
-      + (abbr ? logoImg(abbr, 26) : '')
-      + '</div>';
-  }).join('');
-
   const noteHtml = dp.notes ? '<div style="font-size:0.72rem;color:var(--text-muted);margin-top:10px;font-style:italic;">' + dp.notes + '</div>' : '';
 
   return '<div style="border-top:1px solid var(--border);margin-top:16px;padding-top:16px;">'
     + '<div style="font-size:0.62rem;letter-spacing:0.15em;color:var(--text-muted);text-transform:uppercase;font-weight:600;margin-bottom:12px;">2026 Draft Picks</div>'
     + '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;">' + picksHtml + '</div>'
-    + ''
     + noteHtml
     + '</div>';
 }
-
 
 function addPickRow(){
   pickCount++;const id=pickCount;
@@ -1182,7 +1120,6 @@ function removePick(id){const e=document.getElementById('pick-'+id);if(e)e.remov
 function getBarColor(v){if(v>=85)return'#16A34A';if(v>=70)return'#15803D';if(v>=55)return'#CA8A04';if(v>=40)return'#EA580C';return'#DC2626';}
 function getPickGrade(name,round){const p=PROSPECTS[name];if(!p)return null;let score=p.scores.production*0.30+p.scores.skating*0.20+p.scores.hockey_iq*0.25+p.scores.compete*0.15+p.scores.ceiling*0.10;const er=p.rank<=32?1:p.rank<=64?2:3;const diff=round-er;let bonus=0,rv='';if(diff>=2){bonus=12;rv=`Exceptional value — available ${diff} round(s) later than expected.`;}else if(diff===1){bonus=6;rv='Good value — slightly later than their consensus ranking.';}else if(diff===0){bonus=0;rv='Picked right on consensus — exactly where most boards have them.';}else if(diff===-1){bonus=-8;rv='Slight reach — one round earlier than most boards projected.';}else{bonus=-18;rv=`Significant reach — ${Math.abs(diff)} rounds earlier than projected.`;}
 
-// Team fit
 const fit = selectedTeam ? getTeamFitBonus(p.pos, selectedTeam) : {bonus:0,label:'',note:'',status:'',teamNote:''};
 score = Math.min(100,Math.max(0,score+bonus+fit.bonus));
 
@@ -1329,7 +1266,6 @@ function buildShareCanvas(){
   const GOLD='#B8860B',TEXT='#0C0C0C',TEXT_DIM='#4A4A4A',TEXT_MUTED='#8A8A8A';
   const gc=gradeCol(d.grade);
 
-  // BG + grid
   ctx.fillStyle=BG; ctx.fillRect(0,0,W,H);
   ctx.strokeStyle='rgba(0,0,0,0.016)'; ctx.lineWidth=1;
   for(let x=0;x<W;x+=40){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
@@ -1337,20 +1273,16 @@ function buildShareCanvas(){
 
   const CR=12;
 
-  // Header card
   const HCX=PAD,HCY=PAD,HCW=W-PAD*2,HCH=HEADER_H;
   ctx.fillStyle=SURFACE; rr(ctx,HCX,HCY,HCW,HCH,CR); ctx.fill();
   ctx.strokeStyle=BORDER2; ctx.lineWidth=1; rr(ctx,HCX,HCY,HCW,HCH,CR); ctx.stroke();
 
-  // Section label
   ctx.fillStyle=TEXT_MUTED; ctx.font='500 15px Arial,sans-serif';
   ctx.fillText('DRAFT RESULTS  —  '+d.team.toUpperCase(), HCX+36, HCY+38);
   ctx.fillStyle=BORDER; ctx.fillRect(HCX+36,HCY+48,HCW-72,1);
 
-  // Content vertically centred
   const MID=HCY+48+(HCH-48)/2;
 
-  // Grade circle
   const CR2=58, circX=HCX+36+CR2, circY=MID;
   ctx.beginPath(); ctx.arc(circX,circY,CR2,0,Math.PI*2);
   ctx.fillStyle=gc+'15'; ctx.fill();
@@ -1358,7 +1290,6 @@ function buildShareCanvas(){
   ctx.fillStyle=gc; ctx.font='bold 56px Arial,sans-serif';
   ctx.textAlign='center'; ctx.fillText(d.grade,circX,circY+20); ctx.textAlign='left';
 
-  // Score
   ctx.font='bold 72px Arial,sans-serif';
   const scoreStr=String(d.score);
   const scoreW=ctx.measureText(scoreStr).width;
@@ -1369,7 +1300,6 @@ function buildShareCanvas(){
   ctx.fillText('DRAFT SCORE',scoreRX,MID+44);
   ctx.textAlign='left';
 
-  // Team name + summary
   const textX=HCX+36+CR2*2+28;
   ctx.font='bold 36px Arial,sans-serif';
   const textMaxW=scoreRX-textX-scoreW-32;
@@ -1382,8 +1312,7 @@ function buildShareCanvas(){
   while(ctx.measureText(sum).width>textMaxW&&sum.length>10) sum=sum.slice(0,-4)+'…';
   ctx.fillText(sum,textX,MID+22);
 
-  // Pick rows — styled like roster cards: full colour border, pos top-left, dev top-right, name below
-  const PICK_INNER = 20; // inner padding
+  const PICK_INNER = 20;
   let py=HCY+HCH+PICK_GAP;
   picks.forEach((pick)=>{
     const p=pick.result.prospect;
@@ -1391,37 +1320,28 @@ function buildShareCanvas(){
     const pgc=gradeCol(pg);
     const dev=getDevTimeline({...p, name:pick.player});
 
-    // Card background
     ctx.fillStyle=SURFACE; rr(ctx,PAD,py,W-PAD*2,PICK_H,CR); ctx.fill();
-    // Full coloured border (dev timeline colour)
     ctx.strokeStyle=dev.color; ctx.lineWidth=2; rr(ctx,PAD,py,W-PAD*2,PICK_H,CR); ctx.stroke();
-    // Subtle colour tint background
     ctx.fillStyle=dev.color+'0D'; rr(ctx,PAD,py,W-PAD*2,PICK_H,CR); ctx.fill();
 
-    const IX=PAD+PICK_INNER; // inner x start
-    const RX=PAD+W-PAD*2-PICK_INNER; // inner x end (right)
+    const IX=PAD+PICK_INNER;
+    const RX=PAD+W-PAD*2-PICK_INNER;
 
-    // TOP ROW: Pos · Round (left) | Dev timeline (right)
     const topY=py+22;
-    // Position + Round label
     ctx.fillStyle=dev.color; ctx.font='700 13px Arial,sans-serif';
     const posRoundStr=p.pos+' · RD '+pick.round;
     ctx.fillText(posRoundStr, IX, topY);
-    // Dev timeline (right aligned)
     ctx.textAlign='right';
     ctx.fillStyle=dev.color; ctx.font='700 13px Arial,sans-serif';
     ctx.fillText(dev.label, RX, topY);
     ctx.textAlign='left';
 
-    // BOTTOM ROW: Player name (left) | Grade (right)
     const botY=py+PICK_H-18;
     ctx.fillStyle=TEXT; ctx.font='bold 26px Arial,sans-serif';
-    // Truncate name if too long
     let pname=pick.player;
     const maxNameW=(W-PAD*2)-PICK_INNER*2-80;
     while(ctx.measureText(pname).width>maxNameW && pname.length>4) pname=pname.slice(0,-3)+'…';
     ctx.fillText(pname, IX, botY);
-    // Grade right
     ctx.fillStyle=pgc; ctx.font='bold 26px Arial,sans-serif';
     ctx.textAlign='right'; ctx.fillText(pg, RX, botY); ctx.textAlign='left';
 
