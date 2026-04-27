@@ -945,7 +945,7 @@ const DRAFT_PICKS_2026 = {
   "Tampa Bay":   { R1:"to:Seattle (condition met)", R2:"own", R3:"own", R4:"own", notes:"No R1 own pick" },
   "Toronto":     { R1:"own", R2:"to:Chicago (McCabe trade)", R3:"own", R4:"own", notes:"No R2 own pick" },
   "Utah":        { R1:"own", R2:"from:NYR (Emberson trade), from:Ottawa (Chychrun trade)", R3:"from:Carolina (Gostisbehere trade)", R4:"own", notes:"Extra R2 picks" },
-  "Vancouver":   { R1:"own (lottery — top 3)", R2:"own", R3:"own (recovered — Garland trade)", R4:"own", notes:"Also: MIN R1 (24th), SJS R2 (~42nd). 10 total picks!", extra:["Minnesota R1 (~24th overall)", "San Jose R2 (~42nd overall)"] },
+  "Vancouver":   { R1:"own (lottery — top 3)", R2:"own", R3:"own", R4:"own", notes:"Also: MIN R1 (24th), SJS R2 (~42nd). 10 total picks!", extra:["Minnesota R1 (~24th overall)", "San Jose R2 (~42nd overall)"] },
   "Vegas":       { R1:"to:Calgary (Vorobyev trade)", R2:"own", R3:"own", R4:"own", notes:"No R1 own pick" },
   "Washington":  { R1:"from:Anaheim (Carlson trade)", R2:"to:Florida (Sourdif trade)", R3:"to:Ottawa (Chychrun trade)", R4:"own", notes:"ANA R1 via condition" },
   "Winnipeg":    { R1:"own", R2:"to:Pittsburgh (Luke Schenn trade)", R3:"own", R4:"own", notes:"No R2 own pick" },
@@ -1059,64 +1059,90 @@ function buildPicksGrid(team) {
   const rounds = ['R1','R2','R3','R4'];
   const rl = {R1:'Round 1',R2:'Round 2',R3:'Round 3',R4:'Round 4'};
 
-  const logoImg = (t, size) => {
+  const logoImg = (t) => {
     const abbr = TEAM_ABBREVS_LOGO[t];
-    if (!abbr) return '';
-    return '<img src="https://assets.nhle.com/logos/nhl/svg/' + abbr + '_light.svg" style="width:' + size + 'px;height:' + size + 'px;object-fit:contain;">';
+    if (!abbr) return '<div style="width:24px;height:24px;"></div>';
+    return '<img src="https://assets.nhle.com/logos/nhl/svg/' + abbr + '_light.svg" style="width:24px;height:24px;object-fit:contain;flex-shrink:0;">';
+  };
+
+  // Parse a note out of the value e.g. "own (lottery — top 3)" -> {clean:"own", note:"top 3"}
+  const parseVal = (val) => {
+    const match = val.match(/^([^(]+)\(([^)]+)\)/);
+    if (match) return { raw: val, clean: match[1].trim(), note: match[2].trim() };
+    return { raw: val, clean: val.trim(), note: '' };
   };
 
   const chip = (val, selTeam) => {
-    if (!val) return '';
-    const isOwn = val === 'own';
-    const isTo = val.startsWith('to:');
-    const isFrom = val.startsWith('from:');
-    const isForf = val.startsWith('forfeited');
+    const { clean, note } = parseVal(val);
+    const isOwn = clean === 'own';
+    const isTo = clean.startsWith('to:');
+    const isFrom = clean.startsWith('from:');
+    const isForf = clean.startsWith('forfeited');
+
+    // All chips same height/structure
+    const chipStyle = 'display:flex;align-items:center;gap:8px;padding:9px 12px;border-radius:8px;width:100%;box-sizing:border-box;min-height:46px;';
 
     if (isTo) {
-      return '<div style="display:flex;align-items:center;gap:6px;padding:7px 10px;background:rgba(220,38,38,0.05);border:1px solid rgba(220,38,38,0.18);border-radius:7px;">'
-        + '<span style="font-size:0.68rem;color:#DC2626;font-weight:600;">Traded away</span></div>';
+      return '<div style="' + chipStyle + 'background:rgba(220,38,38,0.05);border:1px solid rgba(220,38,38,0.18);">'
+        + '<div style="width:24px;height:24px;flex-shrink:0;display:flex;align-items:center;justify-content:center;"><span style="color:#DC2626;font-size:1rem;">✕</span></div>'
+        + '<div><div style="font-size:0.72rem;color:#DC2626;font-weight:600;">Traded away</div></div>'
+        + '</div>';
     }
     if (isForf) {
-      return '<div style="display:flex;align-items:center;gap:6px;padding:7px 10px;background:rgba(220,38,38,0.05);border:1px solid rgba(220,38,38,0.18);border-radius:7px;">'
-        + '<span style="font-size:0.68rem;color:#DC2626;font-weight:600;">Forfeited</span></div>';
+      return '<div style="' + chipStyle + 'background:rgba(220,38,38,0.05);border:1px solid rgba(220,38,38,0.18);">'
+        + '<div style="width:24px;height:24px;flex-shrink:0;display:flex;align-items:center;justify-content:center;"><span style="color:#DC2626;font-size:1rem;">✕</span></div>'
+        + '<div><div style="font-size:0.72rem;color:#DC2626;font-weight:600;">Forfeited</div></div>'
+        + '</div>';
     }
     if (isOwn) {
-      return '<div style="display:flex;align-items:center;gap:7px;padding:7px 10px;background:rgba(22,163,74,0.06);border:1px solid rgba(22,163,74,0.22);border-radius:7px;">'
-        + logoImg(selTeam, 24)
-        + '<span style="font-size:0.72rem;color:#16A34A;font-weight:600;">Own pick</span></div>';
+      return '<div style="' + chipStyle + 'background:rgba(22,163,74,0.06);border:1px solid rgba(22,163,74,0.22);">'
+        + logoImg(selTeam)
+        + '<div><div style="font-size:0.72rem;color:#16A34A;font-weight:600;">Own pick</div>'
+        + (note ? '<div style="font-size:0.62rem;color:#16A34A;opacity:0.75;margin-top:1px;">' + note + '</div>' : '')
+        + '</div></div>';
     }
     if (isFrom) {
-      const fromTeam = val.replace(/^from:/,'').split('(')[0].trim();
-      return '<div style="display:flex;align-items:center;gap:7px;padding:7px 10px;background:rgba(184,134,11,0.06);border:1px solid rgba(184,134,11,0.22);border-radius:7px;">'
-        + logoImg(fromTeam, 24)
-        + '<span style="font-size:0.72rem;color:#B8860B;font-weight:600;">From ' + fromTeam + '</span></div>';
+      const fromTeam = clean.replace(/^from:/,'').split('(')[0].trim();
+      return '<div style="' + chipStyle + 'background:rgba(184,134,11,0.06);border:1px solid rgba(184,134,11,0.22);">'
+        + logoImg(fromTeam)
+        + '<div><div style="font-size:0.72rem;color:#B8860B;font-weight:600;">From ' + fromTeam + '</div>'
+        + (note ? '<div style="font-size:0.62rem;color:#B8860B;opacity:0.75;margin-top:1px;">' + note + '</div>' : '')
+        + '</div></div>';
     }
-    return '<div style="padding:7px 10px;background:rgba(0,0,0,0.03);border:1px solid rgba(0,0,0,0.1);border-radius:7px;font-size:0.72rem;color:var(--text-muted);">' + val + '</div>';
+    // Fallback — show as own pick with note
+    return '<div style="' + chipStyle + 'background:rgba(22,163,74,0.06);border:1px solid rgba(22,163,74,0.22);">'
+      + logoImg(selTeam)
+      + '<div><div style="font-size:0.72rem;color:#16A34A;font-weight:600;">Own pick</div>'
+      + (clean ? '<div style="font-size:0.62rem;color:#16A34A;opacity:0.75;margin-top:1px;">' + clean + '</div>' : '')
+      + '</div></div>';
   };
 
   const picksHtml = rounds.map(r => {
-    const vals = (dp[r] || 'own').split(',').map(v => v.trim()).filter(Boolean);
+    const raw = dp[r] || 'own';
+    const vals = raw.split(',').map(v => v.trim()).filter(Boolean);
     const chips = vals.map(v => chip(v, team)).join('');
-    return '<div style="border-right:1px solid var(--border);padding-right:12px;last-child:border-right:none;">'
-      + '<div style="font-size:0.6rem;letter-spacing:0.15em;text-transform:uppercase;font-weight:700;color:var(--text-muted);margin-bottom:8px;">' + rl[r] + '</div>'
-      + '<div style="display:flex;flex-direction:column;gap:5px;">' + chips + '</div>'
+    return '<div style="display:flex;flex-direction:column;gap:6px;">'
+      + '<div style="font-size:0.6rem;letter-spacing:0.15em;text-transform:uppercase;font-weight:700;color:var(--text-muted);margin-bottom:4px;">' + rl[r] + '</div>'
+      + chips
       + '</div>';
   }).join('');
 
   const extraHtml = (dp.extra || []).map(e => {
-    const fromTeam = e.split(' ')[0] === '+' ? e.substring(2) : e;
     const teamName = e.replace(/~.*$/, '').replace(/\(.*$/, '').replace(/^\+ /, '').split(' R')[0].trim();
-    return '<div style="display:flex;align-items:center;gap:7px;padding:7px 10px;background:rgba(184,134,11,0.06);border:1px solid rgba(184,134,11,0.22);border-radius:7px;">'
-      + logoImg(teamName, 22)
-      + '<span style="font-size:0.72rem;color:#B8860B;font-weight:600;">+ ' + e + '</span></div>';
+    const note = e.match(/\(([^)]+)\)/);
+    return '<div style="display:flex;align-items:center;gap:8px;padding:9px 12px;background:rgba(184,134,11,0.06);border:1px solid rgba(184,134,11,0.22);border-radius:8px;min-height:46px;">'
+      + logoImg(teamName)
+      + '<div><div style="font-size:0.72rem;color:#B8860B;font-weight:600;">From ' + teamName + '</div>'
+      + (note ? '<div style="font-size:0.62rem;color:#B8860B;opacity:0.75;margin-top:1px;">' + note[1] + '</div>' : '')
+      + '</div></div>';
   }).join('');
 
   const noteHtml = dp.notes ? '<div style="font-size:0.72rem;color:var(--text-muted);margin-top:10px;font-style:italic;">' + dp.notes + '</div>' : '';
 
   return '<div style="border-top:1px solid var(--border);margin-top:16px;padding-top:16px;">'
     + '<div style="font-size:0.62rem;letter-spacing:0.15em;color:var(--text-muted);text-transform:uppercase;font-weight:600;margin-bottom:12px;">2026 Draft Picks</div>'
-    + '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:0;">' + picksHtml + '</div>'
-    + (extraHtml ? '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;">' + extraHtml + '</div>' : '')
+    + '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;">' + picksHtml + '</div>'
+    + (extraHtml ? '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px;margin-top:10px;">' + extraHtml + '</div>' : '')
     + noteHtml
     + '</div>';
 }
