@@ -898,6 +898,21 @@ const TEAM_NEEDS = {
 
 // Team fit bonus calculation
 
+// ── TEAM ABBREVIATIONS FOR LOGOS ─────────────────────────────────────────
+const TEAM_ABBREVS_LOGO = {
+  "Anaheim":"ANA","Boston":"BOS","Buffalo":"BUF","Calgary":"CGY","Carolina":"CAR",
+  "Chicago":"CHI","Colorado":"COL","Columbus":"CBJ","Dallas":"DAL","Detroit":"DET",
+  "Edmonton":"EDM","Florida":"FLA","Los Angeles":"LAK","Minnesota":"MIN","Montreal":"MTL",
+  "Nashville":"NSH","New Jersey":"NJD","NY Islanders":"NYI","NY Rangers":"NYR",
+  "Ottawa":"OTT","Philadelphia":"PHI","Pittsburgh":"PIT","San Jose":"SJS","Seattle":"SEA",
+  "St. Louis":"STL","Tampa Bay":"TBL","Toronto":"TOR","Utah":"UTA","Vancouver":"VAN",
+  "Vegas":"VGK","Washington":"WSH","Winnipeg":"WPG"
+};
+const logoUrl = (team) => {
+  const abbr = TEAM_ABBREVS_LOGO[team];
+  return abbr ? \`https://assets.nhle.com/logos/nhl/svg/\${abbr}_light.svg\` : null;
+};
+
 // ── 2026 DRAFT PICKS PER TEAM ─────────────────────────────────────────────
 // Source: Wikipedia 2026 NHL Entry Draft, verified April 2026
 // "own" = team's own pick, "from:X" = acquired from X, "to:X" = traded to X
@@ -1043,28 +1058,69 @@ function buildPicksGrid(team) {
   if (!dp) return '';
   const rounds = ['R1','R2','R3','R4'];
   const rl = {R1:'Round 1',R2:'Round 2',R3:'Round 3',R4:'Round 4'};
-  const chip = (val) => {
+
+  const logoImg = (t, size) => {
+    const abbr = TEAM_ABBREVS_LOGO[t];
+    if (!abbr) return '';
+    return '<img src="https://assets.nhle.com/logos/nhl/svg/' + abbr + '_light.svg" style="width:' + size + 'px;height:' + size + 'px;object-fit:contain;" onerror="this.style.display='none'">';
+  };
+
+  const chip = (val, selTeam) => {
     if (!val) return '';
-    const isOwn = val==='own';
+    const isOwn = val === 'own';
     const isTo = val.startsWith('to:');
     const isFrom = val.startsWith('from:');
     const isForf = val.startsWith('forfeited');
-    let bg,border,color,label;
-    if(isOwn){bg='rgba(22,163,74,0.08)';border='rgba(22,163,74,0.3)';color='#16A34A';label='Own pick';}
-    else if(isFrom){const f=val.replace(/^from:/,'').split('(')[0].trim();bg='rgba(184,134,11,0.08)';border='rgba(184,134,11,0.3)';color='#B8860B';label='From '+f;}
-    else if(isTo){bg='rgba(220,38,38,0.06)';border='rgba(220,38,38,0.2)';color='#DC2626';label='Traded away';}
-    else if(isForf){bg='rgba(220,38,38,0.06)';border='rgba(220,38,38,0.2)';color='#DC2626';label='Forfeited';}
-    else{bg='rgba(0,0,0,0.04)';border='rgba(0,0,0,0.1)';color='var(--text-muted)';label=val;}
-    return '<div style="background:'+bg+';border:1px solid '+border+';border-radius:6px;padding:5px 10px;font-size:0.72rem;font-weight:600;color:'+color+';white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+label+'</div>';
+
+    if (isTo) {
+      return '<div style="display:flex;align-items:center;gap:6px;padding:7px 10px;background:rgba(220,38,38,0.05);border:1px solid rgba(220,38,38,0.18);border-radius:7px;">'
+        + '<span style="font-size:0.68rem;color:#DC2626;font-weight:600;">Traded away</span></div>';
+    }
+    if (isForf) {
+      return '<div style="display:flex;align-items:center;gap:6px;padding:7px 10px;background:rgba(220,38,38,0.05);border:1px solid rgba(220,38,38,0.18);border-radius:7px;">'
+        + '<span style="font-size:0.68rem;color:#DC2626;font-weight:600;">Forfeited</span></div>';
+    }
+    if (isOwn) {
+      return '<div style="display:flex;align-items:center;gap:7px;padding:7px 10px;background:rgba(22,163,74,0.06);border:1px solid rgba(22,163,74,0.22);border-radius:7px;">'
+        + logoImg(selTeam, 24)
+        + '<span style="font-size:0.72rem;color:#16A34A;font-weight:600;">Own pick</span></div>';
+    }
+    if (isFrom) {
+      const fromTeam = val.replace(/^from:/,'').split('(')[0].trim();
+      return '<div style="display:flex;align-items:center;gap:7px;padding:7px 10px;background:rgba(184,134,11,0.06);border:1px solid rgba(184,134,11,0.22);border-radius:7px;">'
+        + logoImg(fromTeam, 24)
+        + '<span style="font-size:0.72rem;color:#B8860B;font-weight:600;">From ' + fromTeam + '</span></div>';
+    }
+    return '<div style="padding:7px 10px;background:rgba(0,0,0,0.03);border:1px solid rgba(0,0,0,0.1);border-radius:7px;font-size:0.72rem;color:var(--text-muted);">' + val + '</div>';
   };
+
   const picksHtml = rounds.map(r => {
-    const vals = (dp[r]||'own').split(',').map(v=>v.trim()).filter(Boolean);
-    return '<div><div style="font-size:0.6rem;letter-spacing:0.12em;text-transform:uppercase;font-weight:600;color:var(--text-muted);margin-bottom:5px;">'+rl[r]+'</div><div style="display:flex;flex-direction:column;gap:4px;">'+vals.map(chip).join('')+'</div></div>';
+    const vals = (dp[r] || 'own').split(',').map(v => v.trim()).filter(Boolean);
+    const chips = vals.map(v => chip(v, team)).join('');
+    return '<div style="border-right:1px solid var(--border);padding-right:12px;last-child:border-right:none;">'
+      + '<div style="font-size:0.6rem;letter-spacing:0.15em;text-transform:uppercase;font-weight:700;color:var(--text-muted);margin-bottom:8px;">' + rl[r] + '</div>'
+      + '<div style="display:flex;flex-direction:column;gap:5px;">' + chips + '</div>'
+      + '</div>';
   }).join('');
-  const extraHtml = (dp.extra||[]).map(e => '<div style="background:rgba(184,134,11,0.08);border:1px solid rgba(184,134,11,0.3);border-radius:6px;padding:5px 10px;font-size:0.72rem;font-weight:600;color:#B8860B;">+ '+e+'</div>').join('');
-  const noteHtml = dp.notes ? '<div style="font-size:0.72rem;color:var(--text-muted);margin-top:10px;font-style:italic;">'+dp.notes+'</div>' : '';
-  return '<div style="border-top:1px solid var(--border);margin-top:16px;padding-top:14px;"><div style="font-size:0.62rem;letter-spacing:0.15em;color:var(--text-muted);text-transform:uppercase;font-weight:600;margin-bottom:10px;">2026 Draft Picks</div><div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;">'+picksHtml+'</div>'+( extraHtml ? '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;">'+extraHtml+'</div>' : '')+noteHtml+'</div>';
+
+  const extraHtml = (dp.extra || []).map(e => {
+    const fromTeam = e.split(' ')[0] === '+' ? e.substring(2) : e;
+    const teamName = e.replace(/~.*$/, '').replace(/\(.*$/, '').replace(/^\+ /, '').split(' R')[0].trim();
+    return '<div style="display:flex;align-items:center;gap:7px;padding:7px 10px;background:rgba(184,134,11,0.06);border:1px solid rgba(184,134,11,0.22);border-radius:7px;">'
+      + logoImg(teamName, 22)
+      + '<span style="font-size:0.72rem;color:#B8860B;font-weight:600;">+ ' + e + '</span></div>';
+  }).join('');
+
+  const noteHtml = dp.notes ? '<div style="font-size:0.72rem;color:var(--text-muted);margin-top:10px;font-style:italic;">' + dp.notes + '</div>' : '';
+
+  return '<div style="border-top:1px solid var(--border);margin-top:16px;padding-top:16px;">'
+    + '<div style="font-size:0.62rem;letter-spacing:0.15em;color:var(--text-muted);text-transform:uppercase;font-weight:600;margin-bottom:12px;">2026 Draft Picks</div>'
+    + '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:0;">' + picksHtml + '</div>'
+    + (extraHtml ? '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;">' + extraHtml + '</div>' : '')
+    + noteHtml
+    + '</div>';
 }
+
 function addPickRow(){
   pickCount++;const id=pickCount;
   const r=document.createElement('div');r.className='pick-row';r.id='pick-'+id;
