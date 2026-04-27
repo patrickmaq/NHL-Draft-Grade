@@ -908,6 +908,9 @@ const TEAM_ABBREVS_LOGO = {
   "St. Louis":"STL","Tampa Bay":"TBL","Toronto":"TOR","Utah":"UTA","Vancouver":"VAN",
   "Vegas":"VGK","Washington":"WSH","Winnipeg":"WPG"
 };
+// Direct abbrev set for quick lookup
+const NHL_ABBREVS = new Set(["ANA","BOS","BUF","CGY","CAR","CHI","COL","CBJ","DAL","DET","EDM","FLA","LAK","MIN","MTL","NSH","NJD","NYI","NYR","OTT","PHI","PIT","SJS","SEA","STL","TBL","TOR","UTA","VAN","VGK","WSH","WPG"]);
+
 const logoUrl = (team) => {
   const abbr = TEAM_ABBREVS_LOGO[team];
   return abbr ? 'https://assets.nhle.com/logos/nhl/svg/' + abbr + '_light.svg' : null;
@@ -1060,6 +1063,16 @@ function buildPicksGrid(team) {
   const rounds = ['R1','R2','R3'];
   const rl = {R1:'Round 1',R2:'Round 2',R3:'Round 3'};
   const ownAbbr = TEAM_ABBREVS_LOGO[team] || '';
+  // Reverse lookup: abbr -> abbr (already fine) or name -> abbr
+  const resolveAbbr = (entry) => {
+    if (!entry) return null;
+    const up = entry.toUpperCase();
+    // Direct abbr e.g. "MIN", "VAN"
+    if (NHL_ABBREVS.has(up)) return up;
+    // Full name e.g. "Minnesota"
+    if (TEAM_ABBREVS_LOGO[entry]) return TEAM_ABBREVS_LOGO[entry];
+    return null;
+  };
 
   const logoImg = (abbr, size) => {
     if (!abbr) return '';
@@ -1067,14 +1080,17 @@ function buildPicksGrid(team) {
   };
 
   const badge = (entry) => {
-    if (entry === '-') {
+    const rawEntry = entry;
+    entry = entry.startsWith('from:') ? entry.replace('from:','') : entry;
+    if (rawEntry === '-') {
       return '<div style="width:36px;height:36px;border-radius:6px;background:rgba(220,38,38,0.06);border:1px solid rgba(220,38,38,0.18);display:flex;align-items:center;justify-content:center;font-size:0.75rem;color:#DC2626;font-weight:700;">✕</div>';
     }
     if (entry === 'forfeited') {
       return '<div style="width:36px;height:36px;border-radius:6px;background:rgba(220,38,38,0.06);border:1px solid rgba(220,38,38,0.18);display:flex;align-items:center;justify-content:center;font-size:0.6rem;color:#DC2626;font-weight:700;text-align:center;line-height:1.2;">FOR<br>FEIT</div>';
     }
-    const abbr = entry === 'own' ? ownAbbr : TEAM_ABBREVS_LOGO[entry] || '';
-    const isOwn = entry === 'own';
+    const cleanEntry = entry.startsWith('from:') ? entry.replace('from:','') : entry;
+    const abbr = entry === 'own' ? ownAbbr : resolveAbbr(cleanEntry) || '';
+    const isOwn = rawEntry === 'own';
     const bg = isOwn ? 'rgba(22,163,74,0.06)' : 'rgba(184,134,11,0.06)';
     const border = isOwn ? 'rgba(22,163,74,0.22)' : 'rgba(184,134,11,0.22)';
     return '<div style="width:36px;height:36px;border-radius:6px;background:' + bg + ';border:1px solid ' + border + ';display:flex;align-items:center;justify-content:center;padding:4px;">'
