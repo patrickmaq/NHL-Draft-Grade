@@ -51,6 +51,9 @@ header { padding:48px 0 40px; display:flex; align-items:flex-end; justify-conten
 .prospect-option .opt-league { font-size:0.72rem; color:var(--text-muted); margin-left:auto; }
 .prospect-option.no-results { color:var(--text-muted); cursor:default; font-style:italic; }
 .prospect-option.no-results:hover { background:none; }
+.prospect-option.gone { opacity:0.38; cursor:default; pointer-events:none; }
+.prospect-option.gone:hover { background:none; }
+.prospect-option .opt-gone { font-size:0.62rem; font-weight:600; letter-spacing:0.08em; color:var(--text-muted); background:var(--surface2); border:1px solid var(--border2); padding:2px 6px; border-radius:3px; margin-left:auto; white-space:nowrap; }
 .grade-btn { display:block; width:100%; background:var(--text); color:var(--bg); border:none; padding:16px; border-radius:8px; font-family:'Bebas Neue',sans-serif; font-size:1.1rem; letter-spacing:0.15em; cursor:pointer; transition:all 0.2s; margin-top:20px; }
 .grade-btn:hover { background:#2A2A2A; transform:translateY(-1px); }
 .results { display:none; }
@@ -1077,13 +1080,36 @@ function addPickRow(){
   initProspectSearch(id);
 }
 
+function getRoundCutoff(round){
+  // Returns the rank threshold below which prospects are considered gone
+  if(round<=1) return 0;
+  if(round===2) return 32;
+  if(round===3) return 64;
+  if(round===4) return 96;
+  return 96; // rounds 5-7 same ceiling — class only goes to ~122
+}
+
+function getRoundGoneLabel(rank){
+  if(rank<=32)  return 'Gone — Rd 1';
+  if(rank<=64)  return 'Gone — Rd 2';
+  if(rank<=96)  return 'Gone — Rd 3';
+  return 'Gone — Rd 4';
+}
+
 function initProspectSearch(id){
   const input=document.getElementById('psi-'+id);
   const dropdown=document.getElementById('psd-'+id);
   const allNames=Object.keys(PROSPECTS);
 
+  function getRound(){
+    const row=document.getElementById('pick-'+id);
+    if(!row) return 1;
+    return parseInt(row.querySelector('.round-select').value)||1;
+  }
+
   function renderOptions(query){
     const q=query.toLowerCase().trim();
+    const cutoff=getRoundCutoff(getRound());
     const filtered=q
       ? allNames.filter(n=>n.toLowerCase().includes(q)||String(PROSPECTS[n].rank).includes(q)||PROSPECTS[n].pos.toLowerCase().includes(q)||(PROSPECTS[n].league||'').toLowerCase().includes(q))
       : allNames;
@@ -1092,11 +1118,13 @@ function initProspectSearch(id){
     } else {
       dropdown.innerHTML=filtered.map(n=>{
         const p=PROSPECTS[n];
-        return `<div class="prospect-option" data-name="${n}" onmousedown="selectProspect(${id},'${n.replace(/'/g,"\\'")}')">
+        const isGone = cutoff > 0 && p.rank <= cutoff;
+        const goneLabel = isGone ? `<span class="opt-gone">${getRoundGoneLabel(p.rank)}</span>` : `<span class="opt-league">${(p.league||'').split('(')[0].trim()}</span>`;
+        return `<div class="prospect-option${isGone?' gone':''}" data-name="${n}" ${isGone?'':'onmousedown="selectProspect('+id+',\''+n.replace(/'/g,"\\'")+'\')"'}>
           <span class="opt-rank">#${p.rank}</span>
           <span>${n}</span>
           <span class="opt-pos">${p.pos}</span>
-          <span class="opt-league">${(p.league||'').split('(')[0].trim()}</span>
+          ${goneLabel}
         </div>`;
       }).join('');
     }
@@ -1107,6 +1135,25 @@ function initProspectSearch(id){
   input.addEventListener('input',()=>{ input.dataset.selected=''; renderOptions(input.value); });
   input.addEventListener('blur',()=>{ setTimeout(()=>dropdown.classList.remove('open'),150); });
   document.addEventListener('click',e=>{ if(!document.getElementById('psw-'+id)?.contains(e.target)) dropdown.classList.remove('open'); });
+
+  // Re-render dropdown when round changes so gone labels update live
+  setTimeout(()=>{
+    const row=document.getElementById('pick-'+id);
+    if(row){
+      row.querySelector('.round-select').addEventListener('change',()=>{
+        // If current selection is now gone, clear it
+        const sel=input.dataset.selected;
+        if(sel && PROSPECTS[sel]){
+          const cutoff=getRoundCutoff(getRound());
+          if(cutoff>0 && PROSPECTS[sel].rank<=cutoff){
+            input.value='';
+            input.dataset.selected='';
+          }
+        }
+        if(dropdown.classList.contains('open')) renderOptions(input.value);
+      });
+    }
+  },0);
 }
 
 function selectProspect(id,name){
