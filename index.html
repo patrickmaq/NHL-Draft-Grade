@@ -897,6 +897,45 @@ const TEAM_NEEDS = {
 
 
 // Team fit bonus calculation
+
+// ── 2026 DRAFT PICKS PER TEAM ─────────────────────────────────────────────
+// Source: Wikipedia 2026 NHL Entry Draft, verified April 2026
+// "own" = team's own pick, "from:X" = acquired from X, "to:X" = traded to X
+const DRAFT_PICKS_2026 = {
+  "Anaheim":     { R1:"own", R2:"own", R3:"own", R4:"from:Detroit", notes:"R1 conditional — went to Washington (John Carlson trade)" },
+  "Boston":      { R1:"own", R2:"own", R3:"own", R4:"own" },
+  "Buffalo":     { R1:"own", R2:"to:Ottawa (Norris trade)", R3:"own", R4:"from:Edmonton", notes:"No R2 own pick" },
+  "Calgary":     { R1:"from:Vegas (Vorobyev trade)", R2:"own", R3:"from:Vancouver (Zadorov trade)", R4:"own", notes:"Extra R1 from Vegas" },
+  "Carolina":    { R1:"from:Dallas (Rantanen trade)", R2:"own (K'Andre Miller pick goes to NYR)", R3:"own", R4:"own", notes:"Dallas R1 via Rantanen deal" },
+  "Chicago":     { R1:"from:Florida (Seth Jones trade)", R2:"from:NYI (Josh Bailey trade), from:Toronto (McCabe trade)", R3:"own", R4:"to:Florida", notes:"Extra R1 and R2 picks" },
+  "Colorado":    { R1:"to:St. Louis (Schenn trade)", R2:"to:San Jose (Georgiev trade)", R3:"own", R4:"from:Carolina", notes:"No R1 or R2 own picks" },
+  "Columbus":    { R1:"own", R2:"from:St. Louis (Chinakhov trade)", R3:"from:Colorado (Jiricek trade)", R4:"own" },
+  "Dallas":      { R1:"own", R2:"own", R3:"from:Seattle (Marchment trade)", R4:"to:NJ (Tanev trade)", notes:"Own R1 stays — went to CAR if playoff team (it did)" },
+  "Detroit":     { R1:"to:St. Louis (Faulk trade)", R2:"own", R3:"own", R4:"to:Anaheim (Gibson trade)", notes:"No R1 own pick" },
+  "Edmonton":    { R1:"to:San Jose (Walman trade)", R2:"own", R3:"own", R4:"to:Buffalo (Jokiharju trade)", notes:"No R1 own pick" },
+  "Florida":     { R1:"to:Chicago (Seth Jones trade)", R2:"from:Washington (Sourdif trade)", R3:"to:Ottawa (Tarasenko trade)", R4:"from:Chicago", notes:"No R1 own pick" },
+  "Los Angeles": { R1:"own", R2:"from:Columbus (Danault trade)", R3:"from:Dallas (Rantanen trade)", R4:"own" },
+  "Minnesota":   { R1:"to:Vancouver (Quinn Hughes trade)", R2:"to:Nashville (Nyquist trade)", R3:"own", R4:"own", notes:"No R1 or R2 own picks" },
+  "Montreal":    { R1:"own", R2:"own", R3:"own", R4:"own" },
+  "Nashville":   { R1:"own", R2:"from:Minnesota (Nyquist trade)", R3:"own", R4:"own" },
+  "New Jersey":  { R1:"own", R2:"own", R3:"to:NYI (Tsyplakov trade)", R4:"from:Dallas (Tanev trade)" },
+  "NY Islanders":{ R1:"own", R2:"to:Chicago (Josh Bailey trade)", R3:"from:NJ (Tsyplakov trade)", R4:"own", notes:"No R2 own pick" },
+  "NY Rangers":  { R1:"own", R2:"from:Carolina (K'Andre Miller trade)", R3:"from:NYI (Soucy trade)", R4:"own" },
+  "Ottawa":      { R1:"forfeited (Dadonov penalty) — picks last at #32", R2:"from:Buffalo (Norris trade)", R3:"from:Florida (Tarasenko trade), from:Washington (Chychrun trade)", R4:"own", notes:"No own R1" },
+  "Philadelphia":{ R1:"own", R2:"own", R3:"own", R4:"own" },
+  "Pittsburgh":  { R1:"own", R2:"from:Winnipeg (Luke Schenn trade)", R3:"from:San Jose (Karlsson trade)", R4:"own" },
+  "San Jose":    { R1:"from:Edmonton (Walman trade)", R2:"from:Colorado (Georgiev trade)", R3:"to:Pittsburgh (Karlsson trade)", R4:"own", notes:"Extra R1 from EDM" },
+  "Seattle":     { R1:"from:Tampa Bay (Aucoin trade)", R2:"own", R3:"to:Dallas (Marchment trade)", R4:"from:Anaheim (Dumoulin trade)", notes:"TBL R1 via condition met" },
+  "St. Louis":   { R1:"from:Colorado (Schenn trade), from:Detroit (Faulk trade)", R2:"to:Columbus (Chinakhov trade)", R3:"own", R4:"own", notes:"Two R1 picks!" },
+  "Tampa Bay":   { R1:"to:Seattle (condition met)", R2:"own", R3:"own", R4:"own", notes:"No R1 own pick" },
+  "Toronto":     { R1:"own", R2:"to:Chicago (McCabe trade)", R3:"own", R4:"own", notes:"No R2 own pick" },
+  "Utah":        { R1:"own", R2:"from:NYR (Emberson trade), from:Ottawa (Chychrun trade)", R3:"from:Carolina (Gostisbehere trade)", R4:"own", notes:"Extra R2 picks" },
+  "Vancouver":   { R1:"own (lottery — top 3)", R2:"own", R3:"own (recovered — Garland trade)", R4:"own", notes:"Also: MIN R1 (24th), SJS R2 (~42nd). 10 total picks!", extra:["Minnesota R1 (~24th overall)", "San Jose R2 (~42nd overall)"] },
+  "Vegas":       { R1:"to:Calgary (Vorobyev trade)", R2:"own", R3:"own", R4:"own", notes:"No R1 own pick" },
+  "Washington":  { R1:"from:Anaheim (Carlson trade)", R2:"to:Florida (Sourdif trade)", R3:"to:Ottawa (Chychrun trade)", R4:"own", notes:"ANA R1 via condition" },
+  "Winnipeg":    { R1:"own", R2:"to:Pittsburgh (Luke Schenn trade)", R3:"own", R4:"own", notes:"No R2 own pick" },
+};
+
 function getTeamFitBonus(prospectPos, team) {
   const tn = TEAM_NEEDS[team];
   if (!tn) return { bonus: 0, label: '', note: '' };
@@ -995,7 +1034,36 @@ function showTeamContext(team) {
     <div style="font-size:0.62rem;letter-spacing:0.15em;color:var(--text-muted);text-transform:uppercase;font-weight:600;margin-bottom:8px;">Positional Needs</div>
     <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;">
       ${needsHtml}
-    </div>`;
+    </div>
+    ${buildPicksGrid(team)}`;
+}
+
+function buildPicksGrid(team) {
+  const dp = DRAFT_PICKS_2026[team];
+  if (!dp) return '';
+  const rounds = ['R1','R2','R3','R4'];
+  const rl = {R1:'Round 1',R2:'Round 2',R3:'Round 3',R4:'Round 4'};
+  const chip = (val) => {
+    if (!val) return '';
+    const isOwn = val==='own';
+    const isTo = val.startsWith('to:');
+    const isFrom = val.startsWith('from:');
+    const isForf = val.startsWith('forfeited');
+    let bg,border,color,label;
+    if(isOwn){bg='rgba(22,163,74,0.08)';border='rgba(22,163,74,0.3)';color='#16A34A';label='Own pick';}
+    else if(isFrom){const f=val.replace(/^from:/,'').split('(')[0].trim();bg='rgba(184,134,11,0.08)';border='rgba(184,134,11,0.3)';color='#B8860B';label='From '+f;}
+    else if(isTo){bg='rgba(220,38,38,0.06)';border='rgba(220,38,38,0.2)';color='#DC2626';label='Traded away';}
+    else if(isForf){bg='rgba(220,38,38,0.06)';border='rgba(220,38,38,0.2)';color='#DC2626';label='Forfeited';}
+    else{bg='rgba(0,0,0,0.04)';border='rgba(0,0,0,0.1)';color='var(--text-muted)';label=val;}
+    return '<div style="background:'+bg+';border:1px solid '+border+';border-radius:6px;padding:5px 10px;font-size:0.72rem;font-weight:600;color:'+color+';white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+label+'</div>';
+  };
+  const picksHtml = rounds.map(r => {
+    const vals = (dp[r]||'own').split(',').map(v=>v.trim()).filter(Boolean);
+    return '<div><div style="font-size:0.6rem;letter-spacing:0.12em;text-transform:uppercase;font-weight:600;color:var(--text-muted);margin-bottom:5px;">'+rl[r]+'</div><div style="display:flex;flex-direction:column;gap:4px;">'+vals.map(chip).join('')+'</div></div>';
+  }).join('');
+  const extraHtml = (dp.extra||[]).map(e => '<div style="background:rgba(184,134,11,0.08);border:1px solid rgba(184,134,11,0.3);border-radius:6px;padding:5px 10px;font-size:0.72rem;font-weight:600;color:#B8860B;">+ '+e+'</div>').join('');
+  const noteHtml = dp.notes ? '<div style="font-size:0.72rem;color:var(--text-muted);margin-top:10px;font-style:italic;">'+dp.notes+'</div>' : '';
+  return '<div style="border-top:1px solid var(--border);margin-top:16px;padding-top:14px;"><div style="font-size:0.62rem;letter-spacing:0.15em;color:var(--text-muted);text-transform:uppercase;font-weight:600;margin-bottom:10px;">2026 Draft Picks</div><div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;">'+picksHtml+'</div>'+( extraHtml ? '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;">'+extraHtml+'</div>' : '')+noteHtml+'</div>';
 }
 function addPickRow(){
   pickCount++;const id=pickCount;
